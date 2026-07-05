@@ -1,0 +1,49 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: puku
+      POSTGRES_PASSWORD: puku
+      POSTGRES_DB: puku
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U puku -d puku"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "5432:5432"
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: "postgresql://puku:puku@db:5432/puku?schema=public"
+      NEXTAUTH_URL: "http://localhost:3000"
+      NEXTAUTH_SECRET: "${NEXTAUTH_SECRET:-change-me-to-a-random-32-byte-string}"
+      SMTP_HOST: "${SMTP_HOST:-}"
+      SMTP_PORT: "${SMTP_PORT:-587}"
+      SMTP_USER: "${SMTP_USER:-}"
+      SMTP_PASS: "${SMTP_PASS:-}"
+      SMTP_FROM: "${SMTP_FROM:-puku-timetracking@example.com}"
+      SMTP_TLS: "${SMTP_TLS:-true}"
+      NAGER_DATE_API_URL: "https://date.nager.at/api/v3"
+      NAGER_DATE_DEFAULT_REGION: "DE"
+      NAGER_DATE_DEFAULT_STATE: "NW"
+      PUSH_VAPID_PUBLIC_KEY: "${PUSH_VAPID_PUBLIC_KEY:-}"
+      PUSH_VAPID_PRIVATE_KEY: "${PUSH_VAPID_PRIVATE_KEY:-}"
+      PUSH_VAPID_SUBJECT: "${PUSH_VAPID_SUBJECT:-mailto:admin@example.com}"
+      DEFAULT_LOCALE: "de"
+      DEFAULT_TIMEZONE: "Europe/Berlin"
+    ports:
+      - "3000:3000"
+
+volumes:
+  db-data:

@@ -1,0 +1,67 @@
+{
+  "common": {
+    "appName": "Puku Zeiterfassung",
+    "loading": "Wird geladen…",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "back": "Zurück",
+    "search": "Suchen",
+    "actions": "Aktionen",
+    "confirm": "Bestätigen",
+    "close": "Schließen",
+    "yes": "Ja",
+    "no": "Nein",
+    "all": "Alle",
+    "none": "Keine",
+    "today": "Heute",
+    "week": "Woche",
+    "month": "Monat",
+    "year": "Jahr"
+  },
+  "nav": {
+    "dashboard": "Übersicht",
+    "timesheet": "Stundenzettel",
+    "calendar": "Kalender",
+    "overtime": "Überstunden",
+    "vacation": "Urlaub",
+    "sickness": "Krankheit",
+    "reports": "Berichte",
+    "team": "Team",
+    "admin": "Verwaltung",
+    "users": "Benutzer",
+    "workingModels": "Arbeitszeitmodelle",
+    "holidays": "Feiertage",
+    "vacationApprovals": "Urlaubsanträge",
+    "settings": "Einstellungen",
+    "profile": "Profil",
+    "logout": "Abmelden"
+  },
+  "auth": {
+    "loginTitle": "Anmelden",
+    "loginSubtitle": "Melden Sie sich bei Ihrem Konto an",
+    "email": "E-Mail",
+    "password": "Passwort",
+    "loginButton": "Anmelden",
+    "loginError": "E-Mail oder Passwort ist falsch",
+    "logoutSuccess": "Sie wurden abgemeldet"
+  },
+  "dashboard": {
+    "title": "Übersicht",
+    "welcome": "Willkommen, {name}",
+    "timerStart": "Timer starten",
+    "timerStop": "Timer stoppen",
+    "breakStart": "Pause starten",
+    "breakStop": "Pause beenden",
+    "todayWorked": "Heute gearbeitet",
+    "weekWorked": "Diese Woche gearbeitet",
+    "overtimeBalance": "Überstundenstand",
+    "vacationRemaining": "Verbleibender Urlaub",
+    "noTimerRunning": "Kein Timer aktiv"
+  },
+  "roles": {
+    "EMPLOYEE": "Mitarbeiter",
+    "ADMIN": "Administrator"
+  }
+}

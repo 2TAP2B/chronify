@@ -1,0 +1,67 @@
+{
+  "common": {
+    "appName": "Puku Time Tracking",
+    "loading": "Loading…",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "back": "Back",
+    "search": "Search",
+    "actions": "Actions",
+    "confirm": "Confirm",
+    "close": "Close",
+    "yes": "Yes",
+    "no": "No",
+    "all": "All",
+    "none": "None",
+    "today": "Today",
+    "week": "Week",
+    "month": "Month",
+    "year": "Year"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "timesheet": "Timesheet",
+    "calendar": "Calendar",
+    "overtime": "Overtime",
+    "vacation": "Vacation",
+    "sickness": "Sickness",
+    "reports": "Reports",
+    "team": "Team",
+    "admin": "Admin",
+    "users": "Users",
+    "workingModels": "Working Models",
+    "holidays": "Holidays",
+    "vacationApprovals": "Vacation Approvals",
+    "settings": "Settings",
+    "profile": "Profile",
+    "logout": "Sign out"
+  },
+  "auth": {
+    "loginTitle": "Sign in",
+    "loginSubtitle": "Sign in to your account",
+    "email": "Email",
+    "password": "Password",
+    "loginButton": "Sign in",
+    "loginError": "Email or password is incorrect",
+    "logoutSuccess": "You have been signed out"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome, {name}",
+    "timerStart": "Start timer",
+    "timerStop": "Stop timer",
+    "breakStart": "Start break",
+    "breakStop": "End break",
+    "todayWorked": "Worked today",
+    "weekWorked": "Worked this week",
+    "overtimeBalance": "Overtime balance",
+    "vacationRemaining": "Remaining vacation",
+    "noTimerRunning": "No active timer"
+  },
+  "roles": {
+    "EMPLOYEE": "Employee",
+    "ADMIN": "Administrator"
+  }
+}

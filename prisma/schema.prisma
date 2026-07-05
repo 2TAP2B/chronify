@@ -1,0 +1,309 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["debian-openssl-3.0.x", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  EMPLOYEE
+  ADMIN
+}
+
+enum BreakMode {
+  AUTO
+  MANUAL
+}
+
+enum Locale {
+  de
+  en
+}
+
+enum FederalState {
+  DE_BW
+  DE_BY
+  DE_BE
+  DE_BB
+  DE_HB
+  DE_HE
+  DE_HH
+  DE_ME
+  DE_MV
+  DE_NI
+  DE_NW
+  DE_RP
+  DE_SL
+  DE_SN
+  DE_ST
+  DE_SH
+  DE_TH
+}
+
+enum TimeEntryType {
+  WORK
+  VACATION
+  SICK
+  PUBLIC_HOLIDAY
+  PERSONAL
+}
+
+enum TimeEntrySource {
+  TIMER
+  MANUAL
+  ADMIN
+}
+
+enum VacationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum PublicHolidaySource {
+  NAGER
+  MANUAL
+}
+
+enum NotificationChannel {
+  APP
+  PUSH
+  EMAIL
+}
+
+enum NotificationType {
+  VACATION_APPROVED
+  VACATION_REJECTED
+  VACATION_REQUESTED
+  SICK_NOTE_REMINDER
+  TIMER_REMINDER
+  GENERIC
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String
+  name          String
+  firstName     String?
+  lastName      String?
+  role          Role      @default(EMPLOYEE)
+  locale        Locale    @default(de)
+  federalState  FederalState @default(DE_NW)
+  timezone      String    @default("Europe/Berlin")
+  breakMode     BreakMode @default(AUTO)
+  active        Boolean   @default(true)
+  avatarUrl     String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  lastLoginAt   DateTime?
+
+  workingModels        WorkingModel[]
+  timeEntries          TimeEntry[]
+  timerSessions        TimerSession[]
+  vacationRequests     VacationRequest[]   @relation("VacationRequestUser")
+  vacationApprovals    VacationRequest[]   @relation("VacationApprover")
+  vacationEntitlements VacationEntitlement[]
+  sickNotes            SickNote[]
+  overtimeBalances     OvertimeBalance[]
+  notifications        Notification[]
+  pushSubscriptions    PushSubscription[]
+  auditLogsActor       AuditLog[]          @relation("AuditLogActor")
+  auditLogsTarget      AuditLog[]          @relation("AuditLogTarget")
+
+  @@index([active])
+  @@index([role])
+}
+
+model WorkingModel {
+  id                  String   @id @default(cuid())
+  userId              String
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  validFrom           DateTime
+  validTo             DateTime?
+  mondayMinutes       Int      @default(0)
+  tuesdayMinutes      Int      @default(0)
+  wednesdayMinutes    Int      @default(0)
+  thursdayMinutes     Int      @default(0)
+  fridayMinutes       Int      @default(0)
+  saturdayMinutes     Int      @default(0)
+  sundayMinutes       Int      @default(0)
+  weeklyTargetMinutes Int      @default(0)
+  autoBreakThreshold6h Boolean @default(true)
+  autoBreakMinutes6h  Int      @default(30)
+  autoBreakThreshold9h Boolean @default(true)
+  autoBreakMinutes9h  Int      @default(45)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@index([userId, validFrom])
+}
+
+model TimeEntry {
+  id            String          @id @default(cuid())
+  userId        String
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date          DateTime
+  startAt       DateTime?
+  endAt         DateTime?
+  breakMinutes  Int             @default(0)
+  type          TimeEntryType   @default(WORK)
+  source        TimeEntrySource @default(MANUAL)
+  note          String?
+  lockedAt      DateTime?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  @@index([userId, date])
+  @@index([userId, type, date])
+}
+
+model TimerSession {
+  id             String    @id @default(cuid())
+  userId         String    @unique
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  startedAt      DateTime
+  lastTickAt     DateTime
+  breakStartedAt DateTime?
+  accumulatedBreakMs Int    @default(0)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+model VacationRequest {
+  id         String          @id @default(cuid())
+  userId     String
+  user       User            @relation("VacationRequestUser", fields: [userId], references: [id], onDelete: Cascade)
+  approverId String?
+  approver   User?           @relation("VacationApprover", fields: [approverId], references: [id])
+  from       DateTime
+  to         DateTime
+  days       Float
+  status     VacationStatus  @default(PENDING)
+  year       Int
+  note       String?
+  approverNote String?
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+
+  @@index([userId, status])
+  @@index([status, year])
+}
+
+model VacationEntitlement {
+  id                String  @id @default(cuid())
+  userId            String
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  year              Int
+  totalDays         Float
+  carriedOverDays   Float   @default(0)
+  consumedDays      Float   @default(0)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([userId, year])
+}
+
+model SickNote {
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  from           DateTime
+  to             DateTime
+  days           Float
+  certificateUrl String?
+  aubUntil       DateTime?
+  note           String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([userId, from])
+}
+
+model PublicHoliday {
+  id            String             @id @default(cuid())
+  date          DateTime
+  name          String
+  federalState  FederalState
+  type          String             @default("Public")
+  source        PublicHolidaySource @default(NAGER)
+  counties      String[]
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  @@unique([date, federalState])
+  @@index([federalState, date])
+}
+
+model OvertimeBalance {
+  id                  String   @id @default(cuid())
+  userId              String
+  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  year                Int
+  carriedOverMinutes  Int       @default(0)
+  computedMinutes     Int       @default(0)
+  lockedAt            DateTime?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@unique([userId, year])
+}
+
+model OrgSettings {
+  id                              String       @id @default("singleton")
+  defaultFederalState              FederalState @default(DE_NW)
+  overtimeCarryoverCutoffMonth    Int          @default(4)
+  overtimeCarryoverCutoffDay      Int          @default(1)
+  timeEntryLockWindowDays         Int          @default(7)
+  autoBreakDefault                BreakMode    @default(AUTO)
+  defaultVacationDays             Float        @default(30)
+  createdAt                       DateTime     @default(now())
+  updatedAt                       DateTime     @updatedAt
+}
+
+model Notification {
+  id        String             @id @default(cuid())
+  userId    String
+  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      NotificationType
+  title     String
+  body      String?
+  payload   Json?
+  channel   NotificationChannel @default(APP)
+  readAt    DateTime?
+  createdAt DateTime           @default(now())
+
+  @@index([userId, readAt])
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint  String
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  actorId   String?
+  actor     User?    @relation("AuditLogActor", fields: [actorId], references: [id])
+  targetId  String?
+  target    User?    @relation("AuditLogTarget", fields: [targetId], references: [id])
+  action    String
+  entity    String
+  entityId  String?
+  payload   Json?
+  at        DateTime @default(now())
+
+  @@index([actorId])
+  @@index([entity, entityId])
+}
