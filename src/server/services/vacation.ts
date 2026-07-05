@@ -1,12 +1,14 @@
 import { db } from "@/lib/db";
 import { audit, getUserContext, type SessionUser } from "@/server/context";
 import { notifyUser } from "@/server/services/notification";
+import { computeYearOvertime } from "@/server/services/overtime";
 import {
   businessDaysInRange,
   makeHolidayResolver,
   overlapsExisting,
 } from "@/lib/vacation/business-days";
 import { toCalendarDate } from "@/lib/datetime";
+import { targetMinutesForDate } from "@/lib/overtime/calculate";
 import type { FederalState, VacationRequest, VacationStatus } from "@prisma/client";
 
 export class VacationError extends Error {
@@ -24,6 +26,7 @@ export type VacationCreateInput = {
   to: Date;
   note?: string | null;
   year?: number;
+  useOvertime?: boolean;
 };
 
 export async function listVacationRequests(opts: {
@@ -110,7 +113,24 @@ export async function createVacationRequest(opts: {
   const carriedOverDays = entitlement?.carriedOverDays ?? 0;
   const consumedDays = entitlement?.consumedDays ?? 0;
   const available = totalDays_ + carriedOverDays - consumedDays;
-  if (businessDays.length > available) {
+
+  const useOvertime = opts.input.useOvertime ?? false;
+
+  if (useOvertime) {
+    // Check overtime balance instead of vacation entitlement
+    const { computation } = await computeYearOvertime({
+      userId: actor.id,
+      year,
+      timeZone: ctx.timeZone,
+    });
+    if (computation.balanceMs <= 0) {
+      throw new VacationError(
+        "No overtime balance available",
+        "INSUFFICIENT_OVERTIME",
+        403
+      );
+    }
+  } else if (businessDays.length > available) {
     throw new VacationError(
       `Insufficient entitlement: requested ${businessDays.length} days, available ${available}`,
       "INSUFFICIENT_ENTITLEMENT",
@@ -127,6 +147,7 @@ export async function createVacationRequest(opts: {
       status: "PENDING",
       year,
       note: opts.input.note ?? null,
+      useOvertime,
     },
   });
 
@@ -168,11 +189,22 @@ export async function approveVacationRequest(opts: {
   if (opts.actor.role !== "ADMIN") {
     throw new VacationError("Forbidden", "FORBIDDEN", 403);
   }
-  const req = await db.vacationRequest.findUnique({ where: { id: opts.requestId } });
-  if (!req) throw new VacationError("Not found", "NOT_FOUND", 404);
-  if (req.status !== "PENDING") {
-    throw new VacationError(`Request is ${req.status}`, "NOT_PENDING", 409);
+
+  const claim = await db.vacationRequest.updateMany({
+    where: { id: opts.requestId, status: "PENDING" },
+    data: {
+      status: "APPROVED",
+      approverId: opts.actor.id,
+      approverNote: opts.approverNote ?? null,
+    },
+  });
+  if (claim.count === 0) {
+    const existing = await db.vacationRequest.findUnique({ where: { id: opts.requestId } });
+    if (!existing) throw new VacationError("Not found", "NOT_FOUND", 404);
+    throw new VacationError(`Request is ${existing.status}`, "NOT_PENDING", 409);
   }
+
+  const req = await db.vacationRequest.findUniqueOrThrow({ where: { id: opts.requestId } });
 
   const ctx = await getUserContext(req.userId);
   const state = ctx.user.federalState;
@@ -182,45 +214,83 @@ export async function approveVacationRequest(opts: {
   const resolver = makeHolidayResolver(holidays);
   const { businessDays } = businessDaysInRange(req.from, req.to, state, resolver);
 
-  // Update entitlement: increment consumedDays
-  const settings = await db.orgSettings.findUniqueOrThrow({ where: { id: "singleton" } });
-  await db.vacationEntitlement.upsert({
-    where: { userId_year: { userId: req.userId, year: req.year } },
-    create: {
-      userId: req.userId,
-      year: req.year,
-      totalDays: settings.defaultVacationDays,
-      consumedDays: businessDays.length,
-    },
-    update: {
-      consumedDays: { increment: businessDays.length },
-    },
-  });
+  if (req.useOvertime) {
+    // Deduct from overtime balance instead of vacation entitlement
+    const workingModels = await db.workingModel.findMany({
+      where: {
+        userId: req.userId,
+        validFrom: { lte: req.to },
+        OR: [{ validTo: null }, { validTo: { gte: req.from } }],
+      },
+      orderBy: { validFrom: "desc" },
+    });
+    function modelForDate(d: Date) {
+      return (
+        workingModels.find(
+          (m) => m.validFrom <= d && (m.validTo == null || m.validTo >= d)
+        ) ?? null
+      );
+    }
+    const consumedMinutes = businessDays.reduce((sum, d) => {
+      const model = modelForDate(d);
+      if (!model) return sum;
+      return sum + targetMinutesForDate(d, model);
+    }, 0);
 
-  // Create TimeEntry{type:VACATION} per business day
-  await db.timeEntry.createMany({
-    data: businessDays.map((d) => ({
-      userId: req.userId,
-      date: toCalendarDate(d, ctx.timeZone),
-      startAt: null,
-      endAt: null,
-      breakMinutes: 0,
-      type: "VACATION",
-      source: "ADMIN",
-      note: `Urlaub ${req.from.toISOString().slice(0, 10)} – ${req.to.toISOString().slice(0, 10)}`,
-    })),
-  });
+    await db.$transaction([
+      db.overtimeBalance.upsert({
+        where: { userId_year: { userId: req.userId, year: req.year } },
+        create: {
+          userId: req.userId,
+          year: req.year,
+          consumedOvertimeMinutes: consumedMinutes,
+        },
+        update: {
+          consumedOvertimeMinutes: { increment: consumedMinutes },
+        },
+      }),
+      db.timeEntry.createMany({
+        data: businessDays.map((d) => ({
+          userId: req.userId,
+          date: toCalendarDate(d, ctx.timeZone),
+          startAt: null,
+          endAt: null,
+          breakMinutes: 0,
+          type: "VACATION",
+          source: "ADMIN",
+          note: `Urlaub (Überstunden) ${req.from.toISOString().slice(0, 10)} – ${req.to.toISOString().slice(0, 10)}`,
+        })),
+      }),
+    ]);
+  } else {
+    await db.$transaction([
+      db.vacationEntitlement.upsert({
+        where: { userId_year: { userId: req.userId, year: req.year } },
+        create: {
+          userId: req.userId,
+          year: req.year,
+          totalDays: (await db.orgSettings.findUniqueOrThrow({ where: { id: "singleton" } })).defaultVacationDays,
+          consumedDays: businessDays.length,
+        },
+        update: {
+          consumedDays: { increment: businessDays.length },
+        },
+      }),
+      db.timeEntry.createMany({
+        data: businessDays.map((d) => ({
+          userId: req.userId,
+          date: toCalendarDate(d, ctx.timeZone),
+          startAt: null,
+          endAt: null,
+          breakMinutes: 0,
+          type: "VACATION",
+          source: "ADMIN",
+          note: `Urlaub ${req.from.toISOString().slice(0, 10)} – ${req.to.toISOString().slice(0, 10)}`,
+        })),
+      }),
+    ]);
+  }
 
-  const updated = await db.vacationRequest.update({
-    where: { id: opts.requestId },
-    data: {
-      status: "APPROVED",
-      approverId: opts.actor.id,
-      approverNote: opts.approverNote ?? null,
-    },
-  });
-
-  // Notify user
   await notifyUser({
     userId: req.userId,
     type: "VACATION_APPROVED",
@@ -239,7 +309,7 @@ export async function approveVacationRequest(opts: {
     payload: { days: businessDays.length, year: req.year },
   });
 
-  return updated;
+  return req;
 }
 
 export async function rejectVacationRequest(opts: {
@@ -301,12 +371,47 @@ export async function cancelVacationRequest(opts: {
     throw new VacationError("Cannot reject a rejected request", "BAD_STATE", 409);
   }
 
-  // If was approved, decrement consumedDays and delete associated TimeEntries
+  // If was approved, reverse the consumption
   if (req.status === "APPROVED") {
-    await db.vacationEntitlement.update({
-      where: { userId_year: { userId: req.userId, year: req.year } },
-      data: { consumedDays: { decrement: req.days } },
-    });
+    if (req.useOvertime) {
+      // Restore consumed overtime: recompute the consumed minutes from the vacation days
+      const ctx2 = await getUserContext(req.userId);
+      const state2 = ctx2.user.federalState;
+      const holidays2 = await db.publicHoliday.findMany({
+        where: { federalState: state2, date: { gte: req.from, lte: req.to } },
+      });
+      const resolver2 = makeHolidayResolver(holidays2);
+      const { businessDays: bd } = businessDaysInRange(req.from, req.to, state2, resolver2);
+      const workingModels = await db.workingModel.findMany({
+        where: {
+          userId: req.userId,
+          validFrom: { lte: req.to },
+          OR: [{ validTo: null }, { validTo: { gte: req.from } }],
+        },
+        orderBy: { validFrom: "desc" },
+      });
+      function modelForDate(d: Date) {
+        return (
+          workingModels.find(
+            (m) => m.validFrom <= d && (m.validTo == null || m.validTo >= d)
+          ) ?? null
+        );
+      }
+      const consumedMinutes = bd.reduce((sum, d) => {
+        const model = modelForDate(d);
+        if (!model) return sum;
+        return sum + targetMinutesForDate(d, model);
+      }, 0);
+      await db.overtimeBalance.update({
+        where: { userId_year: { userId: req.userId, year: req.year } },
+        data: { consumedOvertimeMinutes: { decrement: consumedMinutes } },
+      });
+    } else {
+      await db.vacationEntitlement.update({
+        where: { userId_year: { userId: req.userId, year: req.year } },
+        data: { consumedDays: { decrement: req.days } },
+      });
+    }
     await db.timeEntry.deleteMany({
       where: {
         userId: req.userId,

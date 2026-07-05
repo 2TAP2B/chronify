@@ -149,4 +149,21 @@ describe("computeOvertimeForYear", () => {
     expect(msToSignedMinutes(r.balanceMs)).toBe(-120);
     expect(r.byMonth).toHaveLength(12);
   });
+
+  it("subtracts consumed overtime from balance", () => {
+    const days = [makeDay("2026-03-09T00:00:00Z", 9, 480)!]; // +60
+    const r = computeOvertimeForYear({
+      year: 2026,
+      days,
+      carriedOverMinutes: 240,
+      consumedOvertimeMinutes: 120,
+    });
+    expect(r.consumedOvertimeMinutes).toBe(120);
+    expect(msToSignedMinutes(r.balanceMs)).toBe(180); // 240 + 60 - 120
+  });
+
+  it("defaults consumedOvertimeMinutes to 0", () => {
+    const r = computeOvertimeForYear({ year: 2026, days: [], carriedOverMinutes: 0 });
+    expect(r.consumedOvertimeMinutes).toBe(0);
+  });
 });

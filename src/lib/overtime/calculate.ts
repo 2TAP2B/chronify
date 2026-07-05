@@ -105,6 +105,7 @@ export type OvertimeComputation = {
   year: number;
   totalDeltaMs: number;
   carriedOverMinutes: number;
+  consumedOvertimeMinutes: number;
   balanceMs: number;
   byMonth: { month: number; deltaMs: number }[];
 };
@@ -113,6 +114,7 @@ export function computeOvertimeForYear(opts: {
   year: number;
   days: DaySummary[];
   carriedOverMinutes: number;
+  consumedOvertimeMinutes?: number;
 }): OvertimeComputation {
   const byMonth: { month: number; deltaMs: number }[] = Array.from(
     { length: 12 },
@@ -125,11 +127,13 @@ export function computeOvertimeForYear(opts: {
     totalDeltaMs += d.deltaMs;
   }
   const carriedMs = opts.carriedOverMinutes * 60_000;
-  const balanceMs = totalDeltaMs + carriedMs;
+  const consumedMs = (opts.consumedOvertimeMinutes ?? 0) * 60_000;
+  const balanceMs = totalDeltaMs + carriedMs - consumedMs;
   return {
     year: opts.year,
     totalDeltaMs,
     carriedOverMinutes: opts.carriedOverMinutes,
+    consumedOvertimeMinutes: opts.consumedOvertimeMinutes ?? 0,
     balanceMs,
     byMonth,
   };

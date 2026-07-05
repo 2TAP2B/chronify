@@ -36,7 +36,11 @@
     "vacationApprovals": "Urlaubsanträge",
     "settings": "Einstellungen",
     "profile": "Profil",
-    "logout": "Abmelden"
+    "logout": "Abmelden",
+    "closureChoices": "Schließtage",
+    "businessClosures": "Schließtage",
+    "lightMode": "Hell",
+    "darkMode": "Dunkel"
   },
   "auth": {
     "loginTitle": "Anmelden",
@@ -45,7 +49,8 @@
     "password": "Passwort",
     "loginButton": "Anmelden",
     "loginError": "E-Mail oder Passwort ist falsch",
-    "logoutSuccess": "Sie wurden abgemeldet"
+    "logoutSuccess": "Sie wurden abgemeldet",
+    "loginQuote": "Erfassen Sie Ihre Arbeitszeit einfach und präzise – nach deutschen Arbeitsgesetzen."
   },
   "dashboard": {
     "title": "Übersicht",
@@ -64,7 +69,14 @@
     "breakDuration": "Pause: {duration}",
     "today": "Heute",
     "weeklyTarget": "Wochenziel",
-    "weeklyProgress": "Wochenfortschritt"
+    "weeklyProgress": "Wochenfortschritt",
+    "chartTitle": "Arbeitsstunden",
+    "chartDescription": "Stunden der letzten 3 Monate",
+    "last3Months": "3 Monate",
+    "last30Days": "30 Tage",
+    "last7Days": "7 Tage",
+    "recentEntries": "Letzte Einträge",
+    "days": "Tage"
   },
   "timer": {
     "start": "Starten",
@@ -93,6 +105,7 @@
     "end": "Ende",
     "break": "Pause",
     "duration": "Dauer",
+    "netDuration": "Netto",
     "type": "Typ",
     "note": "Notiz",
     "actions": "Aktionen",
@@ -117,7 +130,14 @@
     "hours": "Std.",
     "weekTotal": "Wochensumme",
     "target": "Soll",
-    "delta": "Delta"
+    "delta": "Delta",
+    "quickFill": "Schnelleintrag",
+    "quickFillTitle": "Woche vorausfüllen",
+    "quickFillDescription": "Erstellt für jeden leeren Tag einen Arbeitseintrag mit den eingestellten Zeiten.",
+    "quickFillApply": "Anwenden",
+    "quickFillCount": "Leere Tage: {count}",
+    "quickFillResult": "{created} Einträge erstellt, {skipped} übersprungen.",
+    "weekdaysOnly": "Nur Montag–Freitag"
   },
   "overtime": {
     "title": "Überstunden",
@@ -162,6 +182,7 @@
     "newRequest": "Neuer Antrag",
     "from": "Von",
     "to": "Bis",
+    "today": "Heute",
     "note": "Notiz",
     "submit": "Antrag einreichen",
     "cancel": "Abbrechen",
@@ -179,6 +200,11 @@
     "overlapError": "Zeitraum überschneidet sich mit einem bestehenden Antrag",
     "insufficientError": "Nicht genug Urlaubstage verfügbar",
     "noBusinessDaysError": "Im Zeitraum sind keine Arbeitstage (Mo–Fr, keine Feiertage)",
+    "useOvertimeLabel": "Überstunden abbauen",
+    "overtimeAvailable": "Verfügbar: {hours} Überstunden",
+    "noOvertimeAvailable": "Keine Überstunden verfügbar",
+    "insufficientOvertimeError": "Nicht genug Überstunden verfügbar",
+    "overtimeBadge": "Überstunden",
     "statuses": {
       "PENDING": "Ausstehend",
       "APPROVED": "Genehmigt",
@@ -253,7 +279,18 @@
     "noUsers": "Keine Benutzer vorhanden",
     "confirmDeactivate": "Benutzer wirklich deaktivieren?",
     "cannotDeactivateSelf": "Sie können sich nicht selbst deaktivieren",
-    "emailTaken": "E-Mail-Adresse bereits vergeben"
+    "emailTaken": "E-Mail-Adresse bereits vergeben",
+    "actions": "Aktionen",
+    "users": "Benutzer",
+    "assignModel": "Arbeitszeitmodell",
+    "adjustEntitlement": "Urlaubstage",
+    "confirmDelete": "Benutzer wirklich löschen? Alle zugehörigen Daten werden entfernt.",
+    "delete": "Löschen",
+    "hasDependencies": "Benutzer hat noch Daten (Zeiten, Urlaubsanträge oder Krankschreibungen). Bitte deaktivieren statt löschen.",
+    "totalDays": "Urlaubstage gesamt",
+    "currentDays": "Aktuell: {days} Tage",
+    "usingDefault": "Verwendet Standardwert",
+    "entitlementHint": "Standard ist 30 Tage. Hier kann ein individueller Wert festgelegt werden."
   },
   "adminWorkingModels": {
     "title": "Arbeitszeitmodelle",
@@ -261,7 +298,7 @@
     "selectUser": "Benutzer auswählen",
     "validFrom": "Gültig ab",
     "validTo": "Gültig bis",
-    "weeklyTarget": "Wochenziel (Min.)",
+    "weeklyTarget": "Wochenziel",
     "monday": "Montag",
     "tuesday": "Dienstag",
     "wednesday": "Mittwoch",
@@ -281,7 +318,19 @@
     "cancel": "Abbrechen",
     "noModels": "Keine Modelle vorhanden",
     "open": "offen",
-    "confirmDelete": "Modell wirklich löschen?"
+    "confirmDelete": "Modell wirklich löschen?",
+    "templates": "Vorlagen",
+    "templateDescription": "Wiederverwendbare Arbeitszeitmodelle",
+    "templateName": "Name",
+    "newTemplate": "Neues Modell",
+    "noTemplates": "Keine Vorlagen vorhanden",
+    "default": "Standard",
+    "setDefault": "Als Standard",
+    "actions": "Aktionen",
+    "nameTaken": "Name bereits vergeben",
+    "assignModel": "Modell zuweisen",
+    "assignDescription": "Wähle ein Arbeitszeitmodell für diesen Benutzer",
+    "assign": "Zuweisen"
   },
   "adminHolidays": {
     "title": "Feiertage verwalten",
@@ -391,5 +440,29 @@
   "push": {
     "subscribe": "Benachrichtigungen aktivieren",
     "unsubscribe": "Benachrichtigungen deaktivieren"
+  },
+  "adminClosures": {
+    "title": "Schließtage",
+    "description": "Tage an denen das Unternehmen geschlossen ist. Alle Mitarbeiter bekommen automatisch Urlaub.",
+    "new": "Neuer Schließtag",
+    "name": "Name",
+    "from": "Von",
+    "to": "Bis",
+    "actions": "Aktionen",
+    "noClosures": "Keine Schließtage vorhanden",
+    "cancel": "Abbrechen",
+    "save": "Speichern",
+    "delete": "Löschen",
+    "confirmDelete": "Schließtag wirklich löschen? Alle erstellten Urlaubseinträge werden entfernt."
+  },
+  "closureChoices": {
+    "title": "Schließtage",
+    "description": "Wähle für jeden Schließtag, ob du Urlaubstage oder Überstunden nutzen möchtest.",
+    "noChoices": "Keine ausstehenden Schließtage.",
+    "vacation": "Als Urlaub",
+    "vacationDescription": "Die Tage werden von deinem Urlaubsanspruch abgezogen (Standard).",
+    "overtime": "Überstunden abbauen",
+    "overtimeDescription": "Die Stunden werden von deinem Überstundenkonto abgezogen.",
+    "saving": "Wird gespeichert…"
   }
 }

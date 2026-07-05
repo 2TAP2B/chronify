@@ -15,17 +15,8 @@ export default async function LoginPage({ params }: Props) {
   if (session) redirect(`/${locale}/dashboard`);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/30 px-4">
-      <div className="w-full max-w-sm space-y-6">
-        <div className="flex flex-col items-center text-center">
-          <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground text-2xl font-bold">
-            P
-          </div>
-          <h1 className="text-2xl font-semibold tracking-tight">
-            {t("loginTitle")}
-          </h1>
-          <p className="text-sm text-muted-foreground">{t("loginSubtitle")}</p>
-        </div>
+    <div className="flex min-h-svh flex-col items-center justify-center bg-muted p-6 md:p-10">
+      <div className="w-full max-w-sm md:max-w-3xl">
         <LoginForm />
       </div>
     </div>

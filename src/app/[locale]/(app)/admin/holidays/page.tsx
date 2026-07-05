@@ -20,17 +20,11 @@ import {
 } from "@/components/ui/table";
 import { HolidaySyncButton } from "@/components/admin/holiday-sync-button";
 import { formatInZone } from "@/lib/datetime";
-import type { FederalState } from "@prisma/client";
 
 type Props = {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ year?: string; state?: string }>;
+  searchParams: Promise<{ year?: string }>;
 };
-
-const STATES: FederalState[] = [
-  "DE_BW", "DE_BY", "DE_BE", "DE_BB", "DE_HB", "DE_HE", "DE_HH", "DE_ME",
-  "DE_MV", "DE_NI", "DE_NW", "DE_RP", "DE_SL", "DE_SN", "DE_ST", "DE_SH", "DE_TH",
-];
 
 export default async function AdminHolidaysPage({ params, searchParams }: Props) {
   const { locale } = await params;
@@ -41,9 +35,11 @@ export default async function AdminHolidaysPage({ params, searchParams }: Props)
   if (!session?.user?.id) return null;
   if (session.user.role !== "ADMIN") redirect(`/${locale}/dashboard`);
 
-  const { year: yearStr, state } = await searchParams;
+  const settings = await db.orgSettings.findUniqueOrThrow({ where: { id: "singleton" } });
+  const federalState = settings.defaultFederalState;
+
+  const { year: yearStr } = await searchParams;
   const year = yearStr ? Number(yearStr) : new Date().getUTCFullYear();
-  const federalState = (state ?? "DE_NW") as FederalState;
 
   const holidays = await db.publicHoliday.findMany({
     where: {
@@ -62,21 +58,10 @@ export default async function AdminHolidaysPage({ params, searchParams }: Props)
 
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-sm font-medium">{t("year")}:</span>
-        <a href={`?year=${year - 1}&state=${federalState}`} className="rounded-md border px-3 py-1.5 text-sm hover:bg-accent">← {year - 1}</a>
+        <a href={`?year=${year - 1}`} className="rounded-md border px-3 py-1.5 text-sm hover:bg-accent">← {year - 1}</a>
         <span className="font-semibold">{year}</span>
-        <a href={`?year=${year + 1}&state=${federalState}`} className="rounded-md border px-3 py-1.5 text-sm hover:bg-accent">{year + 1} →</a>
-        <span className="ml-4 text-sm font-medium">{t("state")}:</span>
-        {STATES.map((s) => (
-          <a
-            key={s}
-            href={`?year=${year}&state=${s}`}
-            className={`rounded-md border px-3 py-1.5 text-xs hover:bg-accent ${
-              federalState === s ? "bg-primary text-primary-foreground" : ""
-            }`}
-          >
-            {s}
-          </a>
-        ))}
+        <a href={`?year=${year + 1}`} className="rounded-md border px-3 py-1.5 text-sm hover:bg-accent">{year + 1} →</a>
+        <span className="ml-4 text-sm text-muted-foreground">{t("state")}: {federalState}</span>
       </div>
 
       <div className="flex gap-2">

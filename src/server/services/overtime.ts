@@ -87,7 +87,7 @@ export async function computeYearOvertime(opts: {
   userId: string;
   year: number;
   timeZone: string;
-}): Promise<{ computation: OvertimeComputation; days: DaySummaryWithMeta[]; carriedOverMinutes: number }> {
+}): Promise<{ computation: OvertimeComputation; days: DaySummaryWithMeta[]; carriedOverMinutes: number; consumedOvertimeMinutes: number }> {
   const from = new Date(Date.UTC(opts.year, 0, 1));
   const to = new Date(Date.UTC(opts.year + 1, 0, 1));
   const days = await computeDaysForRange({
@@ -102,13 +102,15 @@ export async function computeYearOvertime(opts: {
     where: { userId_year: { userId: opts.userId, year: opts.year } },
   });
   const carriedOverMinutes = prevBalance?.carriedOverMinutes ?? 0;
+  const consumedOvertimeMinutes = prevBalance?.consumedOvertimeMinutes ?? 0;
 
   const computation = computeOvertimeForYear({
     year: opts.year,
     days,
     carriedOverMinutes,
+    consumedOvertimeMinutes,
   });
-  return { computation, days, carriedOverMinutes };
+  return { computation, days, carriedOverMinutes, consumedOvertimeMinutes };
 }
 
 export async function upsertOvertimeBalance(opts: {

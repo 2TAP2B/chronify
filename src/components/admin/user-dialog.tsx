@@ -45,12 +45,18 @@ const STATES = [
 export function UserDialog({
   mode,
   user,
+  open: externalOpen,
+  onOpenChange: externalOnOpenChange,
 }: {
   mode: "create" | "edit";
   user?: User;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) {
   const t = useTranslations("adminUsers");
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = externalOpen ?? internalOpen;
+  const setOpen = externalOnOpenChange ?? setInternalOpen;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

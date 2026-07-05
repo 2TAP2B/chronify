@@ -181,3 +181,68 @@ export async function toggleUserActive(opts: {
   });
   return updated;
 }
+
+export async function deleteUser(opts: {
+  actor: SessionUser;
+  userId: string;
+}) {
+  requireAdmin(opts.actor);
+  if (opts.userId === opts.actor.id) {
+    throw new AdminError("Cannot delete yourself", "SELF_DELETE", 400);
+  }
+
+  const user = await db.user.findUnique({ where: { id: opts.userId } });
+  if (!user) throw new AdminError("Not found", "NOT_FOUND", 404);
+
+  const [timeEntries, vacationRequests, sickNotes] = await Promise.all([
+    db.timeEntry.count({ where: { userId: opts.userId } }),
+    db.vacationRequest.count({ where: { userId: opts.userId } }),
+    db.sickNote.count({ where: { userId: opts.userId } }),
+  ]);
+
+  if (timeEntries > 0 || vacationRequests > 0 || sickNotes > 0) {
+    throw new AdminError(
+      "User has existing data (time entries, vacation requests, or sick notes). Deactivate instead.",
+      "HAS_DEPENDENCIES",
+      409
+    );
+  }
+
+  await db.user.delete({ where: { id: opts.userId } });
+  await audit({
+    actorId: opts.actor.id,
+    targetId: opts.userId,
+    action: "user.delete",
+    entity: "User",
+    entityId: opts.userId,
+    payload: { email: user.email },
+  });
+}
+
+export async function adjustVacationEntitlement(opts: {
+  actor: SessionUser;
+  userId: string;
+  year: number;
+  totalDays: number;
+}) {
+  requireAdmin(opts.actor);
+  const settings = await db.orgSettings.findUniqueOrThrow({ where: { id: "singleton" } });
+  await db.vacationEntitlement.upsert({
+    where: { userId_year: { userId: opts.userId, year: opts.year } },
+    create: {
+      userId: opts.userId,
+      year: opts.year,
+      totalDays: opts.totalDays,
+      carriedOverDays: 0,
+      consumedDays: 0,
+    },
+    update: { totalDays: opts.totalDays },
+  });
+  await audit({
+    actorId: opts.actor.id,
+    targetId: opts.userId,
+    action: "vacation_entitlement.adjust",
+    entity: "VacationEntitlement",
+    payload: { year: opts.year, totalDays: opts.totalDays, defaultDays: settings.defaultVacationDays },
+  });
+}

@@ -230,6 +230,9 @@ Full schema: `prisma/schema.prisma`. Entities and their roles:
 | **Notification** | In-app/push/email notifications | userId, type, title, body, payload(JSON), channel, readAt |
 | **PushSubscription** | Web Push endpoint per user | userId, endpoint, p256dh, auth |
 | **AuditLog** | Audit trail | actorId, targetId, action, entity, entityId, payload(JSON) |
+| **WorkingModelTemplate** | Named, reusable working-time model (v0.2.0) | name (unique), monday…sundayMinutes, weeklyTargetMinutes, autoBreak*, isDefault |
+| **BusinessClosure** | Schließtag — date range where business is closed (v0.2.0) | from, to, name |
+| **ClosureChoice** | Per-user choice for a closure: vacation or overtime (v0.2.0) | closureId, userId, choice (VACATION/OVERTIME), unique on closureId+userId |
 
 ### Key relations
 - User 1—N WorkingModel (history of working-time models via `validFrom`/`validTo`)
@@ -448,7 +451,7 @@ See `.env.example`. Required/important:
 
 ## 15. Implementation Roadmap
 
-Status: **All phases ✅ complete (Phase 1 through Phase 10)**. The app is production-ready.
+Status: **All phases ✅ complete (Phase 1 through Phase 10) + v0.2.0 ✅**. The app is production-ready.
 
 | Phase | Scope | Status |
 |---|---|---|
@@ -463,6 +466,7 @@ Status: **All phases ✅ complete (Phase 1 through Phase 10)**. The app is produ
 | 8. PWA polish | Manifest, service worker, offline sync, Web Push, install prompt | ✅ Done |
 | 9. Testing | Vitest (overtime, vacation, business-day, break rules), Playwright (login, timer, vacation flow, admin CRUD) | ✅ Done |
 | 10. Hardening + deploy | Rate limit, CSRF, backups script, deploy docs | ✅ Done |
+| v0.2.0 | Working model templates, user context menu (assign model, adjust entitlement, delete), holidays use OrgSettings, business closures (Schließtage) with per-user overtime checkout, mobile hamburger menu fix | ✅ Done |
 
 ---
 

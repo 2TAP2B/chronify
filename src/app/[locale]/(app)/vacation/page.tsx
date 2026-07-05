@@ -1,6 +1,7 @@
 import { getTranslations, setRequestLocale, getLocale } from "next-intl/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { computeYearOvertime } from "@/server/services/overtime";
 import {
   Card,
   CardContent,
@@ -44,7 +45,7 @@ export default async function VacationPage({ params, searchParams }: Props) {
   const { year: yearStr } = await searchParams;
   const year = yearStr ? Number(yearStr) : new Date().getUTCFullYear();
 
-  const [requests, entitlement, settings] = await Promise.all([
+  const [requests, entitlement, settings, overtimeResult] = await Promise.all([
     db.vacationRequest.findMany({
       where: { userId: session.user.id, year },
       orderBy: { from: "desc" },
@@ -53,12 +54,18 @@ export default async function VacationPage({ params, searchParams }: Props) {
       where: { userId_year: { userId: session.user.id, year } },
     }),
     db.orgSettings.findUniqueOrThrow({ where: { id: "singleton" } }),
+    computeYearOvertime({
+      userId: session.user.id,
+      year,
+      timeZone: "Europe/Berlin",
+    }),
   ]);
 
   const totalDays = entitlement?.totalDays ?? settings.defaultVacationDays;
   const carriedOverDays = entitlement?.carriedOverDays ?? 0;
   const consumedDays = entitlement?.consumedDays ?? 0;
   const availableDays = totalDays + carriedOverDays - consumedDays;
+  const overtimeHours = Math.round((overtimeResult.computation.balanceMs / 3_600_000) * 100) / 100;
 
   return (
     <div className="space-y-6">
@@ -97,7 +104,7 @@ export default async function VacationPage({ params, searchParams }: Props) {
           <CardDescription>{year}</CardDescription>
         </CardHeader>
         <CardContent>
-          <VacationRequestForm />
+          <VacationRequestForm overtimeHours={overtimeHours} />
         </CardContent>
       </Card>
 
@@ -134,6 +141,11 @@ export default async function VacationPage({ params, searchParams }: Props) {
                       <span className={`inline-flex rounded-md px-2 py-0.5 text-xs font-medium ${STATUS_COLORS[r.status]}`}>
                         {t(`statuses.${r.status}` as never)}
                       </span>
+                      {r.useOvertime && (
+                        <Badge variant="secondary" className="ml-2 text-xs">
+                          {t("overtimeBadge")}
+                        </Badge>
+                      )}
                     </TableCell>
                     <TableCell className="max-w-[200px] truncate">
                       {r.note ?? r.approverNote ?? <span className="text-muted-foreground">—</span>}

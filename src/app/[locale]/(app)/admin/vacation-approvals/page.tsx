@@ -17,6 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 import { VacationApprovalActions } from "@/components/vacation/vacation-approval-actions";
 import { formatInZone } from "@/lib/datetime";
 import type { VacationStatus } from "@prisma/client";
@@ -78,6 +79,7 @@ export default async function VacationApprovalsPage({ params }: Props) {
                   <TableHead>{t("to")}</TableHead>
                   <TableHead>{t("days")}</TableHead>
                   <TableHead>{t("note")}</TableHead>
+                  <TableHead></TableHead>
                   <TableHead className="text-right">{t("status")}</TableHead>
                 </TableRow>
               </TableHeader>
@@ -97,6 +99,13 @@ export default async function VacationApprovalsPage({ params }: Props) {
                     <TableCell>{r.days}</TableCell>
                     <TableCell className="max-w-[200px] truncate">
                       {r.note ?? <span className="text-muted-foreground">—</span>}
+                    </TableCell>
+                    <TableCell>
+                      {r.useOvertime && (
+                        <Badge variant="secondary" className="text-xs">
+                          {t("overtimeBadge")}
+                        </Badge>
+                      )}
                     </TableCell>
                     <TableCell>
                       <VacationApprovalActions requestId={r.id} />

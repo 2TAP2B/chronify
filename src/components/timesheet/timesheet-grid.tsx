@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Zap } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -14,6 +14,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { TimeEntryDialog } from "@/components/timesheet/time-entry-dialog";
+import { QuickFillDialog } from "@/components/timesheet/quick-fill-dialog";
 import { formatDurationShort } from "@/lib/timer-utils";
 import { formatInZone } from "@/lib/datetime";
 
@@ -55,6 +56,7 @@ export function TimesheetGrid({
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<GridEntry | null>(null);
   const [addDay, setAddDay] = useState<string | null>(null);
+  const [quickFillOpen, setQuickFillOpen] = useState(false);
   const [, startTransition] = useTransition();
 
   const weekTotalMs = days.reduce(
@@ -107,6 +109,12 @@ export function TimesheetGrid({
 
   return (
     <div className="space-y-4">
+      <div className="flex justify-end">
+        <Button variant="outline" size="sm" onClick={() => setQuickFillOpen(true)}>
+          <Zap className="mr-1.5 h-4 w-4" />
+          {t("quickFill")}
+        </Button>
+      </div>
       <div className="space-y-3">
         {days.map((day) => {
           const dayTotalMs = day.entries.reduce((s, e) => s + entryDurationMs(e), 0);
@@ -211,6 +219,16 @@ export function TimesheetGrid({
           onSaved={() => window.location.reload()}
         />
       )}
+
+      <QuickFillDialog
+        days={days}
+        open={quickFillOpen}
+        onClose={() => setQuickFillOpen(false)}
+        onDone={() => {
+          setQuickFillOpen(false);
+          window.location.reload();
+        }}
+      />
     </div>
   );
 }

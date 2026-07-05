@@ -1,19 +1,47 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useTranslations } from "next-intl";
+import { CalendarCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 
-export function VacationRequestForm() {
+type Props = {
+  overtimeHours?: number;
+};
+
+function todayISO(): string {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+export function VacationRequestForm({ overtimeHours = 0 }: Props) {
   const t = useTranslations("vacation");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [note, setNote] = useState("");
+  const [useOvertime, setUseOvertime] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+
+  const overtimeAvailable = overtimeHours > 0;
+
+  const handleFromChange = useCallback((value: string) => {
+    setFrom(value);
+    setTo(value);
+  }, []);
+
+  function setToday() {
+    const today = todayISO();
+    setFrom(today);
+    setTo(today);
+  }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -29,6 +57,7 @@ export function VacationRequestForm() {
           from: new Date(from + "T00:00:00Z").toISOString(),
           to: new Date(to + "T00:00:00Z").toISOString(),
           note: note || null,
+          useOvertime,
         }),
       });
       if (!res.ok) {
@@ -36,6 +65,7 @@ export function VacationRequestForm() {
         const code = (b as { code?: string }).code;
         if (code === "OVERLAP") setError(t("overlapError"));
         else if (code === "INSUFFICIENT_ENTITLEMENT") setError(t("insufficientError"));
+        else if (code === "INSUFFICIENT_OVERTIME") setError(t("insufficientOvertimeError"));
         else if (code === "NO_BUSINESS_DAYS") setError(t("noBusinessDaysError"));
         else setError((b as { error?: string }).error ?? "error");
         return;
@@ -44,6 +74,7 @@ export function VacationRequestForm() {
       setFrom("");
       setTo("");
       setNote("");
+      setUseOvertime(false);
       window.location.reload();
     } catch {
       setError("error");
@@ -56,12 +87,24 @@ export function VacationRequestForm() {
     <form onSubmit={onSubmit} className="space-y-4">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div className="space-y-1.5">
-          <Label htmlFor="from">{t("from")}</Label>
+          <div className="flex items-center justify-between">
+            <Label htmlFor="from">{t("from")}</Label>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-6 gap-1 px-2 text-xs"
+              onClick={setToday}
+            >
+              <CalendarCheck className="h-3.5 w-3.5" />
+              {t("today")}
+            </Button>
+          </div>
           <Input
             id="from"
             type="date"
             value={from}
-            onChange={(e) => setFrom(e.target.value)}
+            onChange={(e) => handleFromChange(e.target.value)}
             required
           />
         </div>
@@ -71,6 +114,7 @@ export function VacationRequestForm() {
             id="to"
             type="date"
             value={to}
+            min={from || undefined}
             onChange={(e) => setTo(e.target.value)}
             required
           />
@@ -83,6 +127,27 @@ export function VacationRequestForm() {
           value={note}
           onChange={(e) => setNote(e.target.value)}
         />
+      </div>
+      <div className="flex items-start gap-2">
+        <Checkbox
+          id="useOvertime"
+          checked={useOvertime}
+          onCheckedChange={(v) => setUseOvertime(v === true)}
+          disabled={!overtimeAvailable}
+        />
+        <div className="grid gap-0.5 leading-none">
+          <Label
+            htmlFor="useOvertime"
+            className={overtimeAvailable ? "cursor-pointer" : "cursor-not-allowed opacity-50"}
+          >
+            {t("useOvertimeLabel")}
+          </Label>
+          <p className="text-xs text-muted-foreground">
+            {overtimeAvailable
+              ? t("overtimeAvailable", { hours: overtimeHours })
+              : t("noOvertimeAvailable")}
+          </p>
+        </div>
       </div>
       {error && <p className="text-sm text-destructive">{error}</p>}
       {success && <p className="text-sm text-emerald-600">✓</p>}

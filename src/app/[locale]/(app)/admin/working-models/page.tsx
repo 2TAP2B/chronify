@@ -18,16 +18,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { WorkingModelDialog } from "@/components/admin/working-model-dialog";
-import { WorkingModelDelete } from "@/components/admin/working-model-delete";
-import { formatInZone } from "@/lib/datetime";
+import { TemplateDialog } from "@/components/admin/template-dialog";
+import { TemplateDelete } from "@/components/admin/template-delete";
 
 type Props = {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ userId?: string }>;
 };
 
-export default async function AdminWorkingModelsPage({ params, searchParams }: Props) {
+export default async function WorkingModelsPage({ params }: Props) {
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations("adminWorkingModels");
@@ -35,87 +33,57 @@ export default async function AdminWorkingModelsPage({ params, searchParams }: P
   if (!session?.user?.id) return null;
   if (session.user.role !== "ADMIN") redirect(`/${locale}/dashboard`);
 
-  const { userId } = await searchParams;
-  const users = await db.user.findMany({
-    where: { active: true },
+  const templates = await db.workingModelTemplate.findMany({
     orderBy: { name: "asc" },
-    select: { id: true, name: true, email: true },
   });
-
-  const selectedUserId = userId ?? users[0]?.id;
-  const models = selectedUserId
-    ? await db.workingModel.findMany({
-        where: { userId: selectedUserId },
-        orderBy: { validFrom: "desc" },
-      })
-    : [];
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
-
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="text-sm font-medium">{t("user")}:</span>
-        {users.map((u) => (
-          <a
-            key={u.id}
-            href={`?userId=${u.id}`}
-            className={`rounded-md border px-3 py-1.5 text-sm hover:bg-accent ${
-              selectedUserId === u.id ? "bg-primary text-primary-foreground" : ""
-            }`}
-          >
-            {u.name}
-          </a>
-        ))}
-      </div>
-
-      <div className="flex justify-end">
-        {selectedUserId && <WorkingModelDialog mode="create" userId={selectedUserId} />}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
+          <p className="text-sm text-muted-foreground">{templates.length} {t("templates")}</p>
+        </div>
+        <TemplateDialog mode="create" />
       </div>
 
       <Card>
         <CardHeader>
           <CardTitle>{t("title")}</CardTitle>
-          <CardDescription>{models.length}</CardDescription>
+          <CardDescription>{t("templateDescription")}</CardDescription>
         </CardHeader>
         <CardContent>
-          {models.length === 0 ? (
-            <p className="text-sm text-muted-foreground">{t("noModels")}</p>
+          {templates.length === 0 ? (
+            <p className="text-sm text-muted-foreground">{t("noTemplates")}</p>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>{t("validFrom")}</TableHead>
-                  <TableHead>{t("validTo")}</TableHead>
+                  <TableHead>{t("templateName")}</TableHead>
                   <TableHead>{t("weeklyTarget")}</TableHead>
                   <TableHead>Mo–Fr</TableHead>
                   <TableHead>Sa/So</TableHead>
-                  <TableHead>{t("autoBreak6h")}</TableHead>
-                  <TableHead>{t("autoBreak9h")}</TableHead>
-                  <TableHead className="text-right">Aktionen</TableHead>
+                  <TableHead>{t("default")}</TableHead>
+                  <TableHead className="text-right">{t("actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {models.map((m) => {
-                  const weekdaySum = m.mondayMinutes + m.tuesdayMinutes + m.wednesdayMinutes + m.thursdayMinutes + m.fridayMinutes;
-                  const weekendSum = m.saturdayMinutes + m.sundayMinutes;
+                {templates.map((tpl) => {
+                  const moFr = tpl.mondayMinutes + tpl.tuesdayMinutes + tpl.wednesdayMinutes + tpl.thursdayMinutes + tpl.fridayMinutes;
+                  const saSo = tpl.saturdayMinutes + tpl.sundayMinutes;
                   return (
-                    <TableRow key={m.id}>
-                      <TableCell className="font-mono">
-                        {formatInZone(m.validFrom, "Europe/Berlin", "dd.MM.yyyy", locale as "de" | "en")}
+                    <TableRow key={tpl.id}>
+                      <TableCell className="font-medium">{tpl.name}</TableCell>
+                      <TableCell>{(tpl.weeklyTargetMinutes / 60).toFixed(1)} h</TableCell>
+                      <TableCell>{(moFr / 60).toFixed(1)} h</TableCell>
+                      <TableCell>{(saSo / 60).toFixed(1)} h</TableCell>
+                      <TableCell>
+                        {tpl.isDefault ? <Badge>{t("default")}</Badge> : <span className="text-muted-foreground">—</span>}
                       </TableCell>
-                      <TableCell className="font-mono">
-                        {m.validTo ? formatInZone(m.validTo, "Europe/Berlin", "dd.MM.yyyy", locale as "de" | "en") : <Badge>{t("open")}</Badge>}
-                      </TableCell>
-                      <TableCell>{m.weeklyTargetMinutes} {t("minutes")}</TableCell>
-                      <TableCell>{weekdaySum} {t("minutes")}</TableCell>
-                      <TableCell>{weekendSum} {t("minutes")}</TableCell>
-                      <TableCell>{m.autoBreakThreshold6h ? `${m.autoBreakMinutes6h}'` : "—"}</TableCell>
-                      <TableCell>{m.autoBreakThreshold9h ? `${m.autoBreakMinutes9h}'` : "—"}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
-                          <WorkingModelDialog mode="edit" userId={selectedUserId!} model={m} />
-                          <WorkingModelDelete modelId={m.id} />
+                          <TemplateDialog mode="edit" template={tpl} />
+                          <TemplateDelete templateId={tpl.id} templateName={tpl.name} />
                         </div>
                       </TableCell>
                     </TableRow>

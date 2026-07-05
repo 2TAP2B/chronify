@@ -19,8 +19,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { UserDialog } from "@/components/admin/user-dialog";
-import { UserToggleActive } from "@/components/admin/user-toggle-active";
-import { formatInZone } from "@/lib/datetime";
+import { UserRowMenu } from "@/components/admin/user-row-menu";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -48,8 +47,6 @@ export default async function AdminUsersPage({ params }: Props) {
       timezone: true,
       breakMode: true,
       active: true,
-      lastLoginAt: true,
-      createdAt: true,
     },
   });
 
@@ -58,7 +55,7 @@ export default async function AdminUsersPage({ params }: Props) {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
-          <p className="text-sm text-muted-foreground">{users.length} Benutzer</p>
+          <p className="text-sm text-muted-foreground">{users.length} {t("users")}</p>
         </div>
         <UserDialog mode="create" />
       </div>
@@ -75,34 +72,19 @@ export default async function AdminUsersPage({ params }: Props) {
                 <TableHead>{t("name")}</TableHead>
                 <TableHead>{t("email")}</TableHead>
                 <TableHead>{t("role")}</TableHead>
-                <TableHead>{t("federalState")}</TableHead>
-                <TableHead>{t("breakMode")}</TableHead>
-                <TableHead>{t("lastLogin")}</TableHead>
                 <TableHead>{t("active")}</TableHead>
-                <TableHead className="text-right">Aktionen</TableHead>
+                <TableHead className="text-right">{t("actions")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {users.map((u) => (
                 <TableRow key={u.id}>
-                  <TableCell className="font-medium">
-                    {u.name}
-                    {(u.firstName || u.lastName) && (
-                      <span className="ml-1 text-xs text-muted-foreground">
-                        ({u.firstName} {u.lastName})
-                      </span>
-                    )}
-                  </TableCell>
+                  <TableCell className="font-medium">{u.name}</TableCell>
                   <TableCell className="text-muted-foreground">{u.email}</TableCell>
                   <TableCell>
                     <Badge variant={u.role === "ADMIN" ? "default" : "secondary"}>
                       {u.role}
                     </Badge>
-                  </TableCell>
-                  <TableCell>{u.federalState}</TableCell>
-                  <TableCell>{u.breakMode}</TableCell>
-                  <TableCell className="text-xs text-muted-foreground">
-                    {u.lastLoginAt ? formatInZone(u.lastLoginAt, "Europe/Berlin", "dd.MM.yyyy HH:mm", locale as "de" | "en") : "—"}
                   </TableCell>
                   <TableCell>
                     {u.active ? (
@@ -112,10 +94,7 @@ export default async function AdminUsersPage({ params }: Props) {
                     )}
                   </TableCell>
                   <TableCell className="text-right">
-                    <div className="flex justify-end gap-1">
-                      <UserDialog mode="edit" user={u} />
-                      <UserToggleActive userId={u.id} active={u.active} isSelf={u.id === session.user.id} />
-                    </div>
+                    <UserRowMenu user={u} isSelf={u.id === session.user.id} />
                   </TableCell>
                 </TableRow>
               ))}

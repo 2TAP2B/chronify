@@ -82,6 +82,7 @@ enum NotificationType {
   SICK_NOTE_REMINDER
   TIMER_REMINDER
   GENERIC
+  CLOSURE_CHOICE
 }
 
 model User {
@@ -114,6 +115,7 @@ model User {
   pushSubscriptions    PushSubscription[]
   auditLogsActor       AuditLog[]          @relation("AuditLogActor")
   auditLogsTarget      AuditLog[]          @relation("AuditLogTarget")
+  closureChoices       ClosureChoice[]
 
   @@index([active])
   @@index([role])
@@ -175,20 +177,21 @@ model TimerSession {
 }
 
 model VacationRequest {
-  id         String          @id @default(cuid())
-  userId     String
-  user       User            @relation("VacationRequestUser", fields: [userId], references: [id], onDelete: Cascade)
-  approverId String?
-  approver   User?           @relation("VacationApprover", fields: [approverId], references: [id])
-  from       DateTime
-  to         DateTime
-  days       Float
-  status     VacationStatus  @default(PENDING)
-  year       Int
-  note       String?
+  id           String          @id @default(cuid())
+  userId       String
+  user         User            @relation("VacationRequestUser", fields: [userId], references: [id], onDelete: Cascade)
+  approverId   String?
+  approver     User?           @relation("VacationApprover", fields: [approverId], references: [id])
+  from         DateTime
+  to           DateTime
+  days         Float
+  status       VacationStatus  @default(PENDING)
+  year         Int
+  note         String?
   approverNote String?
-  createdAt  DateTime        @default(now())
-  updatedAt  DateTime        @updatedAt
+  useOvertime  Boolean         @default(false)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
 
   @@index([userId, status])
   @@index([status, year])
@@ -240,15 +243,16 @@ model PublicHoliday {
 }
 
 model OvertimeBalance {
-  id                  String   @id @default(cuid())
-  userId              String
-  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  year                Int
-  carriedOverMinutes  Int       @default(0)
-  computedMinutes     Int       @default(0)
-  lockedAt            DateTime?
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  id                       String   @id @default(cuid())
+  userId                   String
+  user                     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  year                     Int
+  carriedOverMinutes       Int       @default(0)
+  computedMinutes          Int       @default(0)
+  consumedOvertimeMinutes  Int       @default(0)
+  lockedAt                 DateTime?
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
 
   @@unique([userId, year])
 }
@@ -306,4 +310,56 @@ model AuditLog {
 
   @@index([actorId])
   @@index([entity, entityId])
+}
+
+enum ClosureChoiceType {
+  VACATION
+  OVERTIME
+}
+
+model WorkingModelTemplate {
+  id                  String   @id @default(cuid())
+  name                String   @unique
+  mondayMinutes       Int      @default(0)
+  tuesdayMinutes      Int      @default(0)
+  wednesdayMinutes    Int      @default(0)
+  thursdayMinutes     Int      @default(0)
+  fridayMinutes       Int      @default(0)
+  saturdayMinutes     Int      @default(0)
+  sundayMinutes       Int      @default(0)
+  weeklyTargetMinutes Int      @default(0)
+  autoBreakThreshold6h Boolean @default(true)
+  autoBreakMinutes6h   Int      @default(30)
+  autoBreakThreshold9h Boolean @default(true)
+  autoBreakMinutes9h   Int      @default(45)
+  isDefault           Boolean  @default(false)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+model BusinessClosure {
+  id        String   @id @default(cuid())
+  from      DateTime
+  to        DateTime
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  choices   ClosureChoice[]
+
+  @@index([from, to])
+}
+
+model ClosureChoice {
+  id        String           @id @default(cuid())
+  closureId String
+  closure   BusinessClosure  @relation(fields: [closureId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  choice    ClosureChoiceType @default(VACATION)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  @@unique([closureId, userId])
+  @@index([userId])
 }

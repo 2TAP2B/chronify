@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useTranslations } from "next-intl";
+import { ChevronUp, ChevronDown } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -20,11 +21,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { TimeInput } from "@/components/timesheet/time-input";
 
 export type EntryFormData = {
-  date: string; // yyyy-mm-dd
-  startAt: string; // HH:mm
-  endAt: string; // HH:mm
+  date: string;
+  startAt: string;
+  endAt: string;
   breakMinutes: number;
   type: string;
   note: string;
@@ -48,8 +50,6 @@ function toLocalDateInput(dateIso: string): string {
 
 function combine(dateStr: string, timeStr: string): string | null {
   if (!timeStr) return null;
-  // Treat as Europe/Berlin local time → store as UTC instant.
-  // Simple approach: build an ISO with tz offset (CET/CEST varies; use Intl to get offset).
   const [h, m] = timeStr.split(":").map(Number);
   if (Number.isNaN(h) || Number.isNaN(m)) return null;
   const [y, mo, d] = dateStr.split("-").map(Number);
@@ -57,6 +57,65 @@ function combine(dateStr: string, timeStr: string): string | null {
   const asUtc = Date.UTC(y, mo - 1, d, h, m, 0);
   const offset = asZone.getTime() - asUtc;
   return new Date(asUtc - offset).toISOString();
+}
+
+const MAX_DURATION_MIN = 1440;
+const STEP_MIN = 15;
+const DEFAULT_START = "08:00";
+const DEFAULT_END = "16:00";
+const DEFAULT_BREAK = "30";
+
+function snapToStep(min: number): number {
+  return Math.max(0, Math.min(MAX_DURATION_MIN, Math.round(min / STEP_MIN) * STEP_MIN));
+}
+
+function parseHHMM(s: string): number | null {
+  const clean = s.replace(/[^\d:]/g, "");
+  const m = clean.match(/^(\d{1,2}):?(\d{0,2})$/);
+  if (!m) return null;
+  const h = parseInt(m[1], 10);
+  const min = m[2] ? parseInt(m[2], 10) : 0;
+  if (h > 23 || min > 59) return null;
+  return h * 60 + min;
+}
+
+function formatHHMM(totalMin: number | null): string {
+  if (totalMin == null) return "";
+  const clamped = ((totalMin % 1440) + 1440) % 1440;
+  const h = Math.floor(clamped / 60);
+  const m = clamped % 60;
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+}
+
+function formatDuration(totalMin: number): string {
+  if (totalMin <= 0) return "00:00";
+  const h = Math.floor(totalMin / 60);
+  const m = totalMin % 60;
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+}
+
+function parseDuration(s: string): number | null {
+  const clean = s.replace(/[^\d:.,]/g, "");
+  if (clean.includes(":")) {
+    const [h, m] = clean.split(":").map(Number);
+    if (Number.isNaN(h)) return null;
+    return h * 60 + (m || 0);
+  }
+  if (clean.includes(",") || clean.includes(".")) {
+    const decimal = parseFloat(clean.replace(",", "."));
+    if (Number.isNaN(decimal)) return null;
+    return Math.round(decimal * 60);
+  }
+  const h = parseInt(clean, 10);
+  if (Number.isNaN(h)) return null;
+  return h * 60;
+}
+
+function autoFormatDuration(s: string): string {
+  if (s.includes(":")) return s;
+  const digits = s.replace(/\D/g, "");
+  if (digits.length <= 2) return digits;
+  return `${digits.slice(0, digits.length - 2)}:${digits.slice(-2)}`;
 }
 
 export function TimeEntryDialog({
@@ -70,9 +129,9 @@ export function TimeEntryDialog({
   mode: EntryFormMode;
   initial: {
     id?: string;
-    date: string; // iso
-    startAt: string | null; // iso
-    endAt: string | null; // iso
+    date: string;
+    startAt: string | null;
+    endAt: string | null;
     breakMinutes: number;
     type: string;
     note: string | null;
@@ -81,14 +140,89 @@ export function TimeEntryDialog({
   onSaved: () => void;
 }) {
   const t = useTranslations("timesheet");
+  const isCreate = mode === "create";
+  const initStart = initial.startAt ? isoToTimeInput(initial.startAt) : (isCreate ? DEFAULT_START : "");
+  const initEnd = initial.endAt ? isoToTimeInput(initial.endAt) : (isCreate ? DEFAULT_END : "");
+  const initBreak = initial.breakMinutes != null ? String(initial.breakMinutes) : (isCreate ? DEFAULT_BREAK : "0");
+
   const [date, setDate] = useState(toLocalDateInput(initial.date));
-  const [startAt, setStartAt] = useState(isoToTimeInput(initial.startAt));
-  const [endAt, setEndAt] = useState(isoToTimeInput(initial.endAt));
-  const [breakMinutes, setBreakMinutes] = useState(String(initial.breakMinutes ?? 0));
+  const [startAt, setStartAt] = useState(initStart);
+  const [endAt, setEndAt] = useState(initEnd);
+  const [durationInput, setDurationInput] = useState("");
+  const [breakMinutes, setBreakMinutes] = useState(initBreak);
   const [type, setType] = useState(initial.type || "WORK");
   const [note, setNote] = useState(initial.note ?? "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const startMin = useMemo(() => parseHHMM(startAt), [startAt]);
+  const endMin = useMemo(() => parseHHMM(endAt), [endAt]);
+
+  const computedDuration = useMemo(() => {
+    if (startMin == null || endMin == null) return null;
+    return endMin - startMin;
+  }, [startMin, endMin]);
+
+  const displayedDuration = useMemo(() => {
+    if (durationInput) {
+      const parsed = parseDuration(durationInput);
+      return parsed;
+    }
+    return computedDuration;
+  }, [durationInput, computedDuration]);
+
+  const onStartTimeChange = useCallback((v: string) => {
+    setStartAt(v);
+    setDurationInput("");
+  }, []);
+
+  const onEndTimeChange = useCallback((v: string) => {
+    setEndAt(v);
+    setDurationInput("");
+  }, []);
+
+  const onDurationChange = useCallback((raw: string) => {
+    const formatted = raw.includes(":") || raw.includes(",") || raw.includes(".")
+      ? raw
+      : autoFormatDuration(raw);
+    setDurationInput(formatted);
+    const parsed = parseDuration(formatted);
+    if (parsed != null && startMin != null) {
+      const snapped = snapToStep(parsed);
+      const newEnd = startMin + snapped;
+      setEndAt(formatHHMM(newEnd));
+    }
+  }, [startMin]);
+
+  const stepDuration = useCallback((delta: number) => {
+    const current = durationInput ? parseDuration(durationInput) : computedDuration;
+    if (current == null) return;
+    const next = snapToStep(current + delta);
+    setDurationInput(formatDuration(next));
+    if (startMin != null) {
+      setEndAt(formatHHMM(startMin + next));
+    }
+  }, [durationInput, computedDuration, startMin]);
+
+  const onDurationKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === "ArrowUp") {
+      e.preventDefault();
+      stepDuration(STEP_MIN);
+    } else if (e.key === "ArrowDown") {
+      e.preventDefault();
+      stepDuration(-STEP_MIN);
+    }
+  }, [stepDuration]);
+
+  const durationDisplay = useMemo(() => {
+    if (displayedDuration == null) return durationInput;
+    return formatDuration(displayedDuration);
+  }, [displayedDuration, durationInput]);
+
+  const netDuration = useMemo(() => {
+    if (computedDuration == null) return null;
+    return Math.max(0, computedDuration - (Number(breakMinutes) || 0));
+  }, [computedDuration, breakMinutes]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -163,21 +297,57 @@ export function TimeEntryDialog({
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="start">{t("start")}</Label>
-              <Input
-                id="start"
-                type="time"
+              <TimeInput
+                placeholder="08:00"
                 value={startAt}
-                onChange={(e) => setStartAt(e.target.value)}
+                onChange={onStartTimeChange}
               />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="end">{t("end")}</Label>
-              <Input
-                id="end"
-                type="time"
+              <TimeInput
+                placeholder="16:00"
                 value={endAt}
-                onChange={(e) => setEndAt(e.target.value)}
+                onChange={onEndTimeChange}
               />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="duration">{t("duration")}</Label>
+              <div className="relative">
+                <Input
+                  id="duration"
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="08:00"
+                  value={durationDisplay}
+                  onChange={(e) => onDurationChange(e.target.value)}
+                  onKeyDown={onDurationKeyDown}
+                  className="font-mono tabular-nums pr-9"
+                />
+                <div className="absolute right-1 top-1/2 -translate-y-1/2 flex flex-col">
+                  <button
+                    type="button"
+                    onClick={() => stepDuration(STEP_MIN)}
+                    className="text-muted-foreground hover:text-foreground"
+                    tabIndex={-1}
+                  >
+                    <ChevronUp className="h-3.5 w-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => stepDuration(-STEP_MIN)}
+                    className="text-muted-foreground hover:text-foreground"
+                    tabIndex={-1}
+                  >
+                    <ChevronDown className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </div>
+              {netDuration != null && netDuration > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  {t("netDuration")}: {formatDuration(netDuration)}
+                </p>
+              )}
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="break">{t("break")} ({t("minutes")})</Label>
@@ -190,7 +360,7 @@ export function TimeEntryDialog({
                 onChange={(e) => setBreakMinutes(e.target.value)}
               />
             </div>
-            <div className="space-y-1.5">
+            <div className="col-span-2 space-y-1.5">
               <Label htmlFor="note">{t("note")}</Label>
               <Input
                 id="note"

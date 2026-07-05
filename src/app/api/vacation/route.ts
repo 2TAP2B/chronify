@@ -13,6 +13,7 @@ const createSchema = z.object({
   to: z.coerce.date(),
   note: z.string().trim().max(500).nullish(),
   year: z.number().int().optional(),
+  useOvertime: z.boolean().optional(),
 });
 
 export async function GET(request: Request) {
