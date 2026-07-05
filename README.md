@@ -111,8 +111,96 @@ prisma/
 | `npm run prisma:studio` | Prisma Studio |
 | `npm test` | Vitest |
 | `npm run test:e2e` | Playwright |
+| `npm run test:e2e -- --ui` | Playwright interaktiv |
+| `bash scripts/backup-db.sh` | DB-Backup erstellen |
+| `bash scripts/restore-db.sh <file>` | DB wiederherstellen |
 
 ## Standard-Anmeldedaten (nach Seed)
 
 - Email: `admin@puku.local`
 - Passwort: `admin123`
+
+## Produktion-Deployment
+
+### Voraussetzungen
+- Docker 24+ und Docker Compose v2
+- Ein Server mit mindestens 1 GB RAM, 10 GB Festplatte
+- Eine Domain mit DNS-Eintrag auf den Server
+- (Optional) Reverse Proxy mit TLS (nginx, Caddy, Traefik)
+
+### 1. Repository klonen
+
+```bash
+git clone <repo-url> /opt/puku
+cd /opt/puku
+```
+
+### 2. `.env` konfigurieren
+
+```bash
+cp .env.example .env
+# Alle Werte setzen, insbesondere:
+#   NEXTAUTH_SECRET=$(openssl rand -base64 32)
+#   DATABASE_URL=postgresql://puku:<sicheres-passwort>@db:5432/puku?schema=public
+#   PUSH_VAPID_PUBLIC_KEY / PUSH_VAPID_PRIVATE_KEY (npx web-push generate-vapid-keys)
+#   NEXT_PUBLIC_PUSH_VAPID_PUBLIC_KEY = gleicher Wert wie PUSH_VAPID_PUBLIC_KEY
+#   CSRF_ALLOWED_ORIGINS="https://puku.example.com"
+#   PUSH_VAPID_SUBJECT="mailto:admin@example.com"
+```
+
+### 3. Mit Docker Compose starten
+
+```bash
+docker compose up -d --build
+```
+
+Das `docker-entrypoint.sh` führt automatisch aus:
+1. `prisma migrate deploy` (Migrationen anwenden)
+2. Bedingtes Seeding (wenn die DB leer ist)
+3. `next start` (Production-Server auf Port 3000)
+
+### 4. Reverse Proxy (Beispiel: Caddy)
+
+```Caddyfile
+puku.example.com {
+    reverse_proxy localhost:3000
+}
+```
+
+Caddy stellt automatisch TLS-Zertifikate aus (Let's Encrypt).
+
+### 5. Backups einrichten (Cron)
+
+```bash
+# /etc/cron.d/puku-backup
+0 2 * * * root cd /opt/puku && DATABASE_URL="postgresql://puku:PASS@localhost:5433/puku" bash scripts/backup-db.sh >> /var/log/puku-backup.log 2>&1
+```
+
+- Backups landen in `/opt/puku/backups/`
+- Standard-Aufbewahrung: 14 Tage (`BACKUP_RETENTION_DAYS`)
+- Wiederherstellung: `bash scripts/restore-db.sh backups/puku-backup-YYYYMMDD-HHMMSS.sql.gz`
+
+### 6. Updates
+
+```bash
+cd /opt/puku
+git pull
+docker compose up -d --build
+# Migrationen werden automatisch im Entry-point ausgeführt
+```
+
+### 7. Health-Check
+
+```bash
+curl http://localhost:3000/api/health
+# → {"status":"ok"}
+```
+
+### Sicherheitshinweise
+
+- **`NEXTAUTH_SECRET`** muss ein starkes, zufälliges Geheimnis sein.
+- **`admin123`** (Standard-Seed-Passwort) nach dem ersten Login im Admin-Bereich ändern.
+- **`CSRF_ALLOWED_ORIGINS`** in Produktion auf die echte Domain setzen.
+- **Rate-Limiting**: Login-Versuche sind auf 10/Minute pro IP+Email begrenzt; Mutationen auf 60/Minute.
+- **VAPID-Keys** nicht in das Repository committen (nur in `.env`).
+- **Backups** verschlüsseln oder auf einen offsite-Speicherort kopieren.

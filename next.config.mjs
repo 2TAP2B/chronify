@@ -11,6 +11,15 @@ const nextConfig = {
   images: {
     remotePatterns: [],
   },
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.resolve.alias = {
+        ...(config.resolve.alias || {}),
+        "pg-native": false,
+      };
+    }
+    return config;
+  },
 };
 
 const withPWA = withPWAInit({
@@ -19,8 +28,36 @@ const withPWA = withPWAInit({
   aggressiveFrontEndNavCaching: true,
   reloadOnOnline: true,
   disable: process.env.NODE_ENV === "development",
+  register: false,
   workboxOptions: {
     disableDevLogs: true,
+    runtimeCaching: [
+      {
+        urlPattern: /^https?.*/,
+        handler: "NetworkFirst",
+        options: {
+          cacheName: "offline-cache",
+          expiration: { maxEntries: 200, maxAgeSeconds: 30 * 24 * 60 * 60 },
+          networkTimeoutSeconds: 10,
+        },
+      },
+      {
+        urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp|ico)$/,
+        handler: "CacheFirst",
+        options: {
+          cacheName: "image-cache",
+          expiration: { maxEntries: 60, maxAgeSeconds: 30 * 24 * 60 * 60 },
+        },
+      },
+      {
+        urlPattern: /\/api\/timer$/,
+        handler: "NetworkFirst",
+        options: {
+          cacheName: "timer-cache",
+          networkTimeoutSeconds: 5,
+        },
+      },
+    ],
   },
 });
 

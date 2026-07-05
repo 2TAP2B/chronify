@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { auth } from "@/lib/auth";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { AppHeader } from "@/components/layout/app-header";
+import { PwaManager } from "@/components/pwa/pwa-manager";
 import { db } from "@/lib/db";
 
 export default async function AppLayout({
@@ -35,6 +36,7 @@ export default async function AppLayout({
     { href: "/admin/working-models", label: t("workingModels"), icon: "Clock" },
     { href: "/admin/holidays", label: t("holidays"), icon: "CalendarOff" },
     { href: "/admin/vacation-approvals", label: t("vacationApprovals"), icon: "CheckCheck" },
+    { href: "/admin/sickness", label: t("sickness"), icon: "HeartPulse" },
     { href: "/admin/settings", label: t("settings"), icon: "Settings" },
   ];
 
@@ -50,6 +52,7 @@ export default async function AppLayout({
         <AppHeader userName={user?.name ?? "Benutzer"} />
         <main className="flex-1 p-4 md:p-6 overflow-auto">{children}</main>
       </div>
+      <PwaManager />
     </div>
   );
 }

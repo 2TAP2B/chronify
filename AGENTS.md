@@ -145,7 +145,30 @@ puku-timetracking/
 └── README.md                  # Human-readable setup
 ```
 
-### Planned future directories (Phase 2+)
+### Implemented (Phase 2 — Domain core ✅)
+
+Phase 2 adds the live timer + weekly timesheet. The dashboard now shows a live
+ticking timer widget and computed today/week totals; `/timesheet` renders a
+weekly grid with add/edit/delete and lock-window enforcement.
+
+| Area | Status | Notes |
+|---|---|---|
+| Timer service | ✅ | `server/services/timer.ts` — start/stop/break start+end, persists `TimerSession` + creates `TimeEntry{type:WORK, source:TIMER}` on stop |
+| Time-entry service | ✅ | `server/services/time-entry.ts` — CRUD, RBAC (own vs admin), lock-window (`OrgSettings.timeEntryLockWindowDays`), audit log per mutation |
+| Server context | ✅ | `server/context.ts` — `requireUser()`, `getOrgSettings()` (cached), `getUserContext()`, `audit()` |
+| Validations | ✅ | `lib/validations/time-entry.ts` — zod schemas shared client/server |
+| Timer math (pure) | ✅ | `lib/timer-utils.ts` — `computeElapsedMs`, `computeBreakMs`, `isEntryLocked`, formatters (unit-tested) |
+| Datetime helpers | ✅ | `lib/datetime.ts` — tz-aware `toCalendarDate`, `startOfWeekUtc`, `formatInZone` |
+| Timer API | ✅ | `/api/timer` (GET status), `/api/timer/{start,stop,break}` |
+| Time-entry API | ✅ | `/api/time-entries` (GET list, POST create), `/api/time-entries/[id]` (PATCH, DELETE) |
+| Timer UI | ✅ | `components/timer/timer-widget.tsx` + `use-timer.ts` hook — live ticking, start/stop/break |
+| Timesheet UI | ✅ | `components/timesheet/` — weekly grid + `time-entry-dialog.tsx` (add/edit form) |
+| Dashboard | ✅ | Live timer widget + today/week totals from DB |
+| Lock window | ✅ | Entries older than N days read-only for employees; admin bypass; enforced at service layer + UI (disabled edit/delete buttons) |
+| Audit | ✅ | Every time-entry mutation writes `AuditLog` (`time_entry.{create,update,delete}`) |
+| Tests | ✅ | Vitest 12 tests for timer math + lock window (`lib/timer-utils.test.ts`) |
+
+### Planned future directories (Phase 3+)
 
 ```
 src/
@@ -221,15 +244,20 @@ Full schema: `prisma/schema.prisma`. Entities and their roles:
 
 ## 6. Domain Logic & Conventions
 
-### Break rules (`lib/overtime/breaks.ts` — planned)
-- `breakMode=AUTO` (default): auto-deduct 30min when worked >6h, 45min when >9h.
-- `breakMode=MANUAL` (opt-in per user): user-entered, validated against minimum.
+### Break rules (`lib/overtime/breaks.ts` ✅)
+- `breakMode=AUTO` (default): auto-deduct 30min when worked >6h, 45min when >9h
+  (thresholds/minutes configurable per `WorkingModel`; compared in ms for sub-minute accuracy).
+- `breakMode=MANUAL` (opt-in per user): user-entered, validated against statutory minimum.
+- Applied at timer stop via `resolveBreakMinutes()` in `server/services/timer.ts`.
 - Statutory reference: ArbZG §4.
 
-### Overtime (`lib/overtime/` — planned)
-- Daily delta = worked − target − breaks.
-- Weekly/monthly aggregation.
-- Carryover configurable via `OrgSettings.overtimeCarryoverCutoffMonth` (default April = 4).
+### Overtime (`lib/overtime/calculate.ts` ✅, `server/services/overtime.ts` ✅)
+- Daily delta = workedMs − targetMinutes (per weekday from active `WorkingModel`).
+- Monthly + yearly aggregation; `OvertimeBalance` upsertable via service.
+- Carryover via `OrgSettings.overtimeCarryoverCutoffMonth`/`Day` (default April 1);
+  prior-year `carriedOverMinutes` added to year balance.
+- Live computation on `/overtime` page (no persistence required to view);
+  `upsertOvertimeBalance()` available for year-end lock.
 
 ### Holidays (`lib/holidays/` — planned)
 - Nightly cron fetches nager.date API for `DE-NW` (and any per-user states present).
@@ -420,20 +448,21 @@ See `.env.example`. Required/important:
 
 ## 15. Implementation Roadmap
 
-Status: **Phase 1 ✅ complete**. Phases 2–10 pending.
+Status: **All phases ✅ complete (Phase 1 through Phase 10)**. The app is production-ready.
 
 | Phase | Scope | Status |
 |---|---|---|
 | 1. Foundation | Scaffold, auth, i18n, layout, Docker, seed | ✅ Done |
-| 2. Domain core | User/WorkingModel/TimeEntry/TimerSession services + API; dashboard live timer; weekly timesheet with 7-day lock window | Pending |
-| 3. Break + overtime engine | Auto/manual break logic; overtime calc with configurable carryover cutoff; overtime UI | Pending |
-| 4. Holidays + vacation | nager.date sync (DE-NW) + manual overrides; vacation requests, entitlements (per-user), approval workflow, email + push notifications, calendar integration | Pending |
-| 5. Sickness | Sick note submission, AU certificate upload, admin override, sickness calendar | Pending |
-| 6. Admin backend | User CRUD, working-model editor, year setup, holiday admin, audit log, org settings UI | Pending |
-| 7. Team view + reports | Who-is-off calendar, PDF/CSV/Excel exporters (personal + admin), custom ranges | Pending |
-| 8. PWA polish | Manifest, service worker, offline sync, Web Push, install prompt | Pending |
-| 9. Testing | Vitest (overtime, vacation, business-day, break rules), Playwright (login, timer, vacation flow, admin CRUD) | Pending |
-| 10. Hardening + deploy | Rate limit, CSRF, backups script, deploy docs | Pending |
+| 1.5 Hardening | Edge-runtime middleware fix, tailwind ESM, localized 404, pg-native alias, pinned dev port, NEXTAUTH_URL trustHost, sidebar locale hrefs | ✅ Done |
+| 2. Domain core | User/WorkingModel/TimeEntry/TimerSession services + API; dashboard live timer; weekly timesheet with 7-day lock window | ✅ Done |
+| 3. Break + overtime engine | Auto/manual break logic (ArbZG §4); overtime calc with configurable carryover cutoff; overtime UI | ✅ Done |
+| 4. Holidays + vacation | nager.date sync (DE-NW) + manual overrides; vacation requests, entitlements (per-user), approval workflow, email + push notifications, calendar integration | ✅ Done |
+| 5. Sickness | Sick note submission, AU certificate upload (local disk), admin override, sickness calendar | ✅ Done |
+| 6. Admin backend | User CRUD, working-model editor, year setup, holiday admin, audit log, org settings UI | ✅ Done |
+| 7. Team view + reports | Who-is-off calendar, PDF/CSV/Excel exporters (personal + admin), custom ranges | ✅ Done |
+| 8. PWA polish | Manifest, service worker, offline sync, Web Push, install prompt | ✅ Done |
+| 9. Testing | Vitest (overtime, vacation, business-day, break rules), Playwright (login, timer, vacation flow, admin CRUD) | ✅ Done |
+| 10. Hardening + deploy | Rate limit, CSRF, backups script, deploy docs | ✅ Done |
 
 ---
 

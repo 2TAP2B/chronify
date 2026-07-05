@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
@@ -16,19 +16,14 @@ type NavItem = {
   icon: string;
 };
 
-function NavLinks({
-  items,
-  prefix,
-}: {
-  items: NavItem[];
-  prefix: string;
-}) {
+function NavLinks({ items }: { items: NavItem[] }) {
   const pathname = usePathname();
+  const locale = useLocale();
   return (
     <nav className="flex flex-col gap-1">
       {items.map((item) => {
         const Icon = (Icons as unknown as Record<string, React.FC<LucideProps>>)[item.icon] ?? Icons.Circle;
-        const href = `/${prefix}${item.href}`;
+        const href = `/${locale}${item.href}`;
         const active =
           pathname === href || pathname.startsWith(`${href}/`);
         return (
@@ -77,14 +72,14 @@ export function AppSidebar({
         <span className="text-lg font-semibold">Puku</span>
       </div>
       <div className="flex-1 overflow-y-auto px-3 py-4">
-        <NavLinks items={navItems} prefix={""} />
+        <NavLinks items={navItems} />
         {adminItems.length > 0 && (
           <>
             <Separator className="my-4" />
             <p className="px-3 mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               {t("admin")}
             </p>
-            <NavLinks items={adminItems} prefix={""} />
+            <NavLinks items={adminItems} />
           </>
         )}
       </div>
