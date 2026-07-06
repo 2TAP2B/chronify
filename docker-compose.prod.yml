@@ -13,6 +13,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - internal
 
   app:
     image: git.steltner.cloud/2tap2b/time-track-v3:latest
@@ -41,14 +43,15 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.chroify.entrypoints=websecure"
-      - "traefik.http.routers.chroify.rule=Host(`chroify.h0melab.cc`)"
+      - "traefik.http.routers.chroify.rule=Host(`chronify.h0melab.cc`)"
       - "traefik.http.routers.chroify.tls=true"
       - "traefik.http.routers.chroify.service=chroify"
       - "traefik.http.routers.chroify.tls.certresolver=cloudflare"
-      - "traefik.http.services.chroify.loadbalancer.server.port=3000"
+      - "traefik.http.services.chroify.loadbalancer.server.port=3001"
       - "traefik.docker.network=frontend"
     networks:
       - frontend
+      - internal
 
 volumes:
   db-data:
@@ -56,3 +59,4 @@ volumes:
 networks:
   frontend:
     external: true
+  internal:
