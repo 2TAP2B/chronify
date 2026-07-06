@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   Dialog,
   DialogContent,
@@ -76,11 +78,17 @@ export function ClosureDialog({ mode }: { mode: "create" }) {
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="closure-from">{t("from")}</Label>
-              <Input id="closure-from" type="date" value={from} onChange={(e) => setFrom(e.target.value)} required />
+              <DatePicker
+                value={from ? new Date(from + "T00:00:00") : undefined}
+                onChange={(d) => d && setFrom(format(d, "yyyy-MM-dd"))}
+              />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="closure-to">{t("to")}</Label>
-              <Input id="closure-to" type="date" value={to} onChange={(e) => setTo(e.target.value)} required />
+              <DatePicker
+                value={to ? new Date(to + "T00:00:00") : undefined}
+                onChange={(d) => d && setTo(format(d, "yyyy-MM-dd"))}
+              />
             </div>
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}

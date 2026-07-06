@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useCallback } from "react";
 import { useTranslations } from "next-intl";
+import { format } from "date-fns";
 import { ChevronUp, ChevronDown } from "lucide-react";
 import {
   Dialog,
@@ -22,6 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { TimeInput } from "@/components/timesheet/time-input";
+import { DatePicker } from "@/components/ui/date-picker";
 
 export type EntryFormData = {
   date: string;
@@ -275,12 +277,9 @@ export function TimeEntryDialog({
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="date">{t("day")}</Label>
-              <Input
-                id="date"
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                required
+              <DatePicker
+                value={date ? new Date(date + "T00:00:00") : undefined}
+                onChange={(d) => d && setDate(format(d, "yyyy-MM-dd"))}
               />
             </div>
             <div className="space-y-1.5">

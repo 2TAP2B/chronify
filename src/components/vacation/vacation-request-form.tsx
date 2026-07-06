@@ -2,11 +2,13 @@
 
 import { useState, useCallback } from "react";
 import { useTranslations } from "next-intl";
+import { format } from "date-fns";
 import { CalendarCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { DatePicker } from "@/components/ui/date-picker";
 
 type Props = {
   overtimeHours?: number;
@@ -100,23 +102,16 @@ export function VacationRequestForm({ overtimeHours = 0 }: Props) {
               {t("today")}
             </Button>
           </div>
-          <Input
-            id="from"
-            type="date"
-            value={from}
-            onChange={(e) => handleFromChange(e.target.value)}
-            required
+          <DatePicker
+            value={from ? new Date(from + "T00:00:00") : undefined}
+            onChange={(d) => d && handleFromChange(format(d, "yyyy-MM-dd"))}
           />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="to">{t("to")}</Label>
-          <Input
-            id="to"
-            type="date"
-            value={to}
-            min={from || undefined}
-            onChange={(e) => setTo(e.target.value)}
-            required
+         </div>
+         <div className="space-y-1.5">
+           <Label htmlFor="to">{t("to")}</Label>
+          <DatePicker
+            value={to ? new Date(to + "T00:00:00") : undefined}
+            onChange={(d) => d && setTo(format(d, "yyyy-MM-dd"))}
           />
         </div>
       </div>

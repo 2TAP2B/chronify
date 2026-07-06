@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { format } from "date-fns";
 import {
   Dialog,
   DialogContent,
@@ -14,6 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Pencil, Plus } from "lucide-react";
 import type { WorkingModel } from "@prisma/client";
 
@@ -110,11 +112,17 @@ export function WorkingModelDialog({
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="validFrom">{t("validFrom")}</Label>
-              <Input id="validFrom" type="date" value={validFrom} onChange={(e) => setValidFrom(e.target.value)} required />
+              <DatePicker
+                value={validFrom ? new Date(validFrom + "T00:00:00") : undefined}
+                onChange={(d) => d && setValidFrom(format(d, "yyyy-MM-dd"))}
+              />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="validTo">{t("validTo")}</Label>
-              <Input id="validTo" type="date" value={validTo} onChange={(e) => setValidTo(e.target.value)} />
+              <DatePicker
+                value={validTo ? new Date(validTo + "T00:00:00") : undefined}
+                onChange={(d) => d && setValidTo(format(d, "yyyy-MM-dd"))}
+              />
             </div>
           </div>
           <div className="grid grid-cols-4 gap-3">

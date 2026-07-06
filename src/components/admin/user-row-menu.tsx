@@ -5,7 +5,9 @@ import { useTranslations } from "next-intl";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -82,45 +84,55 @@ export function UserRowMenu({ user, isSelf }: { user: User; isSelf: boolean }) {
             <MoreVertical className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={() => setShowEdit(true)}>
-            <Pencil className="mr-2 h-4 w-4" />
-            {t("edit")}
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setShowTemplate(true)}>
-            <Clock className="mr-2 h-4 w-4" />
-            {t("assignModel")}
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setShowEntitlement(true)}>
-            <CalendarDays className="mr-2 h-4 w-4" />
-            {t("adjustEntitlement")}
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setShowOvertime(true)}>
-            <Timer className="mr-2 h-4 w-4" />
-            {t("adjustOvertime")}
-          </DropdownMenuItem>
+        <DropdownMenuContent align="end" className="w-56">
+          <DropdownMenuGroup>
+            <DropdownMenuLabel>{t("groupUser")}</DropdownMenuLabel>
+            <DropdownMenuItem onClick={() => setShowEdit(true)}>
+              <Pencil className="mr-2 h-4 w-4" />
+              {t("edit")}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setShowTemplate(true)}>
+              <Clock className="mr-2 h-4 w-4" />
+              {t("assignModel")}
+            </DropdownMenuItem>
+          </DropdownMenuGroup>
           <DropdownMenuSeparator />
-          <DropdownMenuItem
-            onClick={toggleActive}
-            disabled={isSelf && user.active}
-            className={user.active ? "text-destructive" : ""}
-          >
-            {user.active ? (
-              <>
-                <UserX className="mr-2 h-4 w-4" />
-                {t("deactivate")}
-              </>
-            ) : (
-              <>
-                <UserCheck className="mr-2 h-4 w-4" />
-                {t("activate")}
-              </>
-            )}
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={deleteUser} disabled={isSelf} className="text-destructive">
-            <Trash2 className="mr-2 h-4 w-4" />
-            {t("delete")}
-          </DropdownMenuItem>
+          <DropdownMenuGroup>
+            <DropdownMenuLabel>{t("groupTime")}</DropdownMenuLabel>
+            <DropdownMenuItem onClick={() => setShowEntitlement(true)}>
+              <CalendarDays className="mr-2 h-4 w-4" />
+              {t("adjustEntitlement")}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setShowOvertime(true)}>
+              <Timer className="mr-2 h-4 w-4" />
+              {t("adjustOvertime")}
+            </DropdownMenuItem>
+          </DropdownMenuGroup>
+          <DropdownMenuSeparator />
+          <DropdownMenuGroup>
+            <DropdownMenuLabel>{t("groupAccount")}</DropdownMenuLabel>
+            <DropdownMenuItem
+              onClick={toggleActive}
+              disabled={isSelf && user.active}
+              className={user.active ? "text-destructive" : ""}
+            >
+              {user.active ? (
+                <>
+                  <UserX className="mr-2 h-4 w-4" />
+                  {t("deactivate")}
+                </>
+              ) : (
+                <>
+                  <UserCheck className="mr-2 h-4 w-4" />
+                  {t("activate")}
+                </>
+              )}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={deleteUser} disabled={isSelf} className="text-destructive">
+              <Trash2 className="mr-2 h-4 w-4" />
+              {t("delete")}
+            </DropdownMenuItem>
+          </DropdownMenuGroup>
         </DropdownMenuContent>
       </DropdownMenu>
 

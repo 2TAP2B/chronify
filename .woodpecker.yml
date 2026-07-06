@@ -1,0 +1,20 @@
+when:
+  - event: push
+    branch: main
+  - event: tag
+    ref: refs/tags/v*
+
+steps:
+  - name: build-and-push
+    image: woodpeckerci/plugin-docker-buildx
+    privileged: true
+    settings:
+      repo: git.steltner.cloud/2tap2b/time-track-v3
+      registry: git.steltner.cloud
+      dockerfile: Dockerfile
+      platforms: linux/amd64
+      auto_tag: true
+      username:
+        from_secret: forgejo_username
+      password:
+        from_secret: forgejo_token
