@@ -36,6 +36,7 @@ const navLabelMap: Record<string, string> = {
   "business-closures": "businessClosures",
   "vacation-approvals": "vacationApprovals",
   settings: "settings",
+  profile: "profile",
 }
 
 export function SiteHeader() {
@@ -95,11 +96,10 @@ export function SiteHeader() {
             variant="ghost"
             size="icon"
             className="size-8"
+            aria-label="Toggle theme"
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            aria-label="Theme"
           >
-            <Sun className="size-4 dark:hidden" />
-            <Moon className="hidden size-4 dark:block" />
+            {theme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
           </Button>
         </div>
       </div>

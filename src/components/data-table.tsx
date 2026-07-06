@@ -18,6 +18,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { cn } from "@/lib/utils"
 
 export type TimeEntryRow = {
@@ -55,11 +56,23 @@ export function DataTable({
     note: string
     noEntries: string
     types: Record<string, string>
+    tabs: {
+      all: string
+      work: string
+      vacation: string
+      sick: string
+    }
   }
 }) {
   const [sorting, setSorting] = React.useState<SortingState>([
     { id: "date", desc: true },
   ])
+  const [filter, setFilter] = React.useState<string>("all")
+
+  const filteredData = React.useMemo(() => {
+    if (filter === "all") return data
+    return data.filter((row) => row.type === filter)
+  }, [data, filter])
 
   const columns: ColumnDef<TimeEntryRow>[] = React.useMemo(
     () => [
@@ -129,7 +142,7 @@ export function DataTable({
         accessorKey: "note",
         header: labels.note,
         cell: ({ row }) => (
-          <span className="text-muted-foreground line-clamp-1 max-w-[200px]">
+          <span className="text-muted-foreground line-clamp-1 max-w-[120px] sm:max-w-[200px]">
             {row.original.note ?? "—"}
           </span>
         ),
@@ -139,7 +152,7 @@ export function DataTable({
   )
 
   const table = useReactTable({
-    data,
+    data: filteredData,
     columns,
     state: { sorting },
     onSortingChange: setSorting,
@@ -152,14 +165,23 @@ export function DataTable({
       <div className="mb-3">
         <h2 className="text-lg font-semibold">{labels.title}</h2>
       </div>
+      <Tabs value={filter} onValueChange={setFilter}>
+        <TabsList variant="line" className="mb-2">
+          <TabsTrigger variant="line" value="all">{labels.tabs.all}</TabsTrigger>
+          <TabsTrigger variant="line" value="WORK">{labels.tabs.work}</TabsTrigger>
+          <TabsTrigger variant="line" value="VACATION">{labels.tabs.vacation}</TabsTrigger>
+          <TabsTrigger variant="line" value="SICK">{labels.tabs.sick}</TabsTrigger>
+        </TabsList>
+      </Tabs>
       <div className="overflow-hidden rounded-lg border">
-        <Table>
+        <div className="overflow-x-auto">
+        <Table className="min-w-[640px]">
           <TableHeader className="bg-muted">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
                   return (
-                    <TableHead key={header.id} colSpan={header.colSpan}>
+                    <TableHead key={header.id} colSpan={header.colSpan} className="whitespace-nowrap">
                       {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -177,7 +199,7 @@ export function DataTable({
               table.getRowModel().rows.map((row) => (
                 <TableRow key={row.id}>
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                    <TableCell key={cell.id} className="whitespace-nowrap">
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()
@@ -198,6 +220,7 @@ export function DataTable({
             )}
           </TableBody>
         </Table>
+        </div>
       </div>
     </div>
   )

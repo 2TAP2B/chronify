@@ -122,6 +122,7 @@ export function TimeEntryDialog({
   open,
   mode,
   initial,
+  adminUserId,
   onClose,
   onSaved,
 }: {
@@ -136,6 +137,7 @@ export function TimeEntryDialog({
     type: string;
     note: string | null;
   };
+  adminUserId?: string;
   onClose: () => void;
   onSaved: () => void;
 }) {
@@ -239,7 +241,8 @@ export function TimeEntryDialog({
         type,
         note: note || null,
       };
-      const url = mode === "edit" ? `/api/time-entries/${initial.id}` : "/api/time-entries";
+      const qs = adminUserId ? `?userId=${adminUserId}` : "";
+      const url = mode === "edit" ? `/api/time-entries/${initial.id}${qs}` : `/api/time-entries${qs}`;
       const method = mode === "edit" ? "PATCH" : "POST";
       const res = await fetch(url, {
         method,

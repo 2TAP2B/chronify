@@ -38,11 +38,15 @@ function getWeekday(iso: string): number {
 
 export function QuickFillDialog({
   days,
+  timeZone,
+  adminUserId,
   open,
   onClose,
   onDone,
 }: {
   days: GridDay[];
+  timeZone?: string;
+  adminUserId?: string;
   open: boolean;
   onClose: () => void;
   onDone: () => void;
@@ -75,7 +79,8 @@ export function QuickFillDialog({
           skipped++;
           continue;
         }
-        const res = await fetch("/api/time-entries", {
+        const qs = adminUserId ? `?userId=${adminUserId}` : "";
+        const res = await fetch(`/api/time-entries${qs}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

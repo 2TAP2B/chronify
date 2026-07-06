@@ -40,7 +40,8 @@
     "closureChoices": "Closures",
     "businessClosures": "Closures",
     "lightMode": "Light",
-    "darkMode": "Dark"
+    "darkMode": "Dark",
+    "theme": "Theme"
   },
   "auth": {
     "loginTitle": "Sign in",
@@ -55,6 +56,9 @@
   "dashboard": {
     "title": "Dashboard",
     "welcome": "Welcome, {name}",
+    "hi": "Hi, {name}",
+    "todayIs": "Today is {date}",
+    "workingTimeToday": "Working time today",
     "timerStart": "Start timer",
     "timerStop": "Stop timer",
     "breakStart": "Start break",
@@ -68,15 +72,24 @@
     "onBreak": "On break",
     "breakDuration": "Break: {duration}",
     "today": "Today",
+    "dailyTarget": "Daily target",
     "weeklyTarget": "Weekly target",
     "weeklyProgress": "Weekly progress",
     "chartTitle": "Working hours",
     "chartDescription": "Hours for the last 3 months",
+    "chartWorked": "Worked",
+    "chartTarget": "Target",
     "last3Months": "3 months",
     "last30Days": "30 days",
     "last7Days": "7 days",
     "recentEntries": "Recent entries",
-    "days": "days"
+    "days": "days",
+    "tabs": {
+      "all": "All",
+      "work": "Work",
+      "vacation": "Vacation",
+      "sick": "Sick"
+    }
   },
   "timer": {
     "start": "Start",
@@ -137,7 +150,9 @@
     "quickFillApply": "Apply",
     "quickFillCount": "Empty days: {count}",
     "quickFillResult": "{created} entries created, {skipped} skipped.",
-    "weekdaysOnly": "Monday–Friday only"
+    "weekdaysOnly": "Monday–Friday only",
+    "myTimesheet": "My timesheet",
+    "filter": "Filter"
   },
   "overtime": {
     "title": "Overtime",
@@ -290,7 +305,13 @@
     "totalDays": "Total vacation days",
     "currentDays": "Current: {days} days",
     "usingDefault": "Using default",
-    "entitlementHint": "Default is 30 days. Set a custom value here."
+    "entitlementHint": "Default is 30 days. Set a custom value here.",
+    "adjustOvertime": "Adjust overtime",
+    "carriedOverLabel": "Carried over (min)",
+    "consumedLabel": "Consumed (min)",
+    "computedThisYear": "Earned this year",
+    "netBalance": "Balance",
+    "overtimeHint": "Values in hours:minutes (e.g. 08:30) or decimal (8.5)."
   },
   "adminWorkingModels": {
     "title": "Working models",
@@ -352,6 +373,8 @@
   },
   "adminSettings": {
     "title": "Settings",
+    "appearance": "Appearance",
+    "appearanceHint": "Choose a color scheme for the application.",
     "defaultFederalState": "Default federal state",
     "carryoverCutoffMonth": "Carryover cutoff (month, 1-12)",
     "carryoverCutoffDay": "Carryover cutoff (day, 1-31)",
@@ -360,6 +383,17 @@
     "defaultVacationDays": "Default vacation days",
     "save": "Save",
     "saved": "Settings saved"
+  },
+  "theme": {
+    "defaultLight": "Default (Light)",
+    "defaultDark": "Default (Dark)",
+    "mauveLight": "Mauve (Light)",
+    "mauveDark": "Mauve (Dark)"
+  },
+  "profile": {
+    "title": "Profile",
+    "appearance": "Appearance",
+    "appearanceHint": "Choose a color scheme for the application."
   },
   "adminYearSetup": {
     "title": "Year setup",

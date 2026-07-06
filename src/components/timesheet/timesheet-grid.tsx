@@ -4,7 +4,13 @@ import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Pencil, Trash2, Zap } from "lucide-react";
+import { Plus, Zap, Pencil, Trash2, MoreHorizontal } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Table,
   TableBody,
@@ -47,10 +53,12 @@ export function TimesheetGrid({
   days,
   timeZone,
   lockWindowDays,
+  adminUserId,
 }: {
   days: GridDay[];
   timeZone: string;
   lockWindowDays: number;
+  adminUserId?: string;
 }) {
   const t = useTranslations("timesheet");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -79,7 +87,7 @@ export function TimesheetGrid({
   async function onDelete(entry: GridEntry) {
     if (!confirm(t("confirmDelete"))) return;
     startTransition(async () => {
-      const res = await fetch(`/api/time-entries/${entry.id}`, { method: "DELETE" });
+      const res = await fetch(`/api/time-entries/${entry.id}${adminUserId ? `?userId=${adminUserId}` : ""}`, { method: "DELETE" });
       if (!res.ok) {
         const b = await res.json().catch(() => ({}));
         alert((b as { error?: string }).error ?? "error");
@@ -118,77 +126,96 @@ export function TimesheetGrid({
       <div className="space-y-3">
         {days.map((day) => {
           const dayTotalMs = day.entries.reduce((s, e) => s + entryDurationMs(e), 0);
+          const isWeekend = (() => {
+            const dow = new Date(day.date).getUTCDay();
+            return dow === 0 || dow === 6;
+          })();
           return (
-            <div key={day.date} className="rounded-lg border">
-              <div className="flex items-center justify-between border-b px-3 py-2">
+            <div
+              key={day.date}
+              className={`rounded-lg border shadow-sm overflow-hidden ${
+                day.isToday ? "ring-2 ring-primary/50" : ""
+              } ${isWeekend && day.entries.length === 0 ? "bg-muted/20" : "bg-card"}`}
+            >
+              <div className="flex items-center justify-between border-b bg-muted/40 px-3 py-2.5">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium capitalize">{day.label}</span>
+                  <span className="text-sm font-semibold capitalize">{day.label}</span>
                   {day.isToday && <Badge variant="default">{t("currentWeek")}</Badge>}
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="font-mono text-sm tabular-nums">
-                    {formatDurationShort(dayTotalMs)}
-                  </span>
+                  {dayTotalMs > 0 && (
+                    <span className="font-mono text-sm font-semibold tabular-nums text-foreground">
+                      {formatDurationShort(dayTotalMs)}
+                    </span>
+                  )}
                   <Button size="sm" variant="ghost" onClick={() => openAdd(day.date)}>
                     <Plus className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
               {day.entries.length === 0 ? (
-                <p className="px-3 py-2 text-xs text-muted-foreground">{t("noEntries")}</p>
+                <p className="px-3 py-3 text-xs text-muted-foreground italic">{t("noEntries")}</p>
               ) : (
                 <Table>
                   <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-24">{t("start")}</TableHead>
-                      <TableHead className="w-24">{t("end")}</TableHead>
-                      <TableHead className="w-20">{t("break")}</TableHead>
-                      <TableHead className="w-24">{t("duration")}</TableHead>
-                      <TableHead>{t("note")}</TableHead>
-                      <TableHead className="w-24">{t("actions")}</TableHead>
+                    <TableRow className="border-b bg-muted/20 hover:bg-muted/20">
+                      <TableHead className="w-[18%] text-xs font-semibold uppercase tracking-wide">{t("start")}</TableHead>
+                      <TableHead className="w-[18%] text-xs font-semibold uppercase tracking-wide">{t("end")}</TableHead>
+                      <TableHead className="w-[16%] text-xs font-semibold uppercase tracking-wide">{t("break")}</TableHead>
+                      <TableHead className="w-[18%] text-xs font-semibold uppercase tracking-wide">{t("duration")}</TableHead>
+                      <TableHead className="text-xs font-semibold uppercase tracking-wide">{t("note")}</TableHead>
+                      <TableHead className="w-[60px] text-xs font-semibold uppercase tracking-wide">{t("actions")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {day.entries.map((e) => (
-                      <TableRow key={e.id}>
-                        <TableCell className="font-mono tabular-nums">
+                    {day.entries.map((e, idx) => (
+                      <TableRow
+                        key={e.id}
+                        className={`border-b ${idx % 2 === 1 ? "bg-muted/15" : ""} hover:bg-accent/50`}
+                      >
+                        <TableCell className="font-mono text-sm tabular-nums font-medium">
                           {e.startAt ? formatInZone(new Date(e.startAt), timeZone, "HH:mm") : "—"}
                         </TableCell>
-                        <TableCell className="font-mono tabular-nums">
+                        <TableCell className="font-mono text-sm tabular-nums font-medium">
                           {e.endAt ? formatInZone(new Date(e.endAt), timeZone, "HH:mm") : "—"}
                         </TableCell>
-                        <TableCell className="font-mono tabular-nums">
+                        <TableCell className="font-mono text-sm tabular-nums text-muted-foreground">
                           {e.breakMinutes} {t("minutes")}
                         </TableCell>
-                        <TableCell className="font-mono tabular-nums">
+                        <TableCell className="font-mono text-sm tabular-nums font-semibold">
                           {formatDurationShort(entryDurationMs(e))}
                         </TableCell>
-                        <TableCell className="max-w-[200px] truncate">
+                        <TableCell className="max-w-[200px] truncate text-sm">
                           {e.note ?? <span className="text-muted-foreground">—</span>}
                           {e.source === "TIMER" && (
                             <Badge variant="secondary" className="ml-2 text-[10px]">T</Badge>
                           )}
                         </TableCell>
                         <TableCell>
-                          <div className="flex gap-1">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              disabled={e.locked}
-                              onClick={() => openEdit(e)}
-                            >
-                              <Pencil className="h-3.5 w-3.5" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              disabled={e.locked}
-                              onClick={() => onDelete(e)}
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </Button>
-                            {e.locked && <Badge variant="secondary">{t("locked")}</Badge>}
-                          </div>
+                          {e.locked ? (
+                            <Badge variant="secondary">{t("locked")}</Badge>
+                          ) : (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => openEdit(e)}>
+                                  <Pencil className="mr-2 h-3.5 w-3.5" />
+                                  {t("edit")}
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  className="text-destructive focus:text-destructive"
+                                  onClick={() => onDelete(e)}
+                                >
+                                  <Trash2 className="mr-2 h-3.5 w-3.5" />
+                                  {t("delete")}
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          )}
                         </TableCell>
                       </TableRow>
                     ))}
@@ -200,9 +227,9 @@ export function TimesheetGrid({
         })}
       </div>
 
-      <div className="flex items-center justify-between rounded-lg border bg-muted/30 px-3 py-2">
-        <span className="text-sm font-medium">{t("weekTotal")}</span>
-        <span className="font-mono text-lg font-bold tabular-nums">
+      <div className="flex items-center justify-between rounded-lg border bg-primary/5 px-4 py-3 shadow-sm">
+        <span className="text-sm font-semibold">{t("weekTotal")}</span>
+        <span className="font-mono text-xl font-bold tabular-nums">
           {formatDurationShort(weekTotalMs)}
         </span>
       </div>
@@ -215,6 +242,7 @@ export function TimesheetGrid({
           open={dialogOpen}
           mode={editing ? "edit" : "create"}
           initial={dialogInitial}
+          adminUserId={adminUserId}
           onClose={() => setDialogOpen(false)}
           onSaved={() => window.location.reload()}
         />
@@ -222,6 +250,8 @@ export function TimesheetGrid({
 
       <QuickFillDialog
         days={days}
+        timeZone={timeZone}
+        adminUserId={adminUserId}
         open={quickFillOpen}
         onClose={() => setQuickFillOpen(false)}
         onDone={() => {

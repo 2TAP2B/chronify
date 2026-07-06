@@ -45,9 +45,24 @@ export type TimerStatus = {
   elapsedMs: number;
   breakMs: number;
   state: TimerState | null;
+  todayWorkedMs: number;
 };
 
 export async function getTimerStatus(userId: string, now: Date = new Date()): Promise<TimerStatus> {
+  const ctx = await getUserContext(userId);
+  const todayStart = toCalendarDate(now, ctx.timeZone);
+  const todayEntries = await db.timeEntry.findMany({
+    where: {
+      userId,
+      date: { gte: todayStart, lt: new Date(todayStart.getTime() + 86_400_000) },
+    },
+  });
+  const todayWorkedMs = todayEntries.reduce((sum, e) => {
+    if (e.type !== "WORK" || !e.startAt || !e.endAt) return sum;
+    const gross = e.endAt.getTime() - e.startAt.getTime();
+    return sum + Math.max(0, gross - e.breakMinutes * 60_000);
+  }, 0);
+
   const session = await db.timerSession.findUnique({ where: { userId } });
   if (!session) {
     return {
@@ -58,6 +73,7 @@ export async function getTimerStatus(userId: string, now: Date = new Date()): Pr
       elapsedMs: 0,
       breakMs: 0,
       state: null,
+      todayWorkedMs,
     };
   }
   const state = toTimerState(session);
@@ -70,6 +86,7 @@ export async function getTimerStatus(userId: string, now: Date = new Date()): Pr
     elapsedMs: computeElapsedMs(state, nowMs),
     breakMs: computeBreakMs(state, nowMs),
     state,
+    todayWorkedMs,
   };
 }
 

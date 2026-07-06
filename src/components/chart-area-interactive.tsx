@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Area, AreaChart, CartesianGrid, XAxis } from "recharts"
+import { Bar, BarChart, CartesianGrid, XAxis } from "recharts"
 
 import { useIsMobile } from "@/hooks/use-mobile"
 import {
@@ -57,6 +57,8 @@ export function ChartAreaInteractive({
     last3Months: string
     last30Days: string
     last7Days: string
+    worked: string
+    target: string
   }
 }) {
   const isMobile = useIsMobile()
@@ -81,6 +83,11 @@ export function ChartAreaInteractive({
     startDate.setDate(startDate.getDate() - daysToSubtract)
     return data.filter((item) => new Date(item.date) >= startDate)
   }, [data, timeRange])
+
+  const chartConfigLabeled = {
+    hours: { ...chartConfig.hours, label: labels.worked },
+    target: { ...chartConfig.target, label: labels.target },
+  } satisfies ChartConfig
 
   return (
     <Card className="@container/card">
@@ -133,36 +140,10 @@ export function ChartAreaInteractive({
       </CardHeader>
       <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
         <ChartContainer
-          config={chartConfig}
+          config={chartConfigLabeled}
           className="aspect-auto h-[250px] w-full"
         >
-          <AreaChart data={filteredData}>
-            <defs>
-              <linearGradient id="fillHours" x1="0" y1="0" x2="0" y2="1">
-                <stop
-                  offset="5%"
-                  stopColor="var(--color-hours)"
-                  stopOpacity={1.0}
-                />
-                <stop
-                  offset="95%"
-                  stopColor="var(--color-hours)"
-                  stopOpacity={0.1}
-                />
-              </linearGradient>
-              <linearGradient id="fillTarget" x1="0" y1="0" x2="0" y2="1">
-                <stop
-                  offset="5%"
-                  stopColor="var(--color-target)"
-                  stopOpacity={0.8}
-                />
-                <stop
-                  offset="95%"
-                  stopColor="var(--color-target)"
-                  stopOpacity={0.1}
-                />
-              </linearGradient>
-            </defs>
+          <BarChart accessibilityLayer data={filteredData}>
             <CartesianGrid vertical={false} />
             <XAxis
               dataKey="date"
@@ -188,25 +169,13 @@ export function ChartAreaInteractive({
                       day: "numeric",
                     })
                   }}
-                  indicator="dot"
+                  indicator="dashed"
                 />
               }
             />
-            <Area
-              dataKey="target"
-              type="natural"
-              fill="url(#fillTarget)"
-              stroke="var(--color-target)"
-              stackId="a"
-            />
-            <Area
-              dataKey="hours"
-              type="natural"
-              fill="url(#fillHours)"
-              stroke="var(--color-hours)"
-              stackId="a"
-            />
-          </AreaChart>
+            <Bar dataKey="target" fill="var(--color-target)" radius={4} />
+            <Bar dataKey="hours" fill="var(--color-hours)" radius={4} />
+          </BarChart>
         </ChartContainer>
       </CardContent>
     </Card>

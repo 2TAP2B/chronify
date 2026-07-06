@@ -246,3 +246,47 @@ export async function adjustVacationEntitlement(opts: {
     payload: { year: opts.year, totalDays: opts.totalDays, defaultDays: settings.defaultVacationDays },
   });
 }
+
+export async function adjustOvertimeBalance(opts: {
+  actor: SessionUser;
+  userId: string;
+  year: number;
+  carriedOverMinutes: number;
+  consumedOvertimeMinutes: number;
+}) {
+  requireAdmin(opts.actor);
+  const existing = await db.overtimeBalance.findUnique({
+    where: { userId_year: { userId: opts.userId, year: opts.year } },
+  });
+  await db.overtimeBalance.upsert({
+    where: { userId_year: { userId: opts.userId, year: opts.year } },
+    create: {
+      userId: opts.userId,
+      year: opts.year,
+      carriedOverMinutes: opts.carriedOverMinutes,
+      consumedOvertimeMinutes: opts.consumedOvertimeMinutes,
+      computedMinutes: 0,
+    },
+    update: {
+      carriedOverMinutes: opts.carriedOverMinutes,
+      consumedOvertimeMinutes: opts.consumedOvertimeMinutes,
+    },
+  });
+  await audit({
+    actorId: opts.actor.id,
+    targetId: opts.userId,
+    action: "overtime_balance.adjust",
+    entity: "OvertimeBalance",
+    payload: {
+      year: opts.year,
+      carriedOverMinutes: opts.carriedOverMinutes,
+      consumedOvertimeMinutes: opts.consumedOvertimeMinutes,
+      previous: existing
+        ? {
+            carriedOverMinutes: existing.carriedOverMinutes,
+            consumedOvertimeMinutes: existing.consumedOvertimeMinutes,
+          }
+        : null,
+    },
+  });
+}

@@ -17,10 +17,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { getOvertimeView } from "@/server/services/overtime";
-import {
-  formatSignedDuration,
-  msToSignedHours,
-} from "@/lib/overtime/calculate";
+import { formatSignedDuration } from "@/lib/overtime/calculate";
 import { formatInZone } from "@/lib/datetime";
 
 type Props = {
@@ -83,7 +80,7 @@ export default async function OvertimePage({ params, searchParams }: Props) {
           <CardHeader className="pb-2">
             <CardDescription>{t("carriedOver")}</CardDescription>
             <CardTitle className="font-mono text-2xl tabular-nums">
-              {view.computation.carriedOverMinutes} {t("minutes")}
+              {formatSignedDuration(view.computation.carriedOverMinutes * 60_000)}
             </CardTitle>
           </CardHeader>
         </Card>
@@ -108,8 +105,7 @@ export default async function OvertimePage({ params, searchParams }: Props) {
           </CardHeader>
           <CardContent>
             <Badge variant={balancePositive ? "default" : "destructive"}>
-              {balancePositive ? t("positive") : t("negative")} ·{" "}
-              {view.balanceHours.toFixed(2)} {t("hours")}
+              {balancePositive ? t("positive") : t("negative")}
             </Badge>
           </CardContent>
         </Card>
@@ -142,7 +138,6 @@ export default async function OvertimePage({ params, searchParams }: Props) {
                 <TableRow>
                   <TableHead className="w-40">{t("month")}</TableHead>
                   <TableHead className="w-32 text-right">{t("delta")}</TableHead>
-                  <TableHead className="w-24 text-right">{t("hours")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -155,9 +150,6 @@ export default async function OvertimePage({ params, searchParams }: Props) {
                       </TableCell>
                       <TableCell className="text-right font-mono tabular-nums">
                         {hasData ? formatSignedDuration(m.deltaMs) : "—"}
-                      </TableCell>
-                      <TableCell className="text-right font-mono tabular-nums">
-                        {hasData ? msToSignedHours(m.deltaMs).toFixed(2) : "—"}
                       </TableCell>
                     </TableRow>
                   );

@@ -40,7 +40,8 @@
     "closureChoices": "Schließtage",
     "businessClosures": "Schließtage",
     "lightMode": "Hell",
-    "darkMode": "Dunkel"
+    "darkMode": "Dunkel",
+    "theme": "Design"
   },
   "auth": {
     "loginTitle": "Anmelden",
@@ -55,6 +56,9 @@
   "dashboard": {
     "title": "Übersicht",
     "welcome": "Willkommen, {name}",
+    "hi": "Hi, {name}",
+    "todayIs": "Heute ist der {date}",
+    "workingTimeToday": "Arbeitszeit heute",
     "timerStart": "Timer starten",
     "timerStop": "Timer stoppen",
     "breakStart": "Pause starten",
@@ -68,15 +72,24 @@
     "onBreak": "Pause",
     "breakDuration": "Pause: {duration}",
     "today": "Heute",
+    "dailyTarget": "Tagesziel",
     "weeklyTarget": "Wochenziel",
     "weeklyProgress": "Wochenfortschritt",
     "chartTitle": "Arbeitsstunden",
     "chartDescription": "Stunden der letzten 3 Monate",
+    "chartWorked": "Gearbeitet",
+    "chartTarget": "Soll",
     "last3Months": "3 Monate",
     "last30Days": "30 Tage",
     "last7Days": "7 Tage",
     "recentEntries": "Letzte Einträge",
-    "days": "Tage"
+    "days": "Tage",
+    "tabs": {
+      "all": "Alle",
+      "work": "Arbeit",
+      "vacation": "Urlaub",
+      "sick": "Krank"
+    }
   },
   "timer": {
     "start": "Starten",
@@ -137,7 +150,9 @@
     "quickFillApply": "Anwenden",
     "quickFillCount": "Leere Tage: {count}",
     "quickFillResult": "{created} Einträge erstellt, {skipped} übersprungen.",
-    "weekdaysOnly": "Nur Montag–Freitag"
+    "weekdaysOnly": "Nur Montag–Freitag",
+    "myTimesheet": "Mein Stundenzettel",
+    "filter": "Filter"
   },
   "overtime": {
     "title": "Überstunden",
@@ -290,7 +305,13 @@
     "totalDays": "Urlaubstage gesamt",
     "currentDays": "Aktuell: {days} Tage",
     "usingDefault": "Verwendet Standardwert",
-    "entitlementHint": "Standard ist 30 Tage. Hier kann ein individueller Wert festgelegt werden."
+    "entitlementHint": "Standard ist 30 Tage. Hier kann ein individueller Wert festgelegt werden.",
+    "adjustOvertime": "Überstunden anpassen",
+    "carriedOverLabel": "Übertrag (Min.)",
+    "consumedLabel": "Verbraucht (Min.)",
+    "computedThisYear": "Dieses Jahr erarbeitet",
+    "netBalance": "Saldo",
+    "overtimeHint": "Werte in Stunden:Minuten (z.B. 08:30) oder Dezimal (8,5)."
   },
   "adminWorkingModels": {
     "title": "Arbeitszeitmodelle",
@@ -352,6 +373,8 @@
   },
   "adminSettings": {
     "title": "Einstellungen",
+    "appearance": "Darstellung",
+    "appearanceHint": "Wählen Sie ein Farbschema für die Anwendung.",
     "defaultFederalState": "Standard-Bundesland",
     "carryoverCutoffMonth": "Übertrag-Stichtag (Monat, 1-12)",
     "carryoverCutoffDay": "Übertrag-Stichtag (Tag, 1-31)",
@@ -360,6 +383,17 @@
     "defaultVacationDays": "Standard-Urlaubstage",
     "save": "Speichern",
     "saved": "Einstellungen gespeichert"
+  },
+  "theme": {
+    "defaultLight": "Standard (Hell)",
+    "defaultDark": "Standard (Dunkel)",
+    "mauveLight": "Mauve (Hell)",
+    "mauveDark": "Mauve (Dunkel)"
+  },
+  "profile": {
+    "title": "Profil",
+    "appearance": "Darstellung",
+    "appearanceHint": "Wählen Sie ein Farbschema für die Anwendung."
   },
   "adminYearSetup": {
     "title": "Jahreswechsel",

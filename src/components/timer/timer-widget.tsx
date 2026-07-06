@@ -1,17 +1,19 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useTimer } from "@/components/timer/use-timer";
+import { useTimer, useTimerInit } from "@/components/timer/use-timer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Play, Square, Coffee } from "lucide-react";
 
 export function TimerWidget() {
+  useTimerInit();
   const t = useTranslations("timer");
+  const tDash = useTranslations("dashboard");
   const timer = useTimer();
 
-  const active = timer.status?.active ?? false;
-  const onBreak = timer.status?.onBreak ?? false;
+  const active = timer.active;
+  const onBreak = timer.onBreak;
 
   const startedAtLabel =
     active && timer.status?.startedAt
@@ -37,7 +39,7 @@ export function TimerWidget() {
           </div>
           <div className="text-right">
             <div className="font-mono text-3xl font-bold tabular-nums">
-              {timer.displayElapsed}
+              {timer.totalWorkedDisplay}
             </div>
             <div className="text-xs text-muted-foreground">
               {t("breakTime")}:{" "}
@@ -54,7 +56,7 @@ export function TimerWidget() {
           {!active ? (
             <Button onClick={timer.start} disabled={timer.loading} className="flex-1">
               <Play className="mr-2 h-4 w-4" />
-              {t("start")}
+              {tDash("timerStart")}
             </Button>
           ) : (
             <>
@@ -74,7 +76,7 @@ export function TimerWidget() {
                 className="flex-1"
               >
                 <Square className="mr-2 h-4 w-4" />
-                {t("stop")}
+                {tDash("timerStop")}
               </Button>
             </>
           )}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
-import { ChevronUp, ChevronDown, Clock } from "lucide-react";
+import { Clock } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
   Popover,
@@ -52,12 +52,10 @@ export function TimeInput({
   value,
   onChange,
   placeholder,
-  onStep,
 }: {
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
-  onStep?: () => void;
 }) {
   const [clockOpen, setClockOpen] = useState(false);
   const [draft, setDraft] = useState(value);
@@ -96,8 +94,7 @@ export function TimeInput({
     const formatted = formatHHMM(next);
     setDraft(formatted);
     onChange(formatted);
-    onStep?.();
-  }, [draft, value, onChange, onStep]);
+  }, [draft, value, onChange]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === "ArrowUp") {
@@ -113,8 +110,7 @@ export function TimeInput({
     const formatted = formatHHMM(totalMin);
     setDraft(formatted);
     onChange(formatted);
-    onStep?.();
-  }, [onChange, onStep]);
+  }, [onChange]);
 
   const currentMin = parseHHMM(draft) ?? 0;
   const currentHour = Math.floor(currentMin / 60);
@@ -151,26 +147,8 @@ export function TimeInput({
         onChange={(e) => handleChange(e.target.value)}
         onBlur={handleBlur}
         onKeyDown={handleKeyDown}
-        className="font-mono tabular-nums pr-9"
+        className="font-mono tabular-nums"
       />
-      <div className="absolute right-1 top-1/2 -translate-y-1/2 flex flex-col">
-        <button
-          type="button"
-          onClick={() => step(STEP_MIN)}
-          className="text-muted-foreground hover:text-foreground"
-          tabIndex={-1}
-        >
-          <ChevronUp className="h-3 w-3" />
-        </button>
-        <button
-          type="button"
-          onClick={() => step(-STEP_MIN)}
-          className="text-muted-foreground hover:text-foreground"
-          tabIndex={-1}
-        >
-          <ChevronDown className="h-3 w-3" />
-        </button>
-      </div>
     </div>
   );
 }

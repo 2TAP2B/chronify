@@ -5,6 +5,7 @@ import {
   toggleUserActive,
   deleteUser,
   adjustVacationEntitlement,
+  adjustOvertimeBalance,
   updateUserSchema,
   AdminError,
 } from "@/server/services/admin-users";
@@ -51,6 +52,27 @@ export async function POST(
         return NextResponse.json({ error: "year and totalDays required" }, { status: 400 });
       }
       await adjustVacationEntitlement({ actor: user, userId: id, year, totalDays });
+      return NextResponse.json({ ok: true });
+    }
+    if (action === "adjust-overtime") {
+      const { year, carriedOverMinutes, consumedOvertimeMinutes } = body as {
+        year: number;
+        carriedOverMinutes: number;
+        consumedOvertimeMinutes: number;
+      };
+      if (!year || typeof carriedOverMinutes !== "number" || typeof consumedOvertimeMinutes !== "number") {
+        return NextResponse.json(
+          { error: "year, carriedOverMinutes and consumedOvertimeMinutes required" },
+          { status: 400 }
+        );
+      }
+      await adjustOvertimeBalance({
+        actor: user,
+        userId: id,
+        year,
+        carriedOverMinutes,
+        consumedOvertimeMinutes,
+      });
       return NextResponse.json({ ok: true });
     }
     return NextResponse.json({ error: "unknown action" }, { status: 400 });

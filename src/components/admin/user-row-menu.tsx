@@ -10,10 +10,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { MoreVertical, Pencil, Trash2, UserX, UserCheck, Clock, CalendarDays } from "lucide-react";
+import { MoreVertical, Pencil, Trash2, UserX, UserCheck, Clock, CalendarDays, Timer } from "lucide-react";
 import { UserDialog } from "@/components/admin/user-dialog";
 import { TemplatePickerDialog } from "@/components/admin/template-picker-dialog";
 import { EntitlementDialog } from "@/components/admin/entitlement-dialog";
+import { OvertimeAdjustDialog } from "@/components/admin/overtime-adjust-dialog";
 
 type User = {
   id: string;
@@ -35,6 +36,7 @@ export function UserRowMenu({ user, isSelf }: { user: User; isSelf: boolean }) {
   const [showEdit, setShowEdit] = useState(false);
   const [showTemplate, setShowTemplate] = useState(false);
   const [showEntitlement, setShowEntitlement] = useState(false);
+  const [showOvertime, setShowOvertime] = useState(false);
 
   async function toggleActive() {
     if (user.active && !confirm(t("confirmDeactivate"))) return;
@@ -93,6 +95,10 @@ export function UserRowMenu({ user, isSelf }: { user: User; isSelf: boolean }) {
             <CalendarDays className="mr-2 h-4 w-4" />
             {t("adjustEntitlement")}
           </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setShowOvertime(true)}>
+            <Timer className="mr-2 h-4 w-4" />
+            {t("adjustOvertime")}
+          </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
             onClick={toggleActive}
@@ -131,6 +137,9 @@ export function UserRowMenu({ user, isSelf }: { user: User; isSelf: boolean }) {
       )}
       {showEntitlement && (
         <EntitlementDialog userId={user.id} userName={user.name} open={showEntitlement} onOpenChange={setShowEntitlement} />
+      )}
+      {showOvertime && (
+        <OvertimeAdjustDialog userId={user.id} userName={user.name} open={showOvertime} onOpenChange={setShowOvertime} />
       )}
     </>
   );

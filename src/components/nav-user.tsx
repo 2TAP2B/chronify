@@ -5,14 +5,12 @@ import {
   BellIcon,
   BellOffIcon,
   LogOutIcon,
-  MoonIcon,
   MoreVerticalIcon,
-  SunIcon,
   UserCircleIcon,
 } from "lucide-react"
-import { useTheme } from "next-themes"
 import { signOut } from "next-auth/react"
-import { useTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
+import Link from "next/link"
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import {
@@ -40,7 +38,7 @@ export function NavUser({
   }
 }) {
   const { isMobile } = useSidebar()
-  const { theme, setTheme } = useTheme()
+  const locale = useLocale()
   const tNav = useTranslations("nav")
   const tPush = useTranslations("push")
 
@@ -131,14 +129,11 @@ export function NavUser({
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem
-                onClick={() =>
-                  setTheme(theme === "dark" ? "light" : "dark")
-                }
-              >
-                <SunIcon className="dark:hidden" />
-                <MoonIcon className="hidden dark:block" />
-                {theme === "dark" ? tNav("lightMode") : tNav("darkMode")}
+              <DropdownMenuItem asChild>
+                <Link href={`/${locale}/profile`}>
+                  <UserCircleIcon />
+                  {tNav("profile")}
+                </Link>
               </DropdownMenuItem>
               {pushSupported && (
                 <DropdownMenuItem
@@ -158,10 +153,6 @@ export function NavUser({
                   )}
                 </DropdownMenuItem>
               )}
-              <DropdownMenuItem>
-                <UserCircleIcon />
-                {tNav("profile")}
-              </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem
