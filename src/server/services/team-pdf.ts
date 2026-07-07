@@ -106,10 +106,6 @@ export async function generateTeamPdf(opts: {
             const weekdayIdx = d.weekday === 0 ? 6 : d.weekday - 1;
             const headerStyle = d.isWeekend
               ? [styles.dayHeader, styles.weekend]
-              : d.isClosure
-              ? [styles.dayHeader, styles.closure]
-              : d.isHoliday
-              ? [styles.dayHeader, styles.holiday]
               : [styles.dayHeader];
             return React.createElement(Text, { key: d.date, style: headerStyle },
               `${WEEKDAY_SHORT[weekdayIdx]}\n${dayNum}`

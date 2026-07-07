@@ -289,6 +289,7 @@
     "timezone": "Zeitzone",
     "breakMode": "Pausenmodus",
     "hireDate": "Eintrittsdatum",
+    "nfcCardId": "NFC Karten-ID",
     "active": "Aktiv",
     "inactive": "Inaktiv",
     "activate": "Aktivieren",
@@ -392,6 +393,20 @@
     "defaultVacationDays": "Standard-Urlaubstage",
     "save": "Speichern",
     "saved": "Einstellungen gespeichert"
+  },
+  "kiosk": {
+    "tapPrompt": "Karte ans Gerät halten",
+    "hello": "Hallo, {name}",
+    "started": "Zeiterfassung gestartet",
+    "stopped": "Zeiterfassung gestoppt",
+    "worked": "Gearbeitet",
+    "done": "Fertig",
+    "loading": "Wird verarbeitet…",
+    "manualEntry": "Karten-ID manuell eingeben",
+    "cardIdPlaceholder": "Karten-ID",
+    "cardNotFound": "Karte nicht erkannt",
+    "rateLimited": "Zu viele Versuche, bitte warten",
+    "scanError": "Fehler beim Lesen der Karte"
   },
   "import": {
     "title": "CSV Import",

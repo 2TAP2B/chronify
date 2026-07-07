@@ -48,6 +48,7 @@ export default async function AdminUsersPage({ params }: Props) {
       breakMode: true,
       active: true,
       hireDate: true,
+      nfcCardId: true,
     },
   });
 

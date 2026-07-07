@@ -48,7 +48,7 @@ export function TeamCalendar({
                 <th
                   key={d.date}
                   className={`border-b border-r p-1 text-center font-medium min-w-[40px] ${
-                    d.isWeekend ? "bg-muted/50" : d.isClosure ? "bg-amber-50" : d.isHoliday ? "bg-emerald-50" : "bg-background"
+                    d.isWeekend ? "bg-muted/50" : "bg-background"
                   }`}
                   title={d.holidayName ?? d.closureName ?? ""}
                 >

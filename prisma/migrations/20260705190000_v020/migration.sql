@@ -74,3 +74,9 @@ ALTER TABLE "OvertimeBalance" ADD COLUMN "consumedOvertimeMinutes" INTEGER NOT N
 
 -- AddColumn: User.hireDate
 ALTER TABLE "User" ADD COLUMN "hireDate" TIMESTAMP(3);
+
+-- AddColumn: User.nfcCardId
+ALTER TABLE "User" ADD COLUMN "nfcCardId" TEXT;
+
+-- CreateIndex: User.nfcCardId unique
+CREATE UNIQUE INDEX "User_nfcCardId_key" ON "User"("nfcCardId");

@@ -31,6 +31,7 @@ type User = {
   breakMode: string;
   active: boolean;
   hireDate: Date | null;
+  nfcCardId: string | null;
 };
 
 export function UserRowMenu({ user, isSelf }: { user: User; isSelf: boolean }) {

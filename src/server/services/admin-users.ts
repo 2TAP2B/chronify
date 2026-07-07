@@ -36,6 +36,7 @@ export const createUserSchema = z.object({
   breakMode: z.enum(["AUTO", "MANUAL"]).default("AUTO"),
   active: z.boolean().default(true),
   hireDate: z.string().datetime().nullable().optional(),
+  nfcCardId: z.string().max(20).nullable().optional(),
 });
 
 export const updateUserSchema = z.object({
@@ -54,6 +55,7 @@ export const updateUserSchema = z.object({
   breakMode: z.enum(["AUTO", "MANUAL"]).optional(),
   active: z.boolean().optional(),
   hireDate: z.string().datetime().nullable().optional(),
+  nfcCardId: z.string().max(20).nullable().optional(),
 });
 
 export type CreateUserInput = z.infer<typeof createUserSchema>;
@@ -78,6 +80,7 @@ export async function listUsers(actor: SessionUser) {
       lastLoginAt: true,
       createdAt: true,
       hireDate: true,
+      nfcCardId: true,
     },
   });
 }
@@ -106,6 +109,7 @@ export async function createUser(opts: {
       breakMode: opts.input.breakMode as BreakMode,
       active: opts.input.active,
       hireDate: opts.input.hireDate ? new Date(opts.input.hireDate) : null,
+      nfcCardId: opts.input.nfcCardId?.trim() || null,
     },
     select: { id: true, email: true, name: true },
   });
@@ -141,6 +145,7 @@ export async function updateUser(opts: {
   if (opts.input.breakMode !== undefined) data.breakMode = opts.input.breakMode;
   if (opts.input.active !== undefined) data.active = opts.input.active;
   if (opts.input.hireDate !== undefined) data.hireDate = opts.input.hireDate ? new Date(opts.input.hireDate) : null;
+  if (opts.input.nfcCardId !== undefined) data.nfcCardId = opts.input.nfcCardId?.trim() || null;
   if (opts.input.password) {
     data.passwordHash = await bcrypt.hash(opts.input.password, 12);
   }

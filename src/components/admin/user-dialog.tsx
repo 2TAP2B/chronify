@@ -38,6 +38,7 @@ type User = {
   breakMode: string;
   active: boolean;
   hireDate: Date | null;
+  nfcCardId: string | null;
 };
 
 const STATES = [
@@ -75,6 +76,7 @@ export function UserDialog({
   const [breakMode, setBreakMode] = useState(user?.breakMode ?? "AUTO");
   const [active, setActive] = useState(user?.active ?? true);
   const [hireDate, setHireDate] = useState(user?.hireDate ?? undefined);
+  const [nfcCardId, setNfcCardId] = useState(user?.nfcCardId ?? "");
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -85,6 +87,7 @@ export function UserDialog({
         email, name, firstName: firstName || undefined, lastName: lastName || undefined,
         role, locale, federalState, timezone, breakMode, active,
         hireDate: hireDate ? hireDate.toISOString() : null,
+        nfcCardId: nfcCardId.trim() || null,
       };
       if (password) body.password = password;
       const url = mode === "edit" ? `/api/admin/users/${user!.id}` : "/api/admin/users";
@@ -194,6 +197,16 @@ export function UserDialog({
                 value={hireDate}
                 onChange={setHireDate}
                 placeholder="—"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="nfcCardId">{t("nfcCardId")}</Label>
+              <Input
+                id="nfcCardId"
+                value={nfcCardId}
+                onChange={(e) => setNfcCardId(e.target.value)}
+                placeholder="—"
+                maxLength={20}
               />
             </div>
             {mode === "edit" && (

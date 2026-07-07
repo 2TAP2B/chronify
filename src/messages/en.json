@@ -289,6 +289,7 @@
     "timezone": "Timezone",
     "breakMode": "Break mode",
     "hireDate": "Hire date",
+    "nfcCardId": "NFC Card ID",
     "active": "Active",
     "inactive": "Inactive",
     "activate": "Activate",
@@ -392,6 +393,20 @@
     "defaultVacationDays": "Default vacation days",
     "save": "Save",
     "saved": "Settings saved"
+  },
+  "kiosk": {
+    "tapPrompt": "Tap your card",
+    "hello": "Hello, {name}",
+    "started": "Time tracking started",
+    "stopped": "Time tracking stopped",
+    "worked": "Worked",
+    "done": "Done",
+    "loading": "Processing…",
+    "manualEntry": "Enter card ID manually",
+    "cardIdPlaceholder": "Card ID",
+    "cardNotFound": "Card not recognized",
+    "rateLimited": "Too many attempts, please wait",
+    "scanError": "Error reading card"
   },
   "import": {
     "title": "CSV Import",
