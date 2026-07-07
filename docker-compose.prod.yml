@@ -7,7 +7,7 @@ services:
       POSTGRES_PASSWORD: puku
       POSTGRES_DB: puku
     volumes:
-      - db-data:/var/lib/postgresql/data
+      - prod-db-data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U puku -d puku"]
       interval: 10s
@@ -55,7 +55,7 @@ services:
       - internal
 
 volumes:
-  db-data:
+  prod-db-data:
 
 networks:
   frontend:

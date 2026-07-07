@@ -65,3 +65,9 @@ ALTER TABLE "ClosureChoice" ADD CONSTRAINT "ClosureChoice_closureId_fkey" FOREIG
 
 -- AddForeignKey
 ALTER TABLE "ClosureChoice" ADD CONSTRAINT "ClosureChoice_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddColumn: VacationRequest.useOvertime
+ALTER TABLE "VacationRequest" ADD COLUMN "useOvertime" BOOLEAN NOT NULL DEFAULT false;
+
+-- AddColumn: OvertimeBalance.consumedOvertimeMinutes
+ALTER TABLE "OvertimeBalance" ADD COLUMN "consumedOvertimeMinutes" INTEGER NOT NULL DEFAULT 0;
