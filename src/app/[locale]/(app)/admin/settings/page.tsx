@@ -30,15 +30,7 @@ export default async function AdminSettingsPage({ params }: Props) {
     <div className="space-y-6">
       <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>{t("title")}</CardTitle>
-          <CardDescription>OrgSettings (singleton)</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <SettingsForm settings={settings} />
-        </CardContent>
-      </Card>
+      <SettingsForm settings={settings} />
 
       <YearSetupCard />
     </div>

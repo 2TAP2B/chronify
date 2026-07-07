@@ -398,7 +398,16 @@
     "autoBreakHint": "Bei Aktivierung werden Pausen automatisch abgezogen (6h → 30min, 9h → 45min).",
     "defaultVacationDays": "Standard-Urlaubstage",
     "save": "Speichern",
-    "saved": "Einstellungen gespeichert"
+    "saved": "Einstellungen gespeichert",
+    "sectionOrg": "Organisation",
+    "sectionOrgHint": "Grundeinstellungen für das Unternehmen.",
+    "sectionBreak": "Pausen",
+    "sectionBreakHint": "Automatische oder manuelle Pausenerfassung.",
+    "sectionOvertime": "Überstunden",
+    "sectionOvertimeHint": "Übertrag und Verfall von Überstunden.",
+    "sectionLock": "Sperrfrist",
+    "sectionLockHint": "Zeitraum, in dem Einträge nachträglich geändert werden können.",
+    "lockWindowHint": "Einträge älter als N Tage sind für Mitarbeiter gesperrt. Administratoren können jederzeit ändern."
   },
   "adminDashboard": {
     "title": "Verwaltung",

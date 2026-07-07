@@ -398,7 +398,16 @@
     "autoBreakHint": "When enabled, breaks are auto-deducted (6h → 30min, 9h → 45min).",
     "defaultVacationDays": "Default vacation days",
     "save": "Save",
-    "saved": "Settings saved"
+    "saved": "Settings saved",
+    "sectionOrg": "Organization",
+    "sectionOrgHint": "Base settings for the company.",
+    "sectionBreak": "Breaks",
+    "sectionBreakHint": "Automatic or manual break tracking.",
+    "sectionOvertime": "Overtime",
+    "sectionOvertimeHint": "Carryover and expiry of overtime.",
+    "sectionLock": "Lock window",
+    "sectionLockHint": "Period in which entries can be retroactively edited.",
+    "lockWindowHint": "Entries older than N days are locked for employees. Admins can always edit."
   },
   "adminDashboard": {
     "title": "Administration",
