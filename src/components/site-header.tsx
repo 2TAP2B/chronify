@@ -37,6 +37,7 @@ const navLabelMap: Record<string, string> = {
   "vacation-approvals": "vacationApprovals",
   settings: "settings",
   profile: "profile",
+  import: "import",
 }
 
 export function SiteHeader() {
