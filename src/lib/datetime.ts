@@ -83,5 +83,31 @@ export function utcToZonedTime(instant: Date, timeZone: string): Date {
   return new Date(targetWallAsUtc - hostOffsetMs);
 }
 
+export function zonedTimeToUtc(
+  year: number,
+  month: number,
+  day: number,
+  hour: number,
+  minute: number,
+  timeZone: string
+): Date {
+  const wallAsUtc = Date.UTC(year, month - 1, day, hour, minute, 0);
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).formatToParts(new Date(wallAsUtc));
+  const get = (t: string) => Number(parts.find((p) => p.type === t)!.value);
+  let h = get("hour");
+  if (h === 24) h = 0;
+  const zonedAsUtc = Date.UTC(get("year"), get("month") - 1, get("day"), h, get("minute"), 0);
+  const offsetMs = zonedAsUtc - wallAsUtc;
+  return new Date(wallAsUtc - offsetMs);
+}
+
 export const WEEKDAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
 export type Weekday = (typeof WEEKDAYS)[number];

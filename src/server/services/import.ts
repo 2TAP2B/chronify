@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { audit, getUserContext, type SessionUser } from "@/server/context";
-import { toCalendarDate } from "@/lib/datetime";
+import { toCalendarDate, zonedTimeToUtc } from "@/lib/datetime";
 import { z } from "zod";
 
 export class ImportError extends Error {
@@ -46,11 +46,10 @@ function parseTime(val: string): { h: number; m: number } | null {
 }
 
 function combineDateTime(date: Date, time: { h: number; m: number }, timeZone: string): Date {
-  const [y, mo, d] = [date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate()];
-  const asZone = new Date(y, mo - 1, d, time.h, time.m, 0);
-  const asUtc = Date.UTC(y, mo - 1, d, time.h, time.m, 0);
-  const offset = asZone.getTime() - asUtc;
-  return new Date(asUtc - offset);
+  const y = date.getUTCFullYear();
+  const mo = date.getUTCMonth() + 1;
+  const d = date.getUTCDate();
+  return zonedTimeToUtc(y, mo, d, time.h, time.m, timeZone);
 }
 
 export async function importTimeEntries(opts: {

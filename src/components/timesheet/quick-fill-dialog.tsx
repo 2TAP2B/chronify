@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { zonedTimeToUtc } from "@/lib/datetime";
 import type { GridDay } from "@/components/timesheet/timesheet-grid";
 
 function combine(dateStr: string, timeStr: string): string | null {
@@ -22,10 +23,7 @@ function combine(dateStr: string, timeStr: string): string | null {
   const [h, m] = timeStr.split(":").map(Number);
   if (Number.isNaN(h) || Number.isNaN(m)) return null;
   const [y, mo, d] = dateStr.split("-").map(Number);
-  const asZone = new Date(y, mo - 1, d, h, m, 0);
-  const asUtc = Date.UTC(y, mo - 1, d, h, m, 0);
-  const offset = asZone.getTime() - asUtc;
-  return new Date(asUtc - offset).toISOString();
+  return zonedTimeToUtc(y, mo, d, h, m, "Europe/Berlin").toISOString();
 }
 
 function dateToISOInput(iso: string): string {

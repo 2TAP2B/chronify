@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/select";
 import { TimeInput } from "@/components/timesheet/time-input";
 import { DatePicker } from "@/components/ui/date-picker";
+import { formatInZone, zonedTimeToUtc } from "@/lib/datetime";
 
 export type EntryFormData = {
   date: string;
@@ -38,12 +39,7 @@ export type EntryFormMode = "create" | "edit";
 
 function isoToTimeInput(iso: string | null): string {
   if (!iso) return "";
-  const d = new Date(iso);
-  return d.toLocaleTimeString("de-DE", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  });
+  return formatInZone(new Date(iso), "Europe/Berlin", "HH:mm");
 }
 
 function toLocalDateInput(dateIso: string): string {
@@ -55,10 +51,7 @@ function combine(dateStr: string, timeStr: string): string | null {
   const [h, m] = timeStr.split(":").map(Number);
   if (Number.isNaN(h) || Number.isNaN(m)) return null;
   const [y, mo, d] = dateStr.split("-").map(Number);
-  const asZone = new Date(y, mo - 1, d, h, m, 0);
-  const asUtc = Date.UTC(y, mo - 1, d, h, m, 0);
-  const offset = asZone.getTime() - asUtc;
-  return new Date(asUtc - offset).toISOString();
+  return zonedTimeToUtc(y, mo, d, h, m, "Europe/Berlin").toISOString();
 }
 
 const MAX_DURATION_MIN = 1440;
