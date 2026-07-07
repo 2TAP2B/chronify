@@ -1,4 +1,5 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getOrgSettings } from "@/server/context";
@@ -33,9 +34,12 @@ export default async function DashboardPage({ params }: Props) {
   if (!session?.user?.id) return null;
 
   const [user, settings] = await Promise.all([
-    db.user.findUniqueOrThrow({ where: { id: session.user.id } }),
+    db.user.findUnique({ where: { id: session.user.id } }),
     getOrgSettings(),
   ]);
+  if (!user) {
+    redirect("/api/auth/signout");
+  }
   const timeZone = user.timezone || "Europe/Berlin";
   const now = new Date();
   const year = now.getUTCFullYear();

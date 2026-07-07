@@ -1,4 +1,5 @@
 import { getTranslations } from "next-intl/server";
+import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { AppSidebar } from "@/components/app-sidebar";
@@ -24,6 +25,10 @@ export default async function AppLayout({
       lastName: true,
     },
   });
+
+  if (!user) {
+    redirect("/api/auth/signout");
+  }
 
   const t = await getTranslations("nav");
 
