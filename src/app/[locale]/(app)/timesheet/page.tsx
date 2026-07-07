@@ -11,12 +11,21 @@ import {
 import { isEntryLocked } from "@/lib/timer-utils";
 import { TimesheetGrid } from "@/components/timesheet/timesheet-grid";
 import { UserSelector } from "@/components/timesheet/user-selector";
+import { TimesheetDatePicker } from "@/components/timesheet/timesheet-date-picker";
 import type { TimeEntryType } from "@prisma/client";
 
 type Props = {
   params: Promise<{ locale: string }>;
   searchParams: Promise<{ date?: string; userId?: string }>;
 };
+
+function getISOWeek(date: Date): number {
+  const d = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil((((d.getTime() - yearStart.getTime()) / 86_400_000) + 1) / 7);
+}
 
 export default async function TimesheetPage({ params, searchParams }: Props) {
   const { locale } = await params;
@@ -85,7 +94,8 @@ export default async function TimesheetPage({ params, searchParams }: Props) {
   const prevDate = addDaysUtc(weekStart, -7).toISOString().slice(0, 10);
   const nextDate = addDaysUtc(weekStart, 7).toISOString().slice(0, 10);
   const todayIso = new Date().toISOString().slice(0, 10);
-  const weekLabel = `${formatInZone(weekStart, timeZone, "dd.MM.yyyy", appLocale)} – ${formatInZone(
+  const kw = getISOWeek(weekStart);
+  const weekLabel = `${t("calendarWeek")} ${kw} · ${formatInZone(weekStart, timeZone, "dd.MM.yyyy", appLocale)} – ${formatInZone(
     addDaysUtc(weekEnd, -1),
     timeZone,
     "dd.MM.yyyy",
@@ -103,11 +113,15 @@ export default async function TimesheetPage({ params, searchParams }: Props) {
           >
             ← {t("previousWeek")}
           </a>
+          <TimesheetDatePicker
+            value={weekStart}
+            userId={userIdParam}
+          />
           <a
             href={`?date=${todayIso}${userIdParam ? `&userId=${userIdParam}` : ""}`}
             className="rounded-md border px-3 py-1.5 text-sm hover:bg-accent"
           >
-            {t("currentWeek")}
+            {t("today")}
           </a>
           <a
             href={`?date=${nextDate}${userIdParam ? `&userId=${userIdParam}` : ""}`}

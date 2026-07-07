@@ -6,7 +6,7 @@ import type { FederalState } from "@prisma/client";
 export type TeamDayEntry = {
   userId: string;
   userName: string;
-  type: "VACATION" | "SICK" | "PUBLIC_HOLIDAY";
+  type: "VACATION" | "SICK" | "PUBLIC_HOLIDAY" | "CLOSURE";
   date: string;
   note?: string | null;
 };
@@ -16,7 +16,9 @@ export type TeamCalendarDay = {
   weekday: number;
   isWeekend: boolean;
   isHoliday: boolean;
+  isClosure: boolean;
   holidayName?: string;
+  closureName?: string;
   entries: TeamDayEntry[];
 };
 
@@ -64,13 +66,21 @@ export async function getTeamCalendar(opts: {
   ]);
 
   // Time entries (VACATION/SICK/PUBLIC_HOLIDAY) in range
-  const timeEntries = await db.timeEntry.findMany({
-    where: {
-      date: { gte: from, lt: to },
-      type: { in: ["VACATION", "SICK", "PUBLIC_HOLIDAY"] },
-    },
-    include: { user: { select: { name: true } } },
-  });
+  const [timeEntries, closures] = await Promise.all([
+    db.timeEntry.findMany({
+      where: {
+        date: { gte: from, lt: to },
+        type: { in: ["VACATION", "SICK", "PUBLIC_HOLIDAY"] },
+      },
+      include: { user: { select: { name: true } } },
+    }),
+    db.businessClosure.findMany({
+      where: {
+        from: { lt: to },
+        to: { gte: from },
+      },
+    }),
+  ]);
 
   // Build day map
   const daysInMonth = new Date(Date.UTC(opts.year, opts.month, 0)).getUTCDate();
@@ -101,6 +111,21 @@ export async function getTeamCalendar(opts: {
         continue;
       }
       if (isWeekend) continue;
+
+      // Business closure (applies to all users)
+      const closure = closures.find(
+        (c) => date.getTime() >= c.from.getTime() && date.getTime() <= c.to.getTime()
+      );
+      if (closure) {
+        entries.push({
+          userId: u.id,
+          userName: u.name,
+          type: "CLOSURE",
+          date: dateStr,
+          note: closure.name,
+        });
+        continue;
+      }
 
       // Vacation
       const vac = vacations.find(
@@ -133,9 +158,12 @@ export async function getTeamCalendar(opts: {
       }
     }
 
-    // Determine if any holiday applies (for the day header)
+    // Determine if any holiday or closure applies (for the day header)
     const dayHoliday = holidays.find(
       (h) => toCalendarDate(h.date, "UTC").getTime() === date.getTime()
+    );
+    const dayClosure = closures.find(
+      (c) => date.getTime() >= c.from.getTime() && date.getTime() <= c.to.getTime()
     );
 
     days.push({
@@ -143,7 +171,9 @@ export async function getTeamCalendar(opts: {
       weekday,
       isWeekend,
       isHoliday: !!dayHoliday,
+      isClosure: !!dayClosure,
       holidayName: dayHoliday?.name,
+      closureName: dayClosure?.name,
       entries,
     });
   }

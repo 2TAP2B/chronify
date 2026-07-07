@@ -2,6 +2,7 @@ import { getTranslations, setRequestLocale, getLocale } from "next-intl/server";
 import { auth } from "@/lib/auth";
 import { getTeamCalendar, type TeamCalendarDay } from "@/server/services/team";
 import { TeamCalendar } from "@/components/team/team-calendar";
+import { TeamPdfExport } from "@/components/team/team-pdf-export";
 import {
   Card,
   CardContent,
@@ -59,6 +60,7 @@ export default async function TeamPage({ params, searchParams }: Props) {
           <a href={`?year=${prevYear}&month=${prevMonth}`} className="rounded-md border px-3 py-1.5 text-sm hover:bg-accent">←</a>
           <span className="font-semibold">{monthNames[month - 1]} {year}</span>
           <a href={`?year=${nextYear}&month=${nextMonth}`} className="rounded-md border px-3 py-1.5 text-sm hover:bg-accent">→</a>
+          <TeamPdfExport year={year} month={month} />
         </div>
       </div>
 
@@ -72,6 +74,7 @@ export default async function TeamPage({ params, searchParams }: Props) {
             <span className="flex items-center gap-1"><span className="h-3 w-3 rounded bg-blue-200" /> {t("vacation")}</span>
             <span className="flex items-center gap-1"><span className="h-3 w-3 rounded bg-red-200" /> {t("sick")}</span>
             <span className="flex items-center gap-1"><span className="h-3 w-3 rounded bg-emerald-200" /> {t("holiday")}</span>
+            <span className="flex items-center gap-1"><span className="h-3 w-3 rounded bg-amber-200" /> {t("closure")}</span>
             <span className="flex items-center gap-1"><span className="h-3 w-3 rounded bg-muted" /> {t("weekend")}</span>
           </div>
           <TeamCalendar days={days as TeamCalendarDay[]} users={users} />

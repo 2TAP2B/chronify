@@ -10,12 +10,14 @@ const TYPE_COLORS: Record<string, string> = {
   VACATION: "bg-blue-100 text-blue-800 border-blue-200",
   SICK: "bg-red-100 text-red-800 border-red-200",
   PUBLIC_HOLIDAY: "bg-emerald-100 text-emerald-800 border-emerald-200",
+  CLOSURE: "bg-amber-100 text-amber-800 border-amber-200",
 };
 
 const TYPE_LABELS: Record<string, string> = {
   VACATION: "U",
   SICK: "K",
   PUBLIC_HOLIDAY: "F",
+  CLOSURE: "S",
 };
 
 export function TeamCalendar({
@@ -46,9 +48,9 @@ export function TeamCalendar({
                 <th
                   key={d.date}
                   className={`border-b border-r p-1 text-center font-medium min-w-[40px] ${
-                    d.isWeekend ? "bg-muted/50" : d.isHoliday ? "bg-emerald-50" : "bg-background"
+                    d.isWeekend ? "bg-muted/50" : d.isClosure ? "bg-amber-50" : d.isHoliday ? "bg-emerald-50" : "bg-background"
                   }`}
-                  title={d.holidayName ?? ""}
+                  title={d.holidayName ?? d.closureName ?? ""}
                 >
                   <div className="text-[10px] text-muted-foreground">{WEEKDAY_LABELS[weekdayIdx]}</div>
                   <div>{dayNum}</div>
