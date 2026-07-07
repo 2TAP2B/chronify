@@ -47,6 +47,7 @@ export default async function AdminUsersPage({ params }: Props) {
       timezone: true,
       breakMode: true,
       active: true,
+      hireDate: true,
     },
   });
 

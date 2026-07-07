@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { format } from "date-fns";
 import {
   Dialog,
   DialogContent,
@@ -14,6 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   Select,
   SelectContent,
@@ -35,6 +37,7 @@ type User = {
   timezone: string;
   breakMode: string;
   active: boolean;
+  hireDate: Date | null;
 };
 
 const STATES = [
@@ -71,6 +74,7 @@ export function UserDialog({
   const [timezone, setTimezone] = useState(user?.timezone ?? "Europe/Berlin");
   const [breakMode, setBreakMode] = useState(user?.breakMode ?? "AUTO");
   const [active, setActive] = useState(user?.active ?? true);
+  const [hireDate, setHireDate] = useState(user?.hireDate ?? undefined);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -80,6 +84,7 @@ export function UserDialog({
       const body: Record<string, unknown> = {
         email, name, firstName: firstName || undefined, lastName: lastName || undefined,
         role, locale, federalState, timezone, breakMode, active,
+        hireDate: hireDate ? hireDate.toISOString() : null,
       };
       if (password) body.password = password;
       const url = mode === "edit" ? `/api/admin/users/${user!.id}` : "/api/admin/users";
@@ -182,6 +187,14 @@ export function UserDialog({
                   <SelectItem value="MANUAL">MANUAL</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="hireDate">{t("hireDate")}</Label>
+              <DatePicker
+                value={hireDate}
+                onChange={setHireDate}
+                placeholder="—"
+              />
             </div>
             {mode === "edit" && (
               <div className="space-y-1.5">

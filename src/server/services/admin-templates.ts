@@ -123,19 +123,19 @@ export async function assignTemplateToUser({ actor, templateId, userId }: { acto
   const template = await db.workingModelTemplate.findUnique({ where: { id: templateId } });
   if (!template) throw new TemplateError("Template not found", "NOT_FOUND", 404);
 
-  const user = await db.user.findUnique({ where: { id: userId } });
+  const user = await db.user.findUnique({ where: { id: userId }, select: { hireDate: true } });
   if (!user) throw new TemplateError("User not found", "NOT_FOUND", 404);
 
-  const now = new Date();
+  const validFrom = user.hireDate ?? new Date();
   await db.workingModel.updateMany({
     where: { userId, validTo: null },
-    data: { validTo: now },
+    data: { validTo: validFrom },
   });
 
   const created = await db.workingModel.create({
     data: {
       userId,
-      validFrom: now,
+      validFrom,
       validTo: null,
       mondayMinutes: template.mondayMinutes,
       tuesdayMinutes: template.tuesdayMinutes,

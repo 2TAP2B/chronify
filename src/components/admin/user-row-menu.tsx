@@ -30,6 +30,7 @@ type User = {
   timezone: string;
   breakMode: string;
   active: boolean;
+  hireDate: Date | null;
 };
 
 export function UserRowMenu({ user, isSelf }: { user: User; isSelf: boolean }) {

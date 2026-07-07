@@ -71,3 +71,6 @@ ALTER TABLE "VacationRequest" ADD COLUMN "useOvertime" BOOLEAN NOT NULL DEFAULT 
 
 -- AddColumn: OvertimeBalance.consumedOvertimeMinutes
 ALTER TABLE "OvertimeBalance" ADD COLUMN "consumedOvertimeMinutes" INTEGER NOT NULL DEFAULT 0;
+
+-- AddColumn: User.hireDate
+ALTER TABLE "User" ADD COLUMN "hireDate" TIMESTAMP(3);

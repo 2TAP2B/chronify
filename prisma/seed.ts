@@ -37,6 +37,7 @@ async function main() {
       federalState: FederalState.DE_NW,
       locale: "de",
       breakMode: BreakMode.AUTO,
+      hireDate: new Date("2026-01-01T00:00:00Z"),
     },
   });
   console.log("✓ Admin user (admin@puku.local / admin123)");

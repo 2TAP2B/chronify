@@ -67,6 +67,26 @@ describe("summarizeDay", () => {
     expect(msToSignedMinutes(s.deltaMs)).toBe(60);
     expect(s.breakMinutes).toBe(30);
   });
+
+  it("missed day (workedMs=0) produces negative delta equal to -target", () => {
+    const monday = new Date("2026-07-06T00:00:00Z");
+    const s = summarizeDay({ date: monday, workedMs: 0, breakMinutes: 0, model: fullWeek });
+    expect(s.targetMinutes).toBe(480);
+    expect(msToSignedMinutes(s.deltaMs)).toBe(-480);
+  });
+
+  it("weekend (target=0) with no work produces zero delta", () => {
+    const saturday = new Date("2026-07-11T00:00:00Z");
+    const s = summarizeDay({ date: saturday, workedMs: 0, breakMinutes: 0, model: fullWeek });
+    expect(s.targetMinutes).toBe(0);
+    expect(msToSignedMinutes(s.deltaMs)).toBe(0);
+  });
+
+  it("exactly meeting target produces zero delta", () => {
+    const monday = new Date("2026-07-06T00:00:00Z");
+    const s = summarizeDay({ date: monday, workedMs: 8 * H, breakMinutes: 0, model: fullWeek });
+    expect(msToSignedMinutes(s.deltaMs)).toBe(0);
+  });
 });
 
 describe("sumDeltaMs", () => {

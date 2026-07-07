@@ -19,6 +19,7 @@ import {
 import { getOvertimeView } from "@/server/services/overtime";
 import { formatSignedDuration } from "@/lib/overtime/calculate";
 import { formatInZone } from "@/lib/datetime";
+import { OvertimeBarChart } from "@/components/overtime/overtime-bar-chart";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -121,6 +122,18 @@ export default async function OvertimePage({ params, searchParams }: Props) {
           </CardContent>
         </Card>
       </div>
+
+      <OvertimeBarChart
+        data={view.computation.byMonth.map((m) => ({
+          month: m.month,
+          deltaMs: m.deltaMs,
+          label: monthNames[m.month - 1].slice(0, 3),
+        }))}
+        labels={{
+          title: t("monthlyChart"),
+          description: String(view.year),
+        }}
+      />
 
       <Card>
         <CardHeader>

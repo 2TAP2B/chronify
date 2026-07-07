@@ -35,6 +35,7 @@ export const createUserSchema = z.object({
   timezone: z.string().default("Europe/Berlin"),
   breakMode: z.enum(["AUTO", "MANUAL"]).default("AUTO"),
   active: z.boolean().default(true),
+  hireDate: z.string().datetime().nullable().optional(),
 });
 
 export const updateUserSchema = z.object({
@@ -52,6 +53,7 @@ export const updateUserSchema = z.object({
   timezone: z.string().optional(),
   breakMode: z.enum(["AUTO", "MANUAL"]).optional(),
   active: z.boolean().optional(),
+  hireDate: z.string().datetime().nullable().optional(),
 });
 
 export type CreateUserInput = z.infer<typeof createUserSchema>;
@@ -75,6 +77,7 @@ export async function listUsers(actor: SessionUser) {
       active: true,
       lastLoginAt: true,
       createdAt: true,
+      hireDate: true,
     },
   });
 }
@@ -102,6 +105,7 @@ export async function createUser(opts: {
       timezone: opts.input.timezone,
       breakMode: opts.input.breakMode as BreakMode,
       active: opts.input.active,
+      hireDate: opts.input.hireDate ? new Date(opts.input.hireDate) : null,
     },
     select: { id: true, email: true, name: true },
   });
@@ -136,6 +140,7 @@ export async function updateUser(opts: {
   if (opts.input.timezone !== undefined) data.timezone = opts.input.timezone;
   if (opts.input.breakMode !== undefined) data.breakMode = opts.input.breakMode;
   if (opts.input.active !== undefined) data.active = opts.input.active;
+  if (opts.input.hireDate !== undefined) data.hireDate = opts.input.hireDate ? new Date(opts.input.hireDate) : null;
   if (opts.input.password) {
     data.passwordHash = await bcrypt.hash(opts.input.password, 12);
   }
