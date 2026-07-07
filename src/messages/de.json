@@ -152,7 +152,8 @@
     "quickFillResult": "{created} Einträge erstellt, {skipped} übersprungen.",
     "weekdaysOnly": "Nur Montag–Freitag",
     "myTimesheet": "Mein Stundenzettel",
-    "filter": "Filter"
+    "filter": "Filter",
+    "overlapError": "Dieser Zeitraum überschneidet sich mit einem bestehenden Eintrag."
   },
   "overtime": {
     "title": "Überstunden",

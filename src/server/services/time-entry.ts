@@ -65,6 +65,10 @@ export async function createTimeEntry(opts: {
 
   const isAdminForOther = opts.actor.role === "ADMIN" && userId !== opts.actor.id;
 
+  if (opts.input.type === "WORK" && opts.input.startAt && opts.input.endAt) {
+    await assertNoOverlap(userId, opts.input.startAt, opts.input.endAt, ctx.timeZone);
+  }
+
   const entry = await db.timeEntry.create({
     data: {
       userId,
@@ -115,6 +119,14 @@ export async function updateTimeEntry(opts: {
   if (opts.input.breakMinutes !== undefined) data.breakMinutes = opts.input.breakMinutes;
   if (opts.input.type !== undefined) data.type = opts.input.type;
   if (opts.input.note !== undefined) data.note = opts.input.note ?? null;
+
+  const finalType = (data.type as string | undefined) ?? existing.type;
+  const finalStart = (data.startAt as Date | undefined) ?? existing.startAt;
+  const finalEnd = (data.endAt as Date | undefined) ?? existing.endAt;
+
+  if (finalType === "WORK" && finalStart && finalEnd) {
+    await assertNoOverlap(existing.userId, finalStart, finalEnd, ctx.timeZone, existing.id);
+  }
 
   const updated = await db.timeEntry.update({
     where: { id: opts.entryId },
@@ -181,6 +193,41 @@ function assertCanRead(actor: SessionUser, userId: string) {
 function assertCanWrite(actor: SessionUser, userId: string) {
   if (userId !== actor.id && actor.role !== "ADMIN") {
     throw new TimeEntryError("Forbidden", "FORBIDDEN", 403);
+  }
+}
+
+async function assertNoOverlap(
+  userId: string,
+  startAt: Date,
+  endAt: Date,
+  timeZone: string,
+  excludeEntryId?: string
+): Promise<void> {
+  const dayStart = toCalendarDate(startAt, timeZone);
+  const dayEnd = addDaysUtc(dayStart, 1);
+
+  const where: Record<string, unknown> = {
+    userId,
+    type: "WORK",
+    startAt: { not: null },
+    endAt: { not: null },
+    date: { gte: dayStart, lt: dayEnd },
+    AND: [
+      { startAt: { lt: endAt } },
+      { endAt: { gt: startAt } },
+    ],
+  };
+  if (excludeEntryId) {
+    where.id = { not: excludeEntryId };
+  }
+
+  const overlapping = await db.timeEntry.findFirst({ where: where as never });
+  if (overlapping) {
+    throw new TimeEntryError(
+      "Time entry overlaps with an existing entry",
+      "OVERLAP",
+      409
+    );
   }
 }
 

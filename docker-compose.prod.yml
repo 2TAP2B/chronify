@@ -24,6 +24,7 @@ services:
         condition: service_healthy
     environment:
       DATABASE_URL: "postgresql://puku:puku@db:5432/puku?schema=public"
+      NEXTAUTH_URL: "https://chronify.h0melab.cc"
       NEXTAUTH_SECRET: "${NEXTAUTH_SECRET}"
       CSRF_ALLOWED_ORIGINS: "https://chronify.h0melab.cc"
       SMTP_HOST: "${SMTP_HOST:-}"

@@ -46,7 +46,8 @@ export function LoginForm({
       return;
     }
 
-    router.push(res?.url ?? `/${locale}/dashboard`);
+    const callbackUrl = res?.url ? new URL(res.url).pathname : `/${locale}/dashboard`;
+    router.push(callbackUrl);
     router.refresh();
   }
 

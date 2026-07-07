@@ -19,6 +19,12 @@ async function getSession(request: NextRequest): Promise<Session> {
   return { user: { id: token.id as string, role: token.role as "EMPLOYEE" | "ADMIN" } };
 }
 
+function buildUrl(request: NextRequest, path: string): URL {
+  const proto = request.headers.get("x-forwarded-proto") ?? "http";
+  const host = request.headers.get("host") ?? request.nextUrl.host;
+  return new URL(path, `${proto}://${host}`);
+}
+
 function checkApiCsrf(request: NextRequest): NextResponse | null {
   if (!isMutationMethod(request.method)) return null;
   if (request.nextUrl.pathname.startsWith("/api/auth/")) return null;
@@ -60,17 +66,17 @@ export async function middleware(request: NextRequest) {
 
   if (isAuthRoute && session) {
     const locale = pathname.split("/")[1] || routing.defaultLocale;
-    return NextResponse.redirect(new URL(`/${locale}/dashboard`, request.url));
+    return NextResponse.redirect(buildUrl(request, `/${locale}/dashboard`));
   }
 
   if (!session && !isPublicRoute) {
     const locale = pathname.split("/")[1] || routing.defaultLocale;
-    return NextResponse.redirect(new URL(`/${locale}/login`, request.url));
+    return NextResponse.redirect(buildUrl(request, `/${locale}/login`));
   }
 
   if (session && pathname.includes("/admin") && session.user.role !== "ADMIN") {
     const locale = pathname.split("/")[1] || routing.defaultLocale;
-    return NextResponse.redirect(new URL(`/${locale}/dashboard`, request.url));
+    return NextResponse.redirect(buildUrl(request, `/${locale}/dashboard`));
   }
 
   return intlResponse;

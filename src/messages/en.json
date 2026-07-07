@@ -152,7 +152,8 @@
     "quickFillResult": "{created} entries created, {skipped} skipped.",
     "weekdaysOnly": "Monday–Friday only",
     "myTimesheet": "My timesheet",
-    "filter": "Filter"
+    "filter": "Filter",
+    "overlapError": "This time range overlaps with an existing entry."
   },
   "overtime": {
     "title": "Overtime",

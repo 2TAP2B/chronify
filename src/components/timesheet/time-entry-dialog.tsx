@@ -253,7 +253,11 @@ export function TimeEntryDialog({
       });
       if (!res.ok) {
         const b = await res.json().catch(() => ({}));
-        throw new Error((b as { error?: string }).error ?? `HTTP ${res.status}`);
+        const code = (b as { code?: string }).code;
+        const msg = code === "OVERLAP"
+          ? t("overlapError")
+          : (b as { error?: string }).error ?? `HTTP ${res.status}`;
+        throw new Error(msg);
       }
       onSaved();
       onClose();
