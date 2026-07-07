@@ -24,11 +24,17 @@ type MonthData = {
 const chartConfig = {
   hours: {
     label: "Überstunden",
-    color: "hsl(var(--chart-1))",
+    theme: {
+      light: "hsl(221 83% 53%)",
+      dark: "hsl(210 80% 60%)",
+    },
   },
   negative: {
     label: "Minus",
-    color: "hsl(var(--destructive))",
+    theme: {
+      light: "hsl(0 72% 45%)",
+      dark: "hsl(0 70% 55%)",
+    },
   },
 } satisfies ChartConfig;
 

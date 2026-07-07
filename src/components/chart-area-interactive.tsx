@@ -14,6 +14,8 @@ import {
 import {
   ChartConfig,
   ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart"
@@ -38,11 +40,17 @@ export type ChartPoint = {
 const chartConfig = {
   hours: {
     label: "Gearbeitet",
-    color: "hsl(var(--chart-1))",
+    theme: {
+      light: "hsl(221 83% 53%)",
+      dark: "hsl(210 80% 60%)",
+    },
   },
   target: {
     label: "Soll",
-    color: "hsl(var(--chart-2))",
+    theme: {
+      light: "hsl(160 64% 40%)",
+      dark: "hsl(160 55% 50%)",
+    },
   },
 } satisfies ChartConfig
 
@@ -175,6 +183,7 @@ export function ChartAreaInteractive({
             />
             <Bar dataKey="target" fill="var(--color-target)" radius={4} />
             <Bar dataKey="hours" fill="var(--color-hours)" radius={4} />
+            <ChartLegend content={<ChartLegendContent />} />
           </BarChart>
         </ChartContainer>
       </CardContent>
