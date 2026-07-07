@@ -16,6 +16,7 @@ export const updateSettingsSchema = z.object({
   ]).optional(),
   overtimeCarryoverCutoffMonth: z.number().int().min(1).max(12).optional(),
   overtimeCarryoverCutoffDay: z.number().int().min(1).max(31).optional(),
+  overtimeCarryoverCutoffEnabled: z.boolean().optional(),
   timeEntryLockWindowDays: z.number().int().min(0).max(365).optional(),
   autoBreakDefault: z.enum(["AUTO", "MANUAL"]).optional(),
   defaultVacationDays: z.number().min(0).max(60).optional(),

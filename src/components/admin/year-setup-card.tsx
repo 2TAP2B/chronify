@@ -88,6 +88,16 @@ export function YearSetupCard() {
         <CardDescription>{year}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        <div className="rounded-lg border bg-muted/30 p-3 text-sm text-muted-foreground">
+          <p className="mb-1 font-medium text-foreground">{t("explanationTitle")}</p>
+          <ul className="space-y-1 list-disc pl-4">
+            <li>{t("explanation1")}</li>
+            <li>{t("explanation2")}</li>
+            <li>{t("explanation3")}</li>
+            <li>{t("explanation4")}</li>
+          </ul>
+        </div>
+
         <div className="flex items-center gap-3">
           <label className="text-sm font-medium">{t("year")}:</label>
           <input

@@ -80,3 +80,6 @@ ALTER TABLE "User" ADD COLUMN "nfcCardId" TEXT;
 
 -- CreateIndex: User.nfcCardId unique
 CREATE UNIQUE INDEX "User_nfcCardId_key" ON "User"("nfcCardId");
+
+-- AddColumn: OrgSettings.overtimeCarryoverCutoffEnabled
+ALTER TABLE "OrgSettings" ADD COLUMN "overtimeCarryoverCutoffEnabled" BOOLEAN NOT NULL DEFAULT true;

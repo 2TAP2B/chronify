@@ -60,6 +60,7 @@ export default async function AppLayout({
           { href: "/admin/sickness", label: t("sickness") },
           { href: "/admin/settings", label: t("settings") },
           { href: "/admin/import", label: t("import") },
+          { href: "/admin/audit-log", label: t("auditLog") },
         ]
       : [];
 

@@ -215,7 +215,9 @@ export async function getOvertimeView(opts: {
     timeZone: ctx.timeZone,
   });
   const settings = await db.orgSettings.findUniqueOrThrow({ where: { id: "singleton" } });
-  const cutoff = carryoverCutoffDate(year, settings.overtimeCarryoverCutoffMonth, settings.overtimeCarryoverCutoffDay);
+  const cutoff = settings.overtimeCarryoverCutoffEnabled
+    ? carryoverCutoffDate(year, settings.overtimeCarryoverCutoffMonth, settings.overtimeCarryoverCutoffDay)
+    : null;
 
   return {
     userId,

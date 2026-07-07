@@ -15,6 +15,7 @@ async function main() {
       defaultFederalState: FederalState.DE_NW,
       overtimeCarryoverCutoffMonth: 4,
       overtimeCarryoverCutoffDay: 1,
+      overtimeCarryoverCutoffEnabled: true,
       timeEntryLockWindowDays: 7,
       autoBreakDefault: BreakMode.AUTO,
       defaultVacationDays: 30,

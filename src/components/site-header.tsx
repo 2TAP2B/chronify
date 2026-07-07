@@ -38,6 +38,7 @@ const navLabelMap: Record<string, string> = {
   settings: "settings",
   profile: "profile",
   import: "import",
+  "audit-log": "auditLog",
 }
 
 export function SiteHeader() {

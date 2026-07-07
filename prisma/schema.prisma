@@ -264,6 +264,7 @@ model OrgSettings {
   defaultFederalState              FederalState @default(DE_NW)
   overtimeCarryoverCutoffMonth    Int          @default(4)
   overtimeCarryoverCutoffDay      Int          @default(1)
+  overtimeCarryoverCutoffEnabled  Boolean      @default(true)
   timeEntryLockWindowDays         Int          @default(7)
   autoBreakDefault                BreakMode    @default(AUTO)
   defaultVacationDays             Float        @default(30)

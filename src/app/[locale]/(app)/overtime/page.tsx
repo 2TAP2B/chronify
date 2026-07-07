@@ -52,7 +52,7 @@ export default async function OvertimePage({ params, searchParams }: Props) {
   });
 
   const monthNames = appLocale === "en" ? MONTH_NAMES_EN : MONTH_NAMES_DE;
-  const cutoffLabel = formatInZone(view.cutoff, view.timeZone, "dd.MM.yyyy", appLocale);
+  const cutoffLabel = view.cutoff ? formatInZone(view.cutoff, view.timeZone, "dd.MM.yyyy", appLocale) : null;
   const balancePositive = view.computation.balanceMs >= 0;
 
   return (
@@ -110,17 +110,19 @@ export default async function OvertimePage({ params, searchParams }: Props) {
             </Badge>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>{t("carryoverCutoff")}</CardDescription>
-            <CardTitle className="text-base">{cutoffLabel}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-xs text-muted-foreground">
-              {t("cutoffHint", { date: cutoffLabel })}
-            </p>
-          </CardContent>
-        </Card>
+        {cutoffLabel && (
+          <Card>
+            <CardHeader className="pb-2">
+              <CardDescription>{t("carryoverCutoff")}</CardDescription>
+              <CardTitle className="text-base">{cutoffLabel}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-xs text-muted-foreground">
+                {t("cutoffHint", { date: cutoffLabel })}
+              </p>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       <OvertimeBarChart
