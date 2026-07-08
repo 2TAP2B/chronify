@@ -39,7 +39,7 @@ export default async function WorkingModelsPage({ params }: Props) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
           <p className="text-sm text-muted-foreground">{templates.length} {t("templates")}</p>
@@ -56,7 +56,8 @@ export default async function WorkingModelsPage({ params }: Props) {
           {templates.length === 0 ? (
             <p className="text-sm text-muted-foreground">{t("noTemplates")}</p>
           ) : (
-            <Table>
+            <div className="overflow-x-auto">
+              <Table className="min-w-[600px] whitespace-nowrap">
               <TableHeader>
                 <TableRow>
                   <TableHead>{t("templateName")}</TableHead>
@@ -91,6 +92,7 @@ export default async function WorkingModelsPage({ params }: Props) {
                 })}
               </TableBody>
             </Table>
+            </div>
           )}
         </CardContent>
       </Card>

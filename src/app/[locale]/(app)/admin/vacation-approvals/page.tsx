@@ -71,7 +71,8 @@ export default async function VacationApprovalsPage({ params }: Props) {
           {requests.length === 0 ? (
             <p className="text-sm text-muted-foreground">{t("noRequests")}</p>
           ) : (
-            <Table>
+            <div className="overflow-x-auto">
+              <Table className="min-w-[700px] whitespace-nowrap">
               <TableHeader>
                 <TableRow>
                   <TableHead>Mitarbeiter</TableHead>
@@ -114,6 +115,7 @@ export default async function VacationApprovalsPage({ params }: Props) {
                 ))}
               </TableBody>
             </Table>
+            </div>
           )}
         </CardContent>
       </Card>
@@ -124,7 +126,8 @@ export default async function VacationApprovalsPage({ params }: Props) {
             <CardTitle>Zuletzt entschieden</CardTitle>
           </CardHeader>
           <CardContent>
-            <Table>
+            <div className="overflow-x-auto">
+              <Table className="min-w-[500px] whitespace-nowrap">
               <TableHeader>
                 <TableRow>
                   <TableHead>Mitarbeiter</TableHead>
@@ -154,6 +157,7 @@ export default async function VacationApprovalsPage({ params }: Props) {
                 ))}
               </TableBody>
             </Table>
+            </div>
           </CardContent>
         </Card>
       )}

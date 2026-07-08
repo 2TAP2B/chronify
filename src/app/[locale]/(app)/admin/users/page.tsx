@@ -54,7 +54,7 @@ export default async function AdminUsersPage({ params }: Props) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
           <p className="text-sm text-muted-foreground">{users.length} {t("users")}</p>
@@ -68,7 +68,8 @@ export default async function AdminUsersPage({ params }: Props) {
           <CardDescription>{users.length}</CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
+          <div className="overflow-x-auto">
+            <Table className="min-w-[500px] whitespace-nowrap">
             <TableHeader>
               <TableRow>
                 <TableHead>{t("name")}</TableHead>
@@ -102,6 +103,7 @@ export default async function AdminUsersPage({ params }: Props) {
               ))}
             </TableBody>
           </Table>
+          </div>
         </CardContent>
       </Card>
     </div>

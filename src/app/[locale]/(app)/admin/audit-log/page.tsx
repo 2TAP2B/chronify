@@ -62,11 +62,11 @@ export default async function AdminAuditLogPage({ params, searchParams }: Props)
     <div className="space-y-6">
       <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
 
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="text-sm font-medium">{t("filter")}:</span>
+      <div className="flex flex-wrap items-center gap-2 overflow-x-auto">
+        <span className="text-sm font-medium shrink-0">{t("filter")}:</span>
         <a
           href={`?`}
-          className={`rounded-md border px-3 py-1.5 text-xs hover:bg-accent ${!entity ? "bg-primary text-primary-foreground" : ""}`}
+          className={`shrink-0 rounded-md border px-3 py-1.5 text-xs hover:bg-accent ${!entity ? "bg-primary text-primary-foreground" : ""}`}
         >
           {t("allEntities")}
         </a>
@@ -74,7 +74,7 @@ export default async function AdminAuditLogPage({ params, searchParams }: Props)
           <a
             key={e}
             href={`?entity=${e}`}
-            className={`rounded-md border px-3 py-1.5 text-xs hover:bg-accent ${entity === e ? "bg-primary text-primary-foreground" : ""}`}
+            className={`shrink-0 rounded-md border px-3 py-1.5 text-xs hover:bg-accent ${entity === e ? "bg-primary text-primary-foreground" : ""}`}
           >
             {e}
           </a>
@@ -90,7 +90,8 @@ export default async function AdminAuditLogPage({ params, searchParams }: Props)
           {entries.length === 0 ? (
             <p className="text-sm text-muted-foreground">{t("noEntries")}</p>
           ) : (
-            <Table>
+            <div className="overflow-x-auto">
+              <Table className="min-w-[600px] whitespace-nowrap">
               <TableHeader>
                 <TableRow>
                   <TableHead>{t("at")}</TableHead>
@@ -122,6 +123,7 @@ export default async function AdminAuditLogPage({ params, searchParams }: Props)
                 ))}
               </TableBody>
             </Table>
+            </div>
           )}
         </CardContent>
       </Card>

@@ -57,7 +57,8 @@ export default async function AdminSicknessPage({ params }: Props) {
           {notes.length === 0 ? (
             <p className="text-sm text-muted-foreground">{t("noNotes")}</p>
           ) : (
-            <Table>
+            <div className="overflow-x-auto">
+              <Table className="min-w-[700px] whitespace-nowrap">
               <TableHeader>
                 <TableRow>
                   <TableHead>{ta("employee")}</TableHead>
@@ -96,6 +97,7 @@ export default async function AdminSicknessPage({ params }: Props) {
                 ))}
               </TableBody>
             </Table>
+            </div>
           )}
         </CardContent>
       </Card>

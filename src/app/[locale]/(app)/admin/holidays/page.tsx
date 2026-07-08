@@ -54,14 +54,15 @@ export default async function AdminHolidaysPage({ params, searchParams }: Props)
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
-
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="text-sm font-medium">{t("year")}:</span>
-        <a href={`?year=${year - 1}`} className="rounded-md border px-3 py-1.5 text-sm hover:bg-accent">← {year - 1}</a>
-        <span className="font-semibold">{year}</span>
-        <a href={`?year=${year + 1}`} className="rounded-md border px-3 py-1.5 text-sm hover:bg-accent">{year + 1} →</a>
-        <span className="ml-4 text-sm text-muted-foreground">{t("state")}: {federalState}</span>
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
+        <div className="flex items-center gap-2 overflow-x-auto">
+          <span className="text-sm font-medium shrink-0">{t("year")}:</span>
+          <a href={`?year=${year - 1}`} className="flex h-9 shrink-0 items-center rounded-md border px-3 text-sm hover:bg-accent">← {year - 1}</a>
+          <span className="font-semibold shrink-0">{year}</span>
+          <a href={`?year=${year + 1}`} className="flex h-9 shrink-0 items-center rounded-md border px-3 text-sm hover:bg-accent">{year + 1} →</a>
+          <span className="shrink-0 text-sm text-muted-foreground">{t("state")}: {federalState}</span>
+        </div>
       </div>
 
       <div className="flex gap-2">
@@ -78,7 +79,8 @@ export default async function AdminHolidaysPage({ params, searchParams }: Props)
           {holidays.length === 0 ? (
             <p className="text-sm text-muted-foreground">{t("noHolidays")}</p>
           ) : (
-            <Table>
+            <div className="overflow-x-auto">
+              <Table className="min-w-[400px] whitespace-nowrap">
               <TableHeader>
                 <TableRow>
                   <TableHead>{t("date")}</TableHead>
@@ -102,6 +104,7 @@ export default async function AdminHolidaysPage({ params, searchParams }: Props)
                 ))}
               </TableBody>
             </Table>
+            </div>
           )}
         </CardContent>
       </Card>
