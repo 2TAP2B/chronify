@@ -163,7 +163,7 @@ export function TimesheetGrid({
                       <TableHead className="w-[18%] text-xs font-semibold uppercase tracking-wide">{t("end")}</TableHead>
                       <TableHead className="w-[16%] text-xs font-semibold uppercase tracking-wide">{t("break")}</TableHead>
                       <TableHead className="w-[18%] text-xs font-semibold uppercase tracking-wide">{t("duration")}</TableHead>
-                      <TableHead className="text-xs font-semibold uppercase tracking-wide">{t("note")}</TableHead>
+                      <TableHead className="hidden md:table-cell text-xs font-semibold uppercase tracking-wide">{t("note")}</TableHead>
                       <TableHead className="w-[60px] text-xs font-semibold uppercase tracking-wide">{t("actions")}</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -180,18 +180,18 @@ export function TimesheetGrid({
                           {e.endAt ? formatInZone(new Date(e.endAt), timeZone, "HH:mm") : "—"}
                         </TableCell>
                         <TableCell className="font-mono text-sm tabular-nums text-muted-foreground">
-                          {e.breakMinutes} {t("minutes")}
+                          {e.breakMinutes} <span className="hidden md:inline">{t("minutes")}</span>
                         </TableCell>
                         <TableCell className="font-mono text-sm tabular-nums font-semibold">
                           {formatDurationShort(entryDurationMs(e))}
                         </TableCell>
-                        <TableCell className="max-w-[200px] truncate text-sm">
+                        <TableCell className="hidden md:table-cell max-w-[200px] truncate text-sm">
                           {e.note ?? <span className="text-muted-foreground">—</span>}
                           {e.source === "TIMER" && (
                             <Badge variant="secondary" className="ml-2 text-[10px]">T</Badge>
                           )}
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="pr-3">
                           {e.locked ? (
                             <Badge variant="secondary">{t("locked")}</Badge>
                           ) : (

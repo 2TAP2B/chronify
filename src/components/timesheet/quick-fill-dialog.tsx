@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { TimeInput } from "@/components/timesheet/time-input";
 import { zonedTimeToUtc } from "@/lib/datetime";
 import type { GridDay } from "@/components/timesheet/timesheet-grid";
 
@@ -115,28 +116,18 @@ export function QuickFillDialog({
           <div className="grid grid-cols-3 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="qf-start">{t("start")}</Label>
-              <Input
-                id="qf-start"
-                type="text"
-                inputMode="numeric"
+              <TimeInput
                 placeholder="08:00"
-                maxLength={5}
                 value={startAt}
-                onChange={(e) => setStartAt(e.target.value)}
-                className="font-mono tabular-nums"
+                onChange={setStartAt}
               />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="qf-end">{t("end")}</Label>
-              <Input
-                id="qf-end"
-                type="text"
-                inputMode="numeric"
+              <TimeInput
                 placeholder="16:00"
-                maxLength={5}
                 value={endAt}
-                onChange={(e) => setEndAt(e.target.value)}
-                className="font-mono tabular-nums"
+                onChange={setEndAt}
               />
             </div>
             <div className="space-y-1.5">

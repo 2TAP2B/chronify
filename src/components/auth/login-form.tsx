@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import { AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -19,7 +18,6 @@ export function LoginForm({
   const t = useTranslations("auth");
   const tCommon = useTranslations("common");
   const locale = useLocale();
-  const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -32,23 +30,11 @@ export function LoginForm({
     const email = String(formData.get("email") ?? "");
     const password = String(formData.get("password") ?? "");
 
-    const res = await signIn("credentials", {
+    await signIn("credentials", {
       email,
       password,
-      redirect: false,
       callbackUrl: `/${locale}/dashboard`,
     });
-
-    setLoading(false);
-
-    if (res?.error) {
-      setError(t("loginError"));
-      return;
-    }
-
-    const callbackUrl = res?.url ? new URL(res.url).pathname : `/${locale}/dashboard`;
-    router.push(callbackUrl);
-    router.refresh();
   }
 
   return (

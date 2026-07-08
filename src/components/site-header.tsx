@@ -5,10 +5,11 @@ import { usePathname, useRouter } from "next/navigation"
 import { useLocale, useTranslations } from "next-intl"
 import Link from "next/link"
 import { useTheme } from "next-themes"
-import { Moon, Sun } from "lucide-react"
+import { Moon, Play, Square, Sun } from "lucide-react"
 
 import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
+import { useTimerInit, useTimer } from "@/stores/timer-store"
 import { Button } from "@/components/ui/button"
 import {
   Breadcrumb,
@@ -47,6 +48,9 @@ export function SiteHeader() {
   const tNav = useTranslations("nav")
   const tCommon = useTranslations("common")
   const { theme, setTheme } = useTheme()
+  const tTimer = useTranslations("timer")
+  useTimerInit()
+  const timer = useTimer()
 
   const segments = pathname
     .replace(`/${locale}`, "")
@@ -68,7 +72,7 @@ export function SiteHeader() {
   })
 
   return (
-    <header className="group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 flex h-12 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear">
+    <header className="group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 sticky top-0 z-10 bg-background flex h-12 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear">
       <div className="flex w-full items-center gap-1 px-4 lg:gap-2 lg:px-6">
         <SidebarTrigger className="-ml-1" />
         <Separator
@@ -94,6 +98,16 @@ export function SiteHeader() {
           </BreadcrumbList>
         </Breadcrumb>
         <div className="ml-auto flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            className={`size-8 ${timer.active ? "text-destructive hover:text-destructive/80" : "text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300"}`}
+            aria-label={timer.active ? tTimer("stop") : tTimer("start")}
+            disabled={timer.loading}
+            onClick={timer.active ? timer.stop : timer.start}
+          >
+            {timer.active ? <Square className="size-4" /> : <Play className="size-4" />}
+          </Button>
           <Button
             variant="ghost"
             size="icon"
