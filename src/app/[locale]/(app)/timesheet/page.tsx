@@ -12,6 +12,7 @@ import { isEntryLocked } from "@/lib/timer-utils";
 import { TimesheetGrid } from "@/components/timesheet/timesheet-grid";
 import { UserSelector } from "@/components/timesheet/user-selector";
 import { TimesheetDatePicker } from "@/components/timesheet/timesheet-date-picker";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { TimeEntryType } from "@prisma/client";
 
 type Props = {
@@ -104,14 +105,15 @@ export default async function TimesheetPage({ params, searchParams }: Props) {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 overflow-x-auto">
           <a
             href={`?date=${prevDate}${userIdParam ? `&userId=${userIdParam}` : ""}`}
-            className="rounded-md border px-3 py-1.5 text-sm hover:bg-accent"
+            className="flex h-9 shrink-0 items-center gap-1 rounded-md border px-2.5 text-sm hover:bg-accent sm:px-3"
           >
-            ← {t("previousWeek")}
+            <ChevronLeft className="h-4 w-4 sm:hidden" />
+            <span className="hidden sm:inline">← {t("previousWeek")}</span>
           </a>
           <TimesheetDatePicker
             value={weekStart}
@@ -119,15 +121,16 @@ export default async function TimesheetPage({ params, searchParams }: Props) {
           />
           <a
             href={`?date=${todayIso}${userIdParam ? `&userId=${userIdParam}` : ""}`}
-            className="rounded-md border px-3 py-1.5 text-sm hover:bg-accent"
+            className="flex h-9 shrink-0 items-center rounded-md border px-3 text-sm hover:bg-accent"
           >
             {t("today")}
           </a>
           <a
             href={`?date=${nextDate}${userIdParam ? `&userId=${userIdParam}` : ""}`}
-            className="rounded-md border px-3 py-1.5 text-sm hover:bg-accent"
+            className="flex h-9 shrink-0 items-center gap-1 rounded-md border px-2.5 text-sm hover:bg-accent sm:px-3"
           >
-            {t("nextWeek")} →
+            <span className="hidden sm:inline">{t("nextWeek")} →</span>
+            <ChevronRight className="h-4 w-4 sm:hidden" />
           </a>
         </div>
       </div>

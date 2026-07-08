@@ -21,6 +21,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar"
 import { cn } from "@/lib/utils"
 import type { NavItem } from "@/components/nav-main"
@@ -39,6 +40,7 @@ export function NavAdmin({ items }: { items: NavItem[] }) {
   const pathname = usePathname()
   const locale = useLocale()
   const t = useTranslations("nav")
+  const { setOpenMobile } = useSidebar()
 
   return (
     <SidebarGroup className="group-data-[collapsible=icon]:hidden">
@@ -55,6 +57,7 @@ export function NavAdmin({ items }: { items: NavItem[] }) {
                 asChild
                 isActive={active}
                 tooltip={item.label}
+                onClick={() => setOpenMobile(false)}
                 className={cn(
                   active &&
                     "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground"

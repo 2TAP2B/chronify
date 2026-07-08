@@ -1,3 +1,5 @@
+"use client"
+
 import * as React from "react"
 import Link from "next/link"
 import type { NavItem } from "@/components/nav-main"
@@ -13,6 +15,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar"
 
 export function AppSidebar({
@@ -24,7 +27,8 @@ export function AppSidebar({
   navItems: NavItem[]
   adminItems: NavItem[]
   user: { name: string; email: string }
-} & React.ComponentProps<typeof Sidebar>) {
+  } & React.ComponentProps<typeof Sidebar>) {
+  const { setOpenMobile } = useSidebar()
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -34,6 +38,7 @@ export function AppSidebar({
               size="lg"
               className="data-[slot=sidebar-menu-button]:!p-1.5"
               asChild
+              onClick={() => setOpenMobile(false)}
             >
               <Link href="/de/dashboard">
                 <Logo className="h-7 w-7" />

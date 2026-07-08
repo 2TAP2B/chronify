@@ -23,6 +23,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar"
 import { cn } from "@/lib/utils"
 
@@ -45,6 +46,7 @@ const iconMap: Record<string, LucideIcon> = {
 export function NavMain({ items }: { items: NavItem[] }) {
   const pathname = usePathname()
   const locale = useLocale()
+  const { setOpenMobile } = useSidebar()
 
   return (
     <SidebarGroup>
@@ -61,6 +63,7 @@ export function NavMain({ items }: { items: NavItem[] }) {
                   asChild
                   isActive={active}
                   tooltip={item.label}
+                  onClick={() => setOpenMobile(false)}
                   className={cn(
                     active &&
                       "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground"
