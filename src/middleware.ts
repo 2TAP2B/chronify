@@ -10,11 +10,13 @@ const publicRoutes = ["/login", "/kiosk"];
 
 type Session = { user: { id: string; role: "EMPLOYEE" | "ADMIN" } } | null;
 
+const secureCookie = process.env.AUTH_SECURE_COOKIE === "true";
+
 async function getSession(request: NextRequest): Promise<Session> {
   const token = await getToken({
     req: request,
     secret: process.env.NEXTAUTH_SECRET,
-    secureCookie: true,
+    secureCookie,
   });
   if (!token?.id || !token?.role) return null;
   return { user: { id: token.id as string, role: token.role as "EMPLOYEE" | "ADMIN" } };
