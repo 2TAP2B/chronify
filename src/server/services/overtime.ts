@@ -113,9 +113,9 @@ export async function computeDaysForRange(opts: {
     if (!model) continue;
 
     const targetMin = targetMinutesForDate(date, model);
-    if (targetMin === 0) continue;
-
     const agg = byDay.get(dayMs);
+    if (targetMin === 0 && !agg) continue;
+
     if (agg) {
       const summary = summarizeDay({
         date,
