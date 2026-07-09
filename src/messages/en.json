@@ -440,7 +440,9 @@
     "rateLimited": "Too many attempts, please wait",
     "scanError": "Error reading card",
     "enableNfc": "Enable NFC",
-    "nfcNotSupported": "NFC is not supported on this device"
+    "nfcNotSupported": "NFC is not supported on this device",
+    "nfcInsecure": "NFC requires HTTPS. Please open via https://",
+    "nfcPermissionDenied": "NFC permission denied. Please allow in settings."
   },
   "import": {
     "title": "CSV Import",

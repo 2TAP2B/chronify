@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useTranslations } from "next-intl";
-import { Play, Square, CheckCircle2, XCircle, CreditCard } from "lucide-react";
+import { Play, Square, XCircle, CreditCard } from "lucide-react";
 
 type KioskState = "idle" | "loading" | "started" | "stopped" | "error";
 
@@ -28,11 +28,21 @@ export function KioskScreen({ locale }: { locale: string }) {
   const [manualCardId, setManualCardId] = useState("");
   const [nfcSupported, setNfcSupported] = useState(false);
   const [nfcActive, setNfcActive] = useState(false);
+  const [nfcError, setNfcError] = useState<string | null>(null);
   const nfcRef = useRef<any>(null);
   const revertTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    setNfcSupported("NDEFReader" in navigator);
+    const hasNdef = "NDEFReader" in window || "NDEFReader" in navigator;
+    const secure = typeof window !== "undefined" && window.isSecureContext;
+    if (!hasNdef) {
+      setNfcSupported(false);
+      if (!secure) {
+        setNfcError("insecure");
+      }
+    } else {
+      setNfcSupported(true);
+    }
   }, []);
 
   useEffect(() => {
@@ -94,12 +104,21 @@ export function KioskScreen({ locale }: { locale: string }) {
   }, [state, t, scheduleRevert]);
 
   const startNfc = useCallback(async () => {
-    if (!("NDEFReader" in navigator)) return;
+    const NDEFReaderCtor = (window as any).NDEFReader ?? (navigator as any).NDEFReader;
+    if (!NDEFReaderCtor) {
+      setNfcError("not_available");
+      return;
+    }
+    if (!window.isSecureContext) {
+      setNfcError("insecure");
+      return;
+    }
     try {
-      const reader = new (window as any).NDEFReader();
+      const reader = new NDEFReaderCtor();
       await reader.scan();
       nfcRef.current = reader;
       setNfcActive(true);
+      setNfcError(null);
       reader.addEventListener("reading", (event: any) => {
         for (const record of event.message.records) {
           if (record.recordType === "text") {
@@ -112,6 +131,7 @@ export function KioskScreen({ locale }: { locale: string }) {
       });
     } catch {
       setNfcActive(false);
+      setNfcError("permission_denied");
     }
   }, [handleCardTap]);
 
@@ -143,18 +163,28 @@ export function KioskScreen({ locale }: { locale: string }) {
               <CreditCard className="h-12 w-12 text-primary" />
             </div>
             {nfcSupported && !nfcActive && (
-              <button
-                onClick={startNfc}
-                className="rounded-xl bg-primary px-8 py-4 text-xl font-semibold text-primary-foreground shadow-lg transition hover:bg-primary/90 active:scale-95"
-              >
-                {t("enableNfc")}
-              </button>
+              <div className="flex flex-col items-center gap-2">
+                <button
+                  onClick={startNfc}
+                  className="rounded-xl bg-primary px-8 py-4 text-xl font-semibold text-primary-foreground shadow-lg transition hover:bg-primary/90 active:scale-95"
+                >
+                  {t("enableNfc")}
+                </button>
+                {nfcError === "permission_denied" && (
+                  <p className="text-sm text-destructive">{t("nfcPermissionDenied")}</p>
+                )}
+              </div>
             )}
             {nfcSupported && nfcActive && (
               <p className="text-2xl font-semibold">{t("tapPrompt")}</p>
             )}
             {!nfcSupported && (
-              <p className="text-lg text-muted-foreground">{t("nfcNotSupported")}</p>
+              <div className="flex flex-col items-center gap-2">
+                <p className="text-lg text-muted-foreground">{t("nfcNotSupported")}</p>
+                {nfcError === "insecure" && (
+                  <p className="text-sm text-destructive">{t("nfcInsecure")}</p>
+                )}
+              </div>
             )}
           </div>
           <button

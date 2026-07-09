@@ -1,14 +1,28 @@
 import { setRequestLocale, getLocale } from "next-intl/server";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { KioskScreen } from "@/components/kiosk/kiosk-screen";
 
 type Props = {
   params: Promise<{ locale: string }>;
 };
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  userScalable: false,
+};
+
 export async function generateMetadata(): Promise<Metadata> {
   return {
     manifest: "/kiosk-manifest",
+    title: "Puku Kiosk",
+    themeColor: "#2563eb",
+    appleWebApp: {
+      capable: true,
+      statusBarStyle: "black-translucent",
+      title: "Puku Kiosk",
+    },
   };
 }
 

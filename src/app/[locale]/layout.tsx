@@ -3,10 +3,18 @@ import { getMessages, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import { Inter } from "next/font/google";
+import type { Viewport } from "next";
 import "../globals.css";
 import { Providers } from "@/components/providers";
+import { PwaManager } from "@/components/pwa/pwa-manager";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
 
 type Props = {
   children: React.ReactNode;
@@ -28,7 +36,10 @@ export default async function LocaleLayout({ children, params }: Props) {
     <html lang={locale} suppressHydrationWarning>
       <body className={`${inter.variable} font-sans antialiased`}>
         <NextIntlClientProvider messages={messages}>
-          <Providers>{children}</Providers>
+          <Providers>
+            {children}
+            <PwaManager />
+          </Providers>
         </NextIntlClientProvider>
       </body>
     </html>

@@ -4,7 +4,6 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { AppSidebar } from "@/components/app-sidebar";
 import { SiteHeader } from "@/components/site-header";
-import { PwaManager } from "@/components/pwa/pwa-manager";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 
 export default async function AppLayout({
@@ -85,7 +84,6 @@ export default async function AppLayout({
           </div>
         </div>
       </SidebarInset>
-      <PwaManager />
     </SidebarProvider>
   );
 }
