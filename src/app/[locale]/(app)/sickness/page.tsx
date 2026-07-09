@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/table";
 import { SickNoteForm } from "@/components/sickness/sick-note-form";
 import { CertificateUpload } from "@/components/sickness/certificate-upload";
+import { YearPicker } from "@/components/shared/year-picker";
 import { formatInZone } from "@/lib/datetime";
 
 type Props = {
@@ -54,11 +55,7 @@ export default async function SicknessPage({ params, searchParams }: Props) {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
-        <div className="flex items-center gap-2">
-          <a href={`?year=${year - 1}`} className="rounded-md border px-3 py-1.5 text-sm hover:bg-accent">← {year - 1}</a>
-          <span className="font-semibold">{year}</span>
-          <a href={`?year=${year + 1}`} className="rounded-md border px-3 py-1.5 text-sm hover:bg-accent">{year + 1} →</a>
-        </div>
+        <YearPicker year={year} />
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">

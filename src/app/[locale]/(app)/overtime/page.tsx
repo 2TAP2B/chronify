@@ -20,6 +20,7 @@ import { getOvertimeView } from "@/server/services/overtime";
 import { formatSignedDuration } from "@/lib/overtime/calculate";
 import { formatInZone } from "@/lib/datetime";
 import { OvertimeBarChart } from "@/components/overtime/overtime-bar-chart";
+import { YearPicker } from "@/components/shared/year-picker";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -59,21 +60,7 @@ export default async function OvertimePage({ params, searchParams }: Props) {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
-        <div className="flex items-center gap-2">
-          <a
-            href={`?year=${view.year - 1}`}
-            className="rounded-md border px-3 py-1.5 text-sm hover:bg-accent"
-          >
-            ← {view.year - 1}
-          </a>
-          <span className="font-semibold">{view.year}</span>
-          <a
-            href={`?year=${view.year + 1}`}
-            className="rounded-md border px-3 py-1.5 text-sm hover:bg-accent"
-          >
-            {view.year + 1} →
-          </a>
-        </div>
+        <YearPicker year={view.year} />
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

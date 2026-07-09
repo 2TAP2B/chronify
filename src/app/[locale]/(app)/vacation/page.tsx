@@ -19,6 +19,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { VacationRequestForm } from "@/components/vacation/vacation-request-form";
+import { YearPicker } from "@/components/shared/year-picker";
 import { formatInZone } from "@/lib/datetime";
 import type { VacationStatus } from "@prisma/client";
 
@@ -69,7 +70,10 @@ export default async function VacationPage({ params, searchParams }: Props) {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
+        <YearPicker year={year} />
+      </div>
 
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
@@ -158,11 +162,6 @@ export default async function VacationPage({ params, searchParams }: Props) {
         </CardContent>
       </Card>
 
-      <div className="flex items-center gap-2">
-        <a href={`?year=${year - 1}`} className="rounded-md border px-3 py-1.5 text-sm hover:bg-accent">← {year - 1}</a>
-        <span className="font-semibold">{year}</span>
-        <a href={`?year=${year + 1}`} className="rounded-md border px-3 py-1.5 text-sm hover:bg-accent">{year + 1} →</a>
-      </div>
     </div>
   );
 }
