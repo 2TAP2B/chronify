@@ -14,15 +14,23 @@ async function getSession(request: NextRequest): Promise<Session> {
   const token = await getToken({
     req: request,
     secret: process.env.NEXTAUTH_SECRET,
+    secureCookie: true,
   });
   if (!token?.id || !token?.role) return null;
   return { user: { id: token.id as string, role: token.role as "EMPLOYEE" | "ADMIN" } };
 }
 
-function buildUrl(request: NextRequest, path: string): URL {
-  const proto = request.headers.get("x-forwarded-proto") ?? "http";
-  const host = request.headers.get("host") ?? request.nextUrl.host;
-  return new URL(path, `${proto}://${host}`);
+function requestOrigin(request: NextRequest): string {
+  const proto = request.headers.get("x-forwarded-proto") ?? request.nextUrl.protocol.slice(0, -1);
+  return `${proto}://${request.nextUrl.host}`;
+}
+
+function redirectUrl(request: NextRequest, pathname: string): URL {
+  const url = request.nextUrl.clone();
+  const proto = request.headers.get("x-forwarded-proto");
+  if (proto) url.protocol = `${proto}:`;
+  url.pathname = pathname;
+  return url;
 }
 
 function checkApiCsrf(request: NextRequest): NextResponse | null {
@@ -35,9 +43,7 @@ function checkApiCsrf(request: NextRequest): NextResponse | null {
     .map((s) => s.trim())
     .filter(Boolean);
 
-  const host = request.headers.get("host");
-  const proto = request.headers.get("x-forwarded-proto") ?? "http";
-  const expected = host ? `${proto}://${host}` : null;
+  const expected = requestOrigin(request);
 
   const result = checkCsrfOrigin(origin, allowed, expected);
   if (!result.ok) {
@@ -66,17 +72,17 @@ export async function middleware(request: NextRequest) {
 
   if (isAuthRoute && session) {
     const locale = pathname.split("/")[1] || routing.defaultLocale;
-    return NextResponse.redirect(buildUrl(request, `/${locale}/dashboard`));
+    return NextResponse.redirect(redirectUrl(request, `/${locale}/dashboard`));
   }
 
   if (!session && !isPublicRoute) {
     const locale = pathname.split("/")[1] || routing.defaultLocale;
-    return NextResponse.redirect(buildUrl(request, `/${locale}/login`));
+    return NextResponse.redirect(redirectUrl(request, `/${locale}/login`));
   }
 
   if (session && pathname.includes("/admin") && session.user.role !== "ADMIN") {
     const locale = pathname.split("/")[1] || routing.defaultLocale;
-    return NextResponse.redirect(buildUrl(request, `/${locale}/dashboard`));
+    return NextResponse.redirect(redirectUrl(request, `/${locale}/dashboard`));
   }
 
   return intlResponse;

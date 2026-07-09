@@ -1,6 +1,13 @@
 #!/bin/sh
 set -e
 
+# Ensure NEXTAUTH_SECRET is set — generate one if missing
+if [ -z "${NEXTAUTH_SECRET}" ]; then
+  echo "==> WARNING: NEXTAUTH_SECRET not set, generating one…"
+  NEXTAUTH_SECRET="$(openssl rand -base64 32)"
+  export NEXTAUTH_SECRET
+fi
+
 echo "==> Running prisma migrate deploy"
 npx prisma migrate deploy
 
