@@ -1,7 +1,7 @@
 "use client"
 
 import { Fragment } from "react"
-import { usePathname, useRouter } from "next/navigation"
+import { usePathname } from "next/navigation"
 import { useLocale, useTranslations } from "next-intl"
 import Link from "next/link"
 import { useTheme } from "next-themes"
@@ -81,6 +81,16 @@ export function SiteHeader() {
         />
         <Breadcrumb>
           <BreadcrumbList>
+            {segments.length > 0 && segments[0] !== "dashboard" && (
+              <>
+                <BreadcrumbItem>
+                  <BreadcrumbLink asChild>
+                    <Link href={`/${locale}/dashboard`}>{tNav("dashboard")}</Link>
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+              </>
+            )}
             {crumbs.map((crumb, i) => (
               <Fragment key={crumb.href}>
                 {i > 0 && <BreadcrumbSeparator />}
