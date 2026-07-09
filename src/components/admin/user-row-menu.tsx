@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { MoreVertical, Pencil, Trash2, UserX, UserCheck, Clock, CalendarDays, Timer } from "lucide-react";
 import { UserDialog } from "@/components/admin/user-dialog";
 import { TemplatePickerDialog } from "@/components/admin/template-picker-dialog";
@@ -36,6 +37,7 @@ type User = {
 
 export function UserRowMenu({ user, isSelf }: { user: User; isSelf: boolean }) {
   const t = useTranslations("adminUsers");
+  const confirm = useConfirm();
   const [pending, startTransition] = useTransition();
   const [showEdit, setShowEdit] = useState(false);
   const [showTemplate, setShowTemplate] = useState(false);
@@ -43,7 +45,7 @@ export function UserRowMenu({ user, isSelf }: { user: User; isSelf: boolean }) {
   const [showOvertime, setShowOvertime] = useState(false);
 
   async function toggleActive() {
-    if (user.active && !confirm(t("confirmDeactivate"))) return;
+    if (user.active && !await confirm({ title: t("confirmDeactivate"), variant: "destructive", confirmLabel: t("deactivate") })) return;
     startTransition(async () => {
       const res = await fetch(`/api/admin/users/${user.id}`, {
         method: "POST",
@@ -55,14 +57,14 @@ export function UserRowMenu({ user, isSelf }: { user: User; isSelf: boolean }) {
       } else {
         const b = await res.json().catch(() => ({}));
         if ((b as { code?: string }).code === "SELF_DEACTIVATE") {
-          alert(t("cannotDeactivateSelf"));
+          await confirm({ title: "Fehler", description: t("cannotDeactivateSelf"), confirmLabel: "OK" });
         }
       }
     });
   }
 
   async function deleteUser() {
-    if (!confirm(t("confirmDelete"))) return;
+    if (!await confirm({ title: t("confirmDelete"), variant: "destructive", confirmLabel: t("delete") })) return;
     startTransition(async () => {
       const res = await fetch(`/api/admin/users/${user.id}`, { method: "DELETE" });
       if (res.ok) {
@@ -70,9 +72,9 @@ export function UserRowMenu({ user, isSelf }: { user: User; isSelf: boolean }) {
       } else {
         const b = await res.json().catch(() => ({}));
         if ((b as { code?: string }).code === "HAS_DEPENDENCIES") {
-          alert(t("hasDependencies"));
+          await confirm({ title: "Fehler", description: t("hasDependencies"), confirmLabel: "OK" });
         } else {
-          alert((b as { error?: string }).error ?? "error");
+          await confirm({ title: "Fehler", description: (b as { error?: string }).error ?? "error", confirmLabel: "OK" });
         }
       }
     });

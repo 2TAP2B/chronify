@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { Plus, Zap, Pencil, Trash2, MoreHorizontal } from "lucide-react";
 import {
   DropdownMenu,
@@ -61,6 +62,7 @@ export function TimesheetGrid({
   adminUserId?: string;
 }) {
   const t = useTranslations("timesheet");
+  const confirm = useConfirm();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<GridEntry | null>(null);
   const [addDay, setAddDay] = useState<string | null>(null);
@@ -85,12 +87,12 @@ export function TimesheetGrid({
   }
 
   async function onDelete(entry: GridEntry) {
-    if (!confirm(t("confirmDelete"))) return;
+    if (!await confirm({ title: t("confirmDelete"), variant: "destructive", confirmLabel: t("delete") })) return;
     startTransition(async () => {
       const res = await fetch(`/api/time-entries/${entry.id}${adminUserId ? `?userId=${adminUserId}` : ""}`, { method: "DELETE" });
       if (!res.ok) {
         const b = await res.json().catch(() => ({}));
-        alert((b as { error?: string }).error ?? "error");
+        await confirm({ title: "Fehler", description: (b as { error?: string }).error ?? "error", confirmLabel: "OK" });
       }
       window.location.reload();
     });

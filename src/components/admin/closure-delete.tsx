@@ -3,14 +3,16 @@
 import { useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { Trash2 } from "lucide-react";
 
 export function ClosureDelete({ closureId, closureName }: { closureId: string; closureName: string }) {
   const t = useTranslations("adminClosures");
+  const confirm = useConfirm();
   const [pending, startTransition] = useTransition();
 
-  function onDelete() {
-    if (!confirm(t("confirmDelete"))) return;
+  async function onDelete() {
+    if (!await confirm({ title: t("confirmDelete"), variant: "destructive", confirmLabel: t("delete") })) return;
     startTransition(async () => {
       await fetch(`/api/business-closures/${closureId}`, { method: "DELETE" });
       window.location.reload();

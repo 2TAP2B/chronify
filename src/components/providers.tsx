@@ -3,6 +3,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "next-themes";
 import { useEffect, useState, type ReactNode } from "react";
+import { ConfirmProvider } from "@/components/ui/confirm-dialog";
 
 export type ColorScheme = "default" | "mauve";
 
@@ -47,7 +48,9 @@ export function Providers({ children }: { children: ReactNode }) {
       themes={["light", "dark"]}
     >
       <ColorSchemeSync />
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      <QueryClientProvider client={queryClient}>
+        <ConfirmProvider>{children}</ConfirmProvider>
+      </QueryClientProvider>
     </ThemeProvider>
   );
 }

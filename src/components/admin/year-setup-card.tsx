@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 
 type Status = {
   year: number;
@@ -23,6 +24,7 @@ type Status = {
 
 export function YearSetupCard() {
   const t = useTranslations("adminYearSetup");
+  const confirm = useConfirm();
   const [year, setYear] = useState(new Date().getUTCFullYear() + 1);
   const [carriedOver, setCarriedOver] = useState(true);
   const [status, setStatus] = useState<Status | null>(null);
@@ -52,7 +54,7 @@ export function YearSetupCard() {
   }, [year]);
 
   async function run() {
-    if (!confirm(t("confirmRun", { year }))) return;
+    if (!await confirm({ title: t("confirmRun", { year }), variant: "destructive", confirmLabel: t("runSetup") })) return;
     setRunning(true);
     setError(null);
     setResult(null);

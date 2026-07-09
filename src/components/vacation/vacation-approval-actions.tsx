@@ -4,17 +4,19 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { Check, X } from "lucide-react";
 
 export function VacationApprovalActions({ requestId }: { requestId: string }) {
   const t = useTranslations("vacation");
+  const confirm = useConfirm();
   const [note, setNote] = useState("");
   const [loading, setLoading] = useState<null | "approve" | "reject">(null);
   const [error, setError] = useState<string | null>(null);
 
   async function act(action: "approve" | "reject") {
     const msg = action === "approve" ? t("confirmApprove") : t("confirmReject");
-    if (!confirm(msg)) return;
+    if (!await confirm({ title: msg, variant: action === "reject" ? "destructive" : "default", confirmLabel: t(action === "approve" ? "approve" : "reject") })) return;
     setLoading(action);
     setError(null);
     try {

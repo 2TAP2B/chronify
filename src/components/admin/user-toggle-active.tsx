@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { UserCheck, UserX } from "lucide-react";
 
 export function UserToggleActive({
@@ -15,11 +16,12 @@ export function UserToggleActive({
   isSelf: boolean;
 }) {
   const t = useTranslations("adminUsers");
+  const confirm = useConfirm();
   const [, startTransition] = useTransition();
 
   async function toggle() {
     const action = active ? "deactivate" : "activate";
-    if (active && !confirm(t("confirmDeactivate"))) return;
+    if (active && !await confirm({ title: t("confirmDeactivate"), variant: "destructive", confirmLabel: t("deactivate") })) return;
     startTransition(async () => {
       const res = await fetch(`/api/admin/users/${userId}`, {
         method: "POST",
@@ -29,7 +31,7 @@ export function UserToggleActive({
       if (!res.ok) {
         const b = await res.json().catch(() => ({}));
         const code = (b as { code?: string }).code;
-        alert(code === "SELF_DEACTIVATE" ? t("cannotDeactivateSelf") : (b as { error?: string }).error ?? "error");
+        await confirm({ title: "Fehler", description: code === "SELF_DEACTIVATE" ? t("cannotDeactivateSelf") : (b as { error?: string }).error ?? "error", confirmLabel: "OK" });
         return;
       }
       window.location.reload();
