@@ -1,4 +1,4 @@
-import { getTranslations, setRequestLocale } from "next-intl/server";
+import { getTranslations, setRequestLocale, getLocale } from "next-intl/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/card";
 import { SettingsForm } from "@/components/admin/settings-form";
 import { YearSetupCard } from "@/components/admin/year-setup-card";
+import { HolidaySync } from "@/components/admin/holiday-sync";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -25,12 +26,15 @@ export default async function AdminSettingsPage({ params }: Props) {
   if (session.user.role !== "ADMIN") redirect(`/${locale}/dashboard`);
 
   const settings = await db.orgSettings.findUniqueOrThrow({ where: { id: "singleton" } });
+  const appLocale = (await getLocale()) as "de" | "en";
 
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
 
       <SettingsForm settings={settings} />
+
+      <HolidaySync defaultFederalState={settings.defaultFederalState} />
 
       <YearSetupCard />
     </div>
