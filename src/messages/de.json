@@ -438,7 +438,9 @@
     "cardIdPlaceholder": "Karten-ID",
     "cardNotFound": "Karte nicht erkannt",
     "rateLimited": "Zu viele Versuche, bitte warten",
-    "scanError": "Fehler beim Lesen der Karte"
+    "scanError": "Fehler beim Lesen der Karte",
+    "enableNfc": "NFC aktivieren",
+    "nfcNotSupported": "NFC wird auf diesem Gerät nicht unterstützt"
   },
   "import": {
     "title": "CSV Import",

@@ -26,8 +26,14 @@ export function KioskScreen({ locale }: { locale: string }) {
   const [now, setNow] = useState(() => new Date());
   const [showManual, setShowManual] = useState(false);
   const [manualCardId, setManualCardId] = useState("");
+  const [nfcSupported, setNfcSupported] = useState(false);
+  const [nfcActive, setNfcActive] = useState(false);
   const nfcRef = useRef<any>(null);
   const revertTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    setNfcSupported("NDEFReader" in navigator);
+  }, []);
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 1000);
@@ -87,38 +93,35 @@ export function KioskScreen({ locale }: { locale: string }) {
     }
   }, [state, t, scheduleRevert]);
 
-  useEffect(() => {
-    if (state !== "idle") return;
-
-    async function startNfc() {
-      if (!("NDEFReader" in navigator)) return;
-      try {
-        const reader = new (window as any).NDEFReader();
-        await reader.scan();
-        nfcRef.current = reader;
-        reader.addEventListener("reading", (event: any) => {
-          for (const record of event.message.records) {
-            if (record.recordType === "text") {
-              const text = record.data.getRecordText?.() ?? "";
-              if (text.trim()) {
-                handleCardTap(text.trim());
-              }
+  const startNfc = useCallback(async () => {
+    if (!("NDEFReader" in navigator)) return;
+    try {
+      const reader = new (window as any).NDEFReader();
+      await reader.scan();
+      nfcRef.current = reader;
+      setNfcActive(true);
+      reader.addEventListener("reading", (event: any) => {
+        for (const record of event.message.records) {
+          if (record.recordType === "text") {
+            const text = record.data.getRecordText?.() ?? "";
+            if (text.trim()) {
+              handleCardTap(text.trim());
             }
           }
-        });
-      } catch {
-        // NFC permission denied or not available
-      }
+        }
+      });
+    } catch {
+      setNfcActive(false);
     }
+  }, [handleCardTap]);
 
-    startNfc();
-
+  useEffect(() => {
     return () => {
       if (nfcRef.current) {
         nfcRef.current = null;
       }
     };
-  }, [state, handleCardTap]);
+  }, []);
 
   const localeStr = locale === "en" ? "en-US" : "de-DE";
   const timeStr = now.toLocaleTimeString(localeStr, { hour: "2-digit", minute: "2-digit", second: "2-digit" });
@@ -139,7 +142,20 @@ export function KioskScreen({ locale }: { locale: string }) {
             <div className="flex h-24 w-24 items-center justify-center rounded-full bg-primary/10">
               <CreditCard className="h-12 w-12 text-primary" />
             </div>
-            <p className="text-2xl font-semibold">{t("tapPrompt")}</p>
+            {nfcSupported && !nfcActive && (
+              <button
+                onClick={startNfc}
+                className="rounded-xl bg-primary px-8 py-4 text-xl font-semibold text-primary-foreground shadow-lg transition hover:bg-primary/90 active:scale-95"
+              >
+                {t("enableNfc")}
+              </button>
+            )}
+            {nfcSupported && nfcActive && (
+              <p className="text-2xl font-semibold">{t("tapPrompt")}</p>
+            )}
+            {!nfcSupported && (
+              <p className="text-lg text-muted-foreground">{t("nfcNotSupported")}</p>
+            )}
           </div>
           <button
             onClick={() => setShowManual(!showManual)}
