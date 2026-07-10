@@ -22,28 +22,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import type { OrgSettings } from "@prisma/client";
-
-const STATE_NAMES: Record<string, string> = {
-  DE_BW: "Baden-Württemberg",
-  DE_BY: "Bayern",
-  DE_BE: "Berlin",
-  DE_BB: "Brandenburg",
-  DE_HB: "Bremen",
-  DE_HE: "Hessen",
-  DE_HH: "Hamburg",
-  DE_ME: "Mecklenburg-Vorpommern",
-  DE_MV: "Mecklenburg-Vorpommern",
-  DE_NI: "Niedersachsen",
-  DE_NW: "Nordrhein-Westfalen",
-  DE_RP: "Rheinland-Pfalz",
-  DE_SL: "Saarland",
-  DE_SN: "Sachsen",
-  DE_ST: "Sachsen-Anhalt",
-  DE_SH: "Schleswig-Holstein",
-  DE_TH: "Thüringen",
-};
-
-const STATES = Object.keys(STATE_NAMES);
+import { STATE_NAMES, STATE_CODES } from "@/lib/federal-states";
 
 export function SettingsForm({ settings }: { settings: OrgSettings }) {
   const t = useTranslations("adminSettings");
@@ -111,7 +90,7 @@ export function SettingsForm({ settings }: { settings: OrgSettings }) {
             <Select value={form.defaultFederalState} onValueChange={(v) => setForm({ ...form, defaultFederalState: v as never })}>
               <SelectTrigger id="fs"><SelectValue /></SelectTrigger>
               <SelectContent>
-                {STATES.map((s) => <SelectItem key={s} value={s}>{STATE_NAMES[s]}</SelectItem>)}
+                {STATE_CODES.map((s) => <SelectItem key={s} value={s}>{STATE_NAMES[s]}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>

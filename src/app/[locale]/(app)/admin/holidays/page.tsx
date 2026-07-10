@@ -20,6 +20,8 @@ import {
 } from "@/components/ui/table";
 import { YearPicker } from "@/components/shared/year-picker";
 import { formatInZone } from "@/lib/datetime";
+import { stateName } from "@/lib/federal-states";
+import { HolidaySyncButtonInline } from "@/components/admin/holiday-sync-button-inline";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -56,12 +58,15 @@ export default async function AdminHolidaysPage({ params, searchParams }: Props)
     <div className="space-y-6">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
-        <YearPicker year={year} />
+        <div className="flex flex-wrap items-center gap-2">
+          <YearPicker year={year} />
+          <HolidaySyncButtonInline year={year} state={federalState} />
+        </div>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>{t("title")} {year} · {federalState}</CardTitle>
+          <CardTitle>{t("title")} {year} · {stateName(federalState)}</CardTitle>
           <CardDescription>{holidays.length}</CardDescription>
         </CardHeader>
         <CardContent>

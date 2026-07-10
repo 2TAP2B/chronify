@@ -41,10 +41,7 @@ type User = {
   nfcCardId: string | null;
 };
 
-const STATES = [
-  "DE_BW", "DE_BY", "DE_BE", "DE_BB", "DE_HB", "DE_HE", "DE_HH", "DE_ME",
-  "DE_MV", "DE_NI", "DE_NW", "DE_RP", "DE_SL", "DE_SN", "DE_ST", "DE_SH", "DE_TH",
-];
+import { STATE_NAMES, STATE_CODES } from "@/lib/federal-states";
 
 export function UserDialog({
   mode,
@@ -173,7 +170,7 @@ export function UserDialog({
               <Select value={federalState} onValueChange={setFederalState}>
                 <SelectTrigger id="federalState"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {STATES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                  {STATE_CODES.map((s) => <SelectItem key={s} value={s}>{STATE_NAMES[s]}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>

@@ -365,8 +365,9 @@
     "assign": "Assign"
   },
   "adminHolidays": {
-    "title": "Holiday management",
-    "sync": "Sync with nager.date",
+    "title": "Holidays",
+    "syncTitle": "Sync holidays",
+    "sync": "Sync",
     "syncAll": "Sync all federal states",
     "year": "Year",
     "state": "Federal state",

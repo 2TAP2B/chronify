@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { RefreshCw, Loader2 } from "lucide-react";
 import type { FederalState } from "@prisma/client";
+import { stateName } from "@/lib/federal-states";
 
 export function HolidaySync({ defaultFederalState }: { defaultFederalState: FederalState }) {
   const t = useTranslations("adminHolidays");
@@ -47,8 +48,8 @@ export function HolidaySync({ defaultFederalState }: { defaultFederalState: Fede
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t("title")}</CardTitle>
-        <CardDescription>{t("state")}: {defaultFederalState}</CardDescription>
+        <CardTitle>{t("syncTitle")}</CardTitle>
+        <CardDescription>{t("state")}: {stateName(defaultFederalState)}</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-wrap items-center gap-3">
         <Button
@@ -61,7 +62,7 @@ export function HolidaySync({ defaultFederalState }: { defaultFederalState: Fede
           ) : (
             <RefreshCw className="mr-2 h-4 w-4" />
           )}
-          {t("sync")} {defaultFederalState}
+          {t("sync")}
         </Button>
         <Button
           variant="outline"

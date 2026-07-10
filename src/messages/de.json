@@ -365,8 +365,9 @@
     "assign": "Zuweisen"
   },
   "adminHolidays": {
-    "title": "Feiertage verwalten",
-    "sync": "Mit nager.date synchronisieren",
+    "title": "Feiertage",
+    "syncTitle": "Feiertage synchronisieren",
+    "sync": "Synchronisieren",
     "syncAll": "Alle Bundesländer synchronisieren",
     "year": "Jahr",
     "state": "Bundesland",
