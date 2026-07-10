@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useTimer, useTimerInit } from "@/components/timer/use-timer";
 import { Button } from "@/components/ui/button";
-import { Play, Square, Coffee } from "lucide-react";
+import { Play, Square, Coffee, AlertTriangle, Info } from "lucide-react";
 
 type Props = {
   userName: string;
@@ -22,6 +22,7 @@ export function MobileTimerHero({
   useTimerInit();
   const t = useTranslations("dashboard");
   const tTimer = useTranslations("timer");
+  const tArbzg = useTranslations("arbzg");
   const timer = useTimer();
 
   const [now, setNow] = useState(() => new Date());
@@ -85,6 +86,28 @@ export function MobileTimerHero({
           </p>
         )}
       </div>
+
+      {timer.warnings.length > 0 && (
+        <div className="w-full space-y-1.5">
+          {timer.warnings.map((w, i) => (
+            <div
+              key={i}
+              className={`flex items-start gap-2 rounded-lg p-2.5 text-xs ${
+                w.level === "warning"
+                  ? "bg-amber-50 text-amber-800 dark:bg-amber-950/30 dark:text-amber-200"
+                  : "bg-blue-50 text-blue-800 dark:bg-blue-950/30 dark:text-blue-200"
+              }`}
+            >
+              {w.level === "warning" ? (
+                <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+              ) : (
+                <Info className="h-4 w-4 shrink-0 mt-0.5" />
+              )}
+              <span>{tArbzg(w.messageKey)}</span>
+            </div>
+          ))}
+        </div>
+      )}
 
       <div className="flex w-full flex-col gap-2 pb-4">
         {!active ? (

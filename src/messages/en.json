@@ -109,6 +109,11 @@
     "errorStop": "Could not stop timer",
     "errorBreak": "Could not start break"
   },
+  "arbzg": {
+    "approachingMax": "Notice: You have worked more than 8 hours today. The legal maximum of 10 hours is approaching (§3 ArbZG).",
+    "exceededMax": "Warning: The legal maximum working time of 10 hours per day has been exceeded (§3 ArbZG). Please inform your supervisor.",
+    "restPeriodShort": "Warning: Less than 11 hours of rest have passed since the end of your last shift (§5 ArbZG)."
+  },
   "timesheet": {
     "title": "Timesheet",
     "week": "Week",

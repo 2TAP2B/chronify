@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { getUserContext } from "@/server/context";
-import { toCalendarDate } from "@/lib/datetime";
+import { toCalendarDate, addDaysUtc } from "@/lib/datetime";
 import {
   toTimerState,
   computeElapsedMs,
@@ -46,6 +46,7 @@ export type TimerStatus = {
   breakMs: number;
   state: TimerState | null;
   todayWorkedMs: number;
+  lastWorkEndAt: string | null;
 };
 
 export async function getTimerStatus(userId: string, now: Date = new Date()): Promise<TimerStatus> {
@@ -63,6 +64,19 @@ export async function getTimerStatus(userId: string, now: Date = new Date()): Pr
     return sum + Math.max(0, gross - e.breakMinutes * 60_000);
   }, 0);
 
+  // Find the most recent WORK entry end time (today + yesterday) for rest period check
+  const recentEntries = await db.timeEntry.findMany({
+    where: {
+      userId,
+      type: "WORK",
+      endAt: { not: null },
+      date: { gte: addDaysUtc(todayStart, -1), lt: new Date(todayStart.getTime() + 86_400_000) },
+    },
+    orderBy: { endAt: "desc" },
+    take: 1,
+  });
+  const lastWorkEndAt = recentEntries[0]?.endAt?.toISOString() ?? null;
+
   const session = await db.timerSession.findUnique({ where: { userId } });
   if (!session) {
     return {
@@ -74,6 +88,7 @@ export async function getTimerStatus(userId: string, now: Date = new Date()): Pr
       breakMs: 0,
       state: null,
       todayWorkedMs,
+      lastWorkEndAt,
     };
   }
   const state = toTimerState(session);
@@ -87,6 +102,7 @@ export async function getTimerStatus(userId: string, now: Date = new Date()): Pr
     breakMs: computeBreakMs(state, nowMs),
     state,
     todayWorkedMs,
+    lastWorkEndAt,
   };
 }
 

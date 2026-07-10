@@ -109,6 +109,11 @@
     "errorStop": "Timer konnte nicht gestoppt werden",
     "errorBreak": "Pause konnte nicht gestartet werden"
   },
+  "arbzg": {
+    "approachingMax": "Hinweis: Sie haben heute mehr als 8 Stunden gearbeitet. Ab 10 Stunden ist die gesetzliche Höchstarbeitszeit erreicht (§3 ArbZG).",
+    "exceededMax": "Warnung: Die gesetzliche Höchstarbeitszeit von 10 Stunden pro Tag wurde überschritten (§3 ArbZG). Bitte informieren Sie Ihren Vorgesetzten.",
+    "restPeriodShort": "Warnung: Seit dem Ende der letzten Schicht sind noch keine 11 Stunden Ruhezeit vergangen (§5 ArbZG)."
+  },
   "timesheet": {
     "title": "Stundenzettel",
     "week": "Woche",

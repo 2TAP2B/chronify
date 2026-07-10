@@ -4,12 +4,13 @@ import { useTranslations } from "next-intl";
 import { useTimer, useTimerInit } from "@/components/timer/use-timer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Play, Square, Coffee } from "lucide-react";
+import { Play, Square, Coffee, AlertTriangle, Info } from "lucide-react";
 
 export function TimerWidget() {
   useTimerInit();
   const t = useTranslations("timer");
   const tDash = useTranslations("dashboard");
+  const tArbzg = useTranslations("arbzg");
   const timer = useTimer();
 
   const active = timer.active;
@@ -51,6 +52,24 @@ export function TimerWidget() {
         {timer.error && (
           <p className="text-sm text-destructive">{timer.error}</p>
         )}
+
+        {timer.warnings.map((w, i) => (
+          <div
+            key={i}
+            className={`flex items-start gap-2 rounded-md p-2 text-xs ${
+              w.level === "warning"
+                ? "bg-amber-50 text-amber-800 dark:bg-amber-950/30 dark:text-amber-200"
+                : "bg-blue-50 text-blue-800 dark:bg-blue-950/30 dark:text-blue-200"
+            }`}
+          >
+            {w.level === "warning" ? (
+              <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+            ) : (
+              <Info className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+            )}
+            <span>{tArbzg(w.messageKey)}</span>
+          </div>
+        ))}
 
         <div className="flex gap-2">
           {!active ? (

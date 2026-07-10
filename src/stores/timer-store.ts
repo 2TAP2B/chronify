@@ -8,6 +8,7 @@ import {
   computeBreakMs,
   type TimerState,
 } from "@/lib/timer-utils";
+import { checkMaxDailyHours, checkRestPeriod, type ArbzgWarning } from "@/lib/arbzg";
 
 export type TimerStatus = {
   active: boolean;
@@ -17,6 +18,7 @@ export type TimerStatus = {
   elapsedMs: number;
   breakMs: number;
   todayWorkedMs: number;
+  lastWorkEndAt: string | null;
 };
 
 async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
@@ -161,6 +163,17 @@ export function useTimer() {
   const displayElapsedMs = active ? live.elapsedMs : 0;
   const totalWorkedMs = active ? todayWorkedMs + live.elapsedMs : todayWorkedMs;
 
+  const maxHoursWarning = active || totalWorkedMs > 0
+    ? checkMaxDailyHours(totalWorkedMs)
+    : null;
+  const restPeriodWarning = !active && status?.lastWorkEndAt
+    ? checkRestPeriod(status.lastWorkEndAt)
+    : null;
+  const warnings: ArbzgWarning[] = [
+    ...(maxHoursWarning ? [maxHoursWarning] : []),
+    ...(restPeriodWarning ? [restPeriodWarning] : []),
+  ];
+
   return {
     status,
     loaded,
@@ -176,6 +189,7 @@ export function useTimer() {
     todayWorkedMs,
     totalWorkedMs,
     totalWorkedDisplay: formatDuration(totalWorkedMs),
+    warnings,
     start,
     stop,
     toggleBreak,
