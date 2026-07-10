@@ -55,6 +55,36 @@ export function TimerWidget() {
           <p className="text-sm text-destructive">{timer.error}</p>
         )}
 
+        <div className="flex gap-2">
+          {!active ? (
+            <Button onClick={timer.start} disabled={timer.loading} className="flex-1">
+              <Play className="mr-2 h-4 w-4" />
+              {tDash("timerStart")}
+            </Button>
+          ) : (
+            <>
+              <Button
+                onClick={timer.toggleBreak}
+                disabled={timer.loading}
+                variant={onBreak ? "default" : "secondary"}
+                className="flex-1"
+              >
+                <Coffee className="mr-2 h-4 w-4" />
+                {onBreak ? t("resume") : t("break")}
+              </Button>
+              <Button
+                onClick={timer.stop}
+                disabled={timer.loading}
+                variant="destructive"
+                className="flex-1"
+              >
+                <Square className="mr-2 h-4 w-4" />
+                {tDash("timerStop")}
+              </Button>
+            </>
+          )}
+        </div>
+
         {timer.warnings.length > 0 && (
           <div
             onClick={() => setWarningsOpen((v) => !v)}
@@ -93,36 +123,6 @@ export function TimerWidget() {
             )}
           </div>
         )}
-
-        <div className="flex gap-2">
-          {!active ? (
-            <Button onClick={timer.start} disabled={timer.loading} className="flex-1">
-              <Play className="mr-2 h-4 w-4" />
-              {tDash("timerStart")}
-            </Button>
-          ) : (
-            <>
-              <Button
-                onClick={timer.toggleBreak}
-                disabled={timer.loading}
-                variant={onBreak ? "default" : "secondary"}
-                className="flex-1"
-              >
-                <Coffee className="mr-2 h-4 w-4" />
-                {onBreak ? t("resume") : t("break")}
-              </Button>
-              <Button
-                onClick={timer.stop}
-                disabled={timer.loading}
-                variant="destructive"
-                className="flex-1"
-              >
-                <Square className="mr-2 h-4 w-4" />
-                {tDash("timerStop")}
-              </Button>
-            </>
-          )}
-        </div>
       </CardContent>
     </Card>
   );
