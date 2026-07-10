@@ -66,6 +66,20 @@ const THEMES: ThemeOption[] = [
     colorScheme: "catppuccin-mocha",
     mode: "dark",
   },
+  {
+    id: "dracula-light",
+    label: "draculaLight",
+    swatch: "bg-[#bd93f9]",
+    colorScheme: "dracula",
+    mode: "light",
+  },
+  {
+    id: "dracula-dark",
+    label: "draculaDark",
+    swatch: "bg-[#44475a]",
+    colorScheme: "dracula",
+    mode: "dark",
+  },
 ];
 
 export function ThemePicker() {

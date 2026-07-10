@@ -478,7 +478,9 @@
     "mauveDark": "Mauve (Dark)",
     "frappe": "Catppuccin Frappé",
     "macchiato": "Catppuccin Macchiato",
-    "mocha": "Catppuccin Mocha"
+    "mocha": "Catppuccin Mocha",
+    "draculaLight": "Dracula (Light)",
+    "draculaDark": "Dracula (Dark)"
   },
   "profile": {
     "title": "Profile",
