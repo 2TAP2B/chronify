@@ -4,6 +4,7 @@ import { useTheme } from "next-themes";
 import { useTranslations } from "next-intl";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+import type { ColorScheme } from "@/components/providers";
 
 const STORAGE_KEY = "puku-color-scheme";
 
@@ -11,7 +12,7 @@ type ThemeOption = {
   id: string;
   label: string;
   swatch: string;
-  colorScheme: "default" | "mauve";
+  colorScheme: ColorScheme;
   mode: "light" | "dark";
 };
 
@@ -42,6 +43,27 @@ const THEMES: ThemeOption[] = [
     label: "mauveDark",
     swatch: "bg-purple-900",
     colorScheme: "mauve",
+    mode: "dark",
+  },
+  {
+    id: "catppuccin-frappe",
+    label: "frappe",
+    swatch: "bg-[#ca9ee6]",
+    colorScheme: "catppuccin-frappe",
+    mode: "dark",
+  },
+  {
+    id: "catppuccin-macchiato",
+    label: "macchiato",
+    swatch: "bg-[#c6a0f6]",
+    colorScheme: "catppuccin-macchiato",
+    mode: "dark",
+  },
+  {
+    id: "catppuccin-mocha",
+    label: "mocha",
+    swatch: "bg-[#cba6f7]",
+    colorScheme: "catppuccin-mocha",
     mode: "dark",
   },
 ];

@@ -475,7 +475,10 @@
     "defaultLight": "Default (Light)",
     "defaultDark": "Default (Dark)",
     "mauveLight": "Mauve (Light)",
-    "mauveDark": "Mauve (Dark)"
+    "mauveDark": "Mauve (Dark)",
+    "frappe": "Catppuccin Frappé",
+    "macchiato": "Catppuccin Macchiato",
+    "mocha": "Catppuccin Mocha"
   },
   "profile": {
     "title": "Profile",

@@ -148,6 +148,154 @@
 }
 
 @layer base {
+  /* Catppuccin Latte (light) — shared base for all 3 dark flavors */
+  [data-theme="catppuccin-frappe"],
+  [data-theme="catppuccin-macchiato"],
+  [data-theme="catppuccin-mocha"] {
+    --background: 220 23% 95%;
+    --foreground: 234 16% 35%;
+    --card: 220 23% 95%;
+    --card-foreground: 234 16% 35%;
+    --popover: 220 23% 95%;
+    --popover-foreground: 234 16% 35%;
+    --primary: 266 85% 58%;
+    --primary-foreground: 220 23% 95%;
+    --secondary: 223 16% 83%;
+    --secondary-foreground: 234 16% 35%;
+    --muted: 223 16% 83%;
+    --muted-foreground: 233 10% 47%;
+    --accent: 223 16% 83%;
+    --accent-foreground: 234 16% 35%;
+    --destructive: 347 87% 44%;
+    --destructive-foreground: 220 23% 95%;
+    --border: 227 12% 71%;
+    --input: 227 12% 71%;
+    --ring: 266 85% 58%;
+    --sidebar-background: 220 23% 92%;
+    --sidebar-foreground: 234 16% 35%;
+    --sidebar-primary: 266 85% 58%;
+    --sidebar-primary-foreground: 220 23% 95%;
+    --sidebar-accent: 225 14% 77%;
+    --sidebar-accent-foreground: 234 16% 35%;
+    --sidebar-border: 225 14% 77%;
+    --sidebar-ring: 220 91% 54%;
+    --chart-1: 220 91% 54%;
+    --chart-2: 197 97% 46%;
+    --chart-3: 109 58% 40%;
+    --chart-4: 266 85% 58%;
+    --chart-5: 35 77% 49%;
+  }
+
+  /* Catppuccin Frappé (dark) */
+  [data-theme="catppuccin-frappe"].dark {
+    --background: 229 19% 23%;
+    --foreground: 227 70% 87%;
+    --card: 230 16% 30%;
+    --card-foreground: 227 70% 87%;
+    --popover: 229 19% 23%;
+    --popover-foreground: 227 70% 87%;
+    --primary: 277 59% 76%;
+    --primary-foreground: 229 19% 23%;
+    --secondary: 228 13% 44%;
+    --secondary-foreground: 227 70% 87%;
+    --muted: 230 16% 30%;
+    --muted-foreground: 228 29% 73%;
+    --accent: 228 13% 44%;
+    --accent-foreground: 227 70% 87%;
+    --destructive: 359 68% 71%;
+    --destructive-foreground: 229 19% 23%;
+    --border: 228 22% 66%;
+    --input: 228 22% 66%;
+    --ring: 277 59% 76%;
+    --sidebar-background: 231 19% 20%;
+    --sidebar-foreground: 227 70% 87%;
+    --sidebar-primary: 277 59% 76%;
+    --sidebar-primary-foreground: 229 19% 23%;
+    --sidebar-accent: 230 16% 30%;
+    --sidebar-accent-foreground: 227 70% 87%;
+    --sidebar-border: 228 13% 44%;
+    --sidebar-ring: 222 74% 74%;
+    --chart-1: 222 74% 74%;
+    --chart-2: 189 55% 69%;
+    --chart-3: 96 44% 68%;
+    --chart-4: 277 59% 76%;
+    --chart-5: 40 62% 73%;
+  }
+
+  /* Catppuccin Macchiato (dark) */
+  [data-theme="catppuccin-macchiato"].dark {
+    --background: 232 23% 18%;
+    --foreground: 227 68% 88%;
+    --card: 230 19% 26%;
+    --card-foreground: 227 68% 88%;
+    --popover: 232 23% 18%;
+    --popover-foreground: 227 68% 88%;
+    --primary: 267 83% 80%;
+    --primary-foreground: 232 23% 18%;
+    --secondary: 230 14% 41%;
+    --secondary-foreground: 227 68% 88%;
+    --muted: 230 19% 26%;
+    --muted-foreground: 228 27% 72%;
+    --accent: 230 14% 41%;
+    --accent-foreground: 227 68% 88%;
+    --destructive: 351 74% 73%;
+    --destructive-foreground: 232 23% 18%;
+    --border: 228 20% 65%;
+    --input: 228 20% 65%;
+    --ring: 267 83% 80%;
+    --sidebar-background: 233 23% 15%;
+    --sidebar-foreground: 227 68% 88%;
+    --sidebar-primary: 267 83% 80%;
+    --sidebar-primary-foreground: 232 23% 18%;
+    --sidebar-accent: 230 19% 26%;
+    --sidebar-accent-foreground: 227 68% 88%;
+    --sidebar-border: 230 14% 41%;
+    --sidebar-ring: 220 83% 75%;
+    --chart-1: 220 83% 75%;
+    --chart-2: 199 66% 69%;
+    --chart-3: 105 48% 72%;
+    --chart-4: 267 83% 80%;
+    --chart-5: 40 70% 78%;
+  }
+
+  /* Catppuccin Mocha (dark) */
+  [data-theme="catppuccin-mocha"].dark {
+    --background: 240 21% 15%;
+    --foreground: 226 64% 88%;
+    --card: 237 16% 23%;
+    --card-foreground: 226 64% 88%;
+    --popover: 240 21% 15%;
+    --popover-foreground: 226 64% 88%;
+    --primary: 267 84% 81%;
+    --primary-foreground: 240 21% 15%;
+    --secondary: 233 12% 39%;
+    --secondary-foreground: 226 64% 88%;
+    --muted: 237 16% 23%;
+    --muted-foreground: 228 24% 72%;
+    --accent: 233 12% 39%;
+    --accent-foreground: 226 64% 88%;
+    --destructive: 343 81% 75%;
+    --destructive-foreground: 240 21% 15%;
+    --border: 228 17% 64%;
+    --input: 228 17% 64%;
+    --ring: 267 84% 81%;
+    --sidebar-background: 240 21% 12%;
+    --sidebar-foreground: 226 64% 88%;
+    --sidebar-primary: 267 84% 81%;
+    --sidebar-primary-foreground: 240 21% 15%;
+    --sidebar-accent: 237 16% 23%;
+    --sidebar-accent-foreground: 226 64% 88%;
+    --sidebar-border: 233 12% 39%;
+    --sidebar-ring: 217 92% 76%;
+    --chart-1: 217 92% 76%;
+    --chart-2: 199 76% 69%;
+    --chart-3: 115 54% 76%;
+    --chart-4: 267 84% 81%;
+    --chart-5: 41 86% 83%;
+  }
+}
+
+@layer base {
   * {
     @apply border-border;
   }
