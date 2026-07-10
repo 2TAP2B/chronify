@@ -17,7 +17,6 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DatePicker } from "@/components/ui/date-picker";
 import { useConfirm } from "@/components/ui/confirm-dialog";
@@ -50,14 +49,10 @@ export function SickNoteRowActions({
 
   const [editFrom, setEditFrom] = useState(toInput(initialFrom));
   const [editTo, setEditTo] = useState(toInput(initialTo));
-  const [editAub, setEditAub] = useState(toInput(initialAub));
-  const [editNote, setEditNote] = useState(initialNote ?? "");
 
   function openEdit() {
     setEditFrom(toInput(initialFrom));
     setEditTo(toInput(initialTo));
-    setEditAub(toInput(initialAub));
-    setEditNote(initialNote ?? "");
     setEditOpen(true);
     setMenuOpen(false);
   }
@@ -72,8 +67,6 @@ export function SickNoteRowActions({
         body: JSON.stringify({
           from: new Date(editFrom + "T00:00:00Z").toISOString(),
           to: new Date(editTo + "T00:00:00Z").toISOString(),
-          aubUntil: editAub ? new Date(editAub + "T00:00:00Z").toISOString() : null,
-          note: editNote || null,
         }),
       });
       if (!res.ok) {
@@ -135,7 +128,7 @@ export function SickNoteRowActions({
             <DialogTitle>{t("edit")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label htmlFor="edit-from">{t("from")}</Label>
                 <DatePicker
@@ -150,17 +143,6 @@ export function SickNoteRowActions({
                   onChange={(d) => d && setEditTo(format(d, "yyyy-MM-dd"))}
                 />
               </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="edit-aub">{t("aubUntil")}</Label>
-                <DatePicker
-                  value={editAub ? new Date(editAub + "T00:00:00") : undefined}
-                  onChange={(d) => d && setEditAub(format(d, "yyyy-MM-dd"))}
-                />
-              </div>
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="edit-note">{t("note")}</Label>
-              <Input id="edit-note" value={editNote} onChange={(e) => setEditNote(e.target.value)} />
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
           </div>
