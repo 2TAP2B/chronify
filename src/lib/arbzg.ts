@@ -17,7 +17,7 @@ export function checkMaxDailyHours(workedMs: number): ArbzgWarning | null {
     return {
       level: "warning",
       key: "exceededMax",
-      messageKey: "arbzg.exceededMax",
+      messageKey: "exceededMax",
     };
   }
 
@@ -25,7 +25,7 @@ export function checkMaxDailyHours(workedMs: number): ArbzgWarning | null {
     return {
       level: "info",
       key: "approachingMax",
-      messageKey: "arbzg.approachingMax",
+      messageKey: "approachingMax",
     };
   }
 
@@ -48,7 +48,7 @@ export function checkRestPeriod(
     return {
       level: "warning",
       key: "restPeriodShort",
-      messageKey: "arbzg.restPeriodShort",
+      messageKey: "restPeriodShort",
     };
   }
 
