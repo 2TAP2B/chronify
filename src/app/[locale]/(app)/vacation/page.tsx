@@ -19,6 +19,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { VacationRequestForm } from "@/components/vacation/vacation-request-form";
+import { VacationCancelAction } from "@/components/vacation/vacation-cancel-action";
 import { YearPicker } from "@/components/shared/year-picker";
 import { formatInZone } from "@/lib/datetime";
 import type { VacationStatus } from "@prisma/client";
@@ -129,6 +130,7 @@ export default async function VacationPage({ params, searchParams }: Props) {
                   <TableHead>{t("days")}</TableHead>
                   <TableHead>{t("status")}</TableHead>
                   <TableHead>{t("note")}</TableHead>
+                  <TableHead className="w-[60px]"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -153,6 +155,11 @@ export default async function VacationPage({ params, searchParams }: Props) {
                     </TableCell>
                     <TableCell className="max-w-[200px] truncate">
                       {r.note ?? r.approverNote ?? <span className="text-muted-foreground">—</span>}
+                    </TableCell>
+                    <TableCell className="pr-3">
+                      {(r.status === "PENDING" || r.status === "APPROVED") && (
+                        <VacationCancelAction requestId={r.id} />
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}

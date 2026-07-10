@@ -19,6 +19,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { CertificateUpload } from "@/components/sickness/certificate-upload";
+import { SickNoteRowActions } from "@/components/sickness/sick-note-row-actions";
 import { formatInZone } from "@/lib/datetime";
 
 type Props = {
@@ -68,6 +69,7 @@ export default async function AdminSicknessPage({ params }: Props) {
                   <TableHead>{t("aubUntil")}</TableHead>
                   <TableHead>{t("certificate")}</TableHead>
                   <TableHead>{t("note")}</TableHead>
+                  <TableHead className="w-[60px]"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -92,6 +94,15 @@ export default async function AdminSicknessPage({ params }: Props) {
                     </TableCell>
                     <TableCell className="max-w-[200px] truncate">
                       {n.note ?? <span className="text-muted-foreground">—</span>}
+                    </TableCell>
+                    <TableCell className="pr-3">
+                      <SickNoteRowActions
+                        noteId={n.id}
+                        from={n.from.toISOString()}
+                        to={n.to.toISOString()}
+                        aubUntil={n.aubUntil?.toISOString() ?? null}
+                        note={n.note}
+                      />
                     </TableCell>
                   </TableRow>
                 ))}

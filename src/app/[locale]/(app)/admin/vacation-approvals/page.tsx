@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { VacationApprovalActions } from "@/components/vacation/vacation-approval-actions";
+import { VacationCancelAction } from "@/components/vacation/vacation-cancel-action";
 import { formatInZone } from "@/lib/datetime";
 import type { VacationStatus } from "@prisma/client";
 
@@ -53,6 +54,12 @@ export default async function VacationApprovalsPage({ params }: Props) {
     orderBy: { updatedAt: "desc" },
     take: 10,
     include: { user: { select: { name: true } } },
+  });
+
+  const approved = await db.vacationRequest.findMany({
+    where: { status: "APPROVED" },
+    orderBy: { from: "asc" },
+    include: { user: { select: { name: true, email: true } } },
   });
 
   return (
@@ -119,6 +126,58 @@ export default async function VacationApprovalsPage({ params }: Props) {
           )}
         </CardContent>
       </Card>
+
+      {approved.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>{t("statuses.APPROVED")} ({approved.length})</CardTitle>
+            <CardDescription>{t("confirmCancel")}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <Table className="min-w-[700px] whitespace-nowrap">
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Mitarbeiter</TableHead>
+                  <TableHead>{t("from")}</TableHead>
+                  <TableHead>{t("to")}</TableHead>
+                  <TableHead>{t("days")}</TableHead>
+                  <TableHead></TableHead>
+                  <TableHead></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {approved.map((r) => (
+                  <TableRow key={r.id}>
+                    <TableCell>
+                      <div className="font-medium">{r.user.name}</div>
+                      <div className="text-xs text-muted-foreground">{r.user.email}</div>
+                    </TableCell>
+                    <TableCell className="font-mono">
+                      {formatInZone(r.from, "Europe/Berlin", "dd.MM.yyyy", appLocale)}
+                    </TableCell>
+                    <TableCell className="font-mono">
+                      {formatInZone(r.to, "Europe/Berlin", "dd.MM.yyyy", appLocale)}
+                    </TableCell>
+                    <TableCell>{r.days}</TableCell>
+                    <TableCell>
+                      {r.useOvertime && (
+                        <Badge variant="secondary" className="text-xs">
+                          {t("overtimeBadge")}
+                        </Badge>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <VacationCancelAction requestId={r.id} />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {recent.length > 0 && (
         <Card>
