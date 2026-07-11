@@ -1,11 +1,13 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import { PrismaAdapter } from "@auth/prisma-adapter";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { rateLimit } from "@/lib/rate-limit";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true,
+  adapter: PrismaAdapter(db),
   session: {
     strategy: "jwt",
     maxAge: 60 * 60 * 24 * 7,
@@ -51,15 +53,38 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           email: user.email,
           name: user.name,
           role: user.role,
+          mustChangePassword: user.mustChangePassword,
         };
       },
     }),
+    ...(process.env.OIDC_ISSUER && process.env.OIDC_CLIENT_ID && process.env.OIDC_CLIENT_SECRET
+      ? [{
+          id: "pocket-id",
+          name: "Pocket-ID",
+          type: "oidc" as const,
+          issuer: process.env.OIDC_ISSUER,
+          clientId: process.env.OIDC_CLIENT_ID,
+          clientSecret: process.env.OIDC_CLIENT_SECRET,
+          authorization: { params: { scope: "openid profile email" } },
+        }]
+      : []),
   ],
   callbacks: {
+    signIn: async ({ user, account }) => {
+      if (account?.provider === "pocket-id" && user.email) {
+        const dbUser = await db.user.findUnique({
+          where: { email: (user.email as string).toLowerCase() },
+        });
+        if (!dbUser || !dbUser.active) return false;
+        if (dbUser.mustChangePassword) return false;
+      }
+      return true;
+    },
     jwt: ({ token, user }) => {
       if (user) {
         token.id = user.id as string;
         token.role = user.role;
+        token.mustChangePassword = (user as { mustChangePassword?: boolean }).mustChangePassword ?? false;
       }
       return token;
     },
@@ -67,6 +92,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (token) {
         session.user.id = token.id as string;
         session.user.role = token.role as "EMPLOYEE" | "ADMIN";
+        session.user.mustChangePassword = token.mustChangePassword as boolean;
       }
       return session;
     },

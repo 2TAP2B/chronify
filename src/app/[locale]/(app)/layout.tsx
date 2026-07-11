@@ -1,4 +1,5 @@
 import { getTranslations } from "next-intl/server";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -22,11 +23,21 @@ export default async function AppLayout({
       role: true,
       firstName: true,
       lastName: true,
+      mustChangePassword: true,
     },
   });
 
   if (!user) {
     redirect("/api/auth/signout");
+  }
+
+  if (user.mustChangePassword) {
+    const headersList = await headers();
+    const pathname = headersList.get("x-pathname") ?? "";
+    if (!pathname.includes("/change-password")) {
+      const locale = pathname.split("/")[1] || "de";
+      redirect(`/${locale}/change-password`);
+    }
   }
 
   const t = await getTranslations("nav");

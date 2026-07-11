@@ -56,6 +56,7 @@ export const updateUserSchema = z.object({
   active: z.boolean().optional(),
   hireDate: z.string().datetime().nullable().optional(),
   nfcCardId: z.string().max(20).nullable().optional(),
+  mustChangePassword: z.boolean().optional(),
 });
 
 export type CreateUserInput = z.infer<typeof createUserSchema>;
@@ -110,6 +111,7 @@ export async function createUser(opts: {
       active: opts.input.active,
       hireDate: opts.input.hireDate ? new Date(opts.input.hireDate) : null,
       nfcCardId: opts.input.nfcCardId?.trim() || null,
+      mustChangePassword: true,
     },
     select: { id: true, email: true, name: true },
   });
@@ -148,7 +150,9 @@ export async function updateUser(opts: {
   if (opts.input.nfcCardId !== undefined) data.nfcCardId = opts.input.nfcCardId?.trim() || null;
   if (opts.input.password) {
     data.passwordHash = await bcrypt.hash(opts.input.password, 12);
+    data.mustChangePassword = true;
   }
+  if (opts.input.mustChangePassword !== undefined) data.mustChangePassword = opts.input.mustChangePassword;
 
   const updated = await db.user.update({
     where: { id: opts.userId },

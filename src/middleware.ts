@@ -87,7 +87,13 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(redirectUrl(request, `/${locale}/dashboard`));
   }
 
-  return intlResponse;
+  if (intlResponse) {
+    intlResponse.headers.set("x-pathname", pathname);
+    return intlResponse;
+  }
+  const response = NextResponse.next();
+  response.headers.set("x-pathname", pathname);
+  return response;
 }
 
 export const config = {

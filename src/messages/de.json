@@ -53,7 +53,21 @@
     "loginButton": "Anmelden",
     "loginError": "E-Mail oder Passwort ist falsch",
     "logoutSuccess": "Sie wurden abgemeldet",
-    "loginQuote": "Erfassen Sie Ihre Arbeitszeit einfach und präzise – nach deutschen Arbeitsgesetzen."
+    "loginQuote": "Erfassen Sie Ihre Arbeitszeit einfach und präzise – nach deutschen Arbeitsgesetzen.",
+    "oidcLogin": "Mit Pocket-ID anmelden",
+    "or": "oder"
+  },
+  "changePassword": {
+    "title": "Passwort ändern",
+    "description": "Bitte ändern Sie Ihr Passwort bei der ersten Anmeldung.",
+    "current": "Aktuelles Passwort",
+    "new": "Neues Passwort",
+    "confirm": "Passwort bestätigen",
+    "submit": "Passwort ändern",
+    "errorCurrent": "Aktuelles Passwort ist falsch",
+    "errorMismatch": "Passwörter stimmen nicht überein",
+    "errorTooShort": "Passwort muss mindestens 6 Zeichen lang sein",
+    "success": "Passwort erfolgreich geändert"
   },
   "dashboard": {
     "title": "Übersicht",
@@ -490,7 +504,14 @@
   "profile": {
     "title": "Profil",
     "appearance": "Darstellung",
-    "appearanceHint": "Wählen Sie ein Farbschema für die Anwendung."
+    "appearanceHint": "Wählen Sie ein Farbschema für die Anwendung.",
+    "oidcLink": "Pocket-ID",
+    "oidcLinkHint": "Verknüpfen Sie Ihr Pocket-ID-Konto für passwortloses Anmelden.",
+    "oidcLinked": "ist verknüpft",
+    "oidcNotLinked": "Nicht verknüpft",
+    "oidcLinkButton": "Pocket-ID verknüpfen",
+    "oidcUnlinkButton": "Trennen",
+    "oidcUnlinkConfirm": "Pocket-ID-Verknüpfung wirklich trennen?"
   },
   "adminYearSetup": {
     "title": "Jahreswechsel",

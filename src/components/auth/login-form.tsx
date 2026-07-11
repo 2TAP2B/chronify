@@ -3,13 +3,15 @@
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useTranslations, useLocale } from "next-intl";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, KeyRound } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/layout/logo";
+
+const OIDC_ENABLED = !!process.env.NEXT_PUBLIC_OIDC_ENABLED;
 
 export function LoginForm({
   className,
@@ -89,6 +91,29 @@ export function LoginForm({
               >
                 {loading ? "…" : t("loginButton")}
               </Button>
+
+              {OIDC_ENABLED && (
+                <>
+                  <div className="relative my-2">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-card px-2 text-muted-foreground">{t("or")}</span>
+                    </div>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full"
+                    disabled={loading}
+                    onClick={() => signIn("pocket-id", { callbackUrl: `/${locale}/dashboard` })}
+                  >
+                    <KeyRound className="mr-2 h-4 w-4" />
+                    {t("oidcLogin")}
+                  </Button>
+                </>
+              )}
             </div>
           </form>
           <div className="relative hidden bg-primary md:block">

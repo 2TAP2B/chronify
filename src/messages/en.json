@@ -53,7 +53,21 @@
     "loginButton": "Sign in",
     "loginError": "Email or password is incorrect",
     "logoutSuccess": "You have been signed out",
-    "loginQuote": "Track your working time simply and precisely – compliant with German labor law."
+    "loginQuote": "Track your working time simply and precisely – compliant with German labor law.",
+    "oidcLogin": "Sign in with Pocket-ID",
+    "or": "or"
+  },
+  "changePassword": {
+    "title": "Change password",
+    "description": "Please change your password on first login.",
+    "current": "Current password",
+    "new": "New password",
+    "confirm": "Confirm password",
+    "submit": "Change password",
+    "errorCurrent": "Current password is incorrect",
+    "errorMismatch": "Passwords do not match",
+    "errorTooShort": "Password must be at least 6 characters",
+    "success": "Password changed successfully"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -490,7 +504,14 @@
   "profile": {
     "title": "Profile",
     "appearance": "Appearance",
-    "appearanceHint": "Choose a color scheme for the application."
+    "appearanceHint": "Choose a color scheme for the application.",
+    "oidcLink": "Pocket-ID",
+    "oidcLinkHint": "Link your Pocket-ID account for passwordless sign-in.",
+    "oidcLinked": "is linked",
+    "oidcNotLinked": "Not linked",
+    "oidcLinkButton": "Link Pocket-ID",
+    "oidcUnlinkButton": "Unlink",
+    "oidcUnlinkConfirm": "Really unlink your Pocket-ID account?"
   },
   "adminYearSetup": {
     "title": "Year setup",
