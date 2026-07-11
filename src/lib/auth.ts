@@ -62,6 +62,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           id: "pocket-id",
           name: "Pocket-ID",
           type: "oidc" as const,
+          issuer: process.env.OIDC_ISSUER,
           clientId: process.env.OIDC_CLIENT_ID,
           clientSecret: process.env.OIDC_CLIENT_SECRET,
           authorization: {
@@ -70,7 +71,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           },
           token: `${process.env.OIDC_ISSUER}/api/oidc/token`,
           userinfo: `${process.env.OIDC_ISSUER}/api/oidc/userinfo`,
-          jwks_endpoint: `${process.env.OIDC_ISSUER}/.well-known/jwks.json`,
           profile(profile: { email?: string; name?: string; sub?: string }) {
             return {
               id: profile.sub ?? "",
@@ -78,7 +78,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               name: profile.name ?? profile.email ?? "",
             };
           },
-        } satisfies { id: string; name: string; type: "oidc"; clientId: string; clientSecret: string; authorization: { url: string; params: { scope: string } }; token: string; userinfo: string; jwks_endpoint: string; profile: (p: { email?: string; name?: string; sub?: string }) => { id: string; email: string; name: string } }]
+        }]
       : []),
   ],
   callbacks: {
