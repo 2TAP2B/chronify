@@ -1,3 +1,5 @@
+/// <reference path="../../types/web-nfc.d.ts" />
+
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
@@ -29,20 +31,11 @@ export function KioskScreen({ locale }: { locale: string }) {
   const [nfcSupported, setNfcSupported] = useState(false);
   const [nfcActive, setNfcActive] = useState(false);
   const [nfcError, setNfcError] = useState<string | null>(null);
-  const nfcRef = useRef<any>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
   const revertTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    const hasNdef = "NDEFReader" in window || "NDEFReader" in navigator;
-    const secure = typeof window !== "undefined" && window.isSecureContext;
-    if (!hasNdef) {
-      setNfcSupported(false);
-      if (!secure) {
-        setNfcError("insecure");
-      }
-    } else {
-      setNfcSupported(true);
-    }
+    setNfcSupported(typeof window !== "undefined" && "NDEFReader" in window);
   }, []);
 
   useEffect(() => {
@@ -103,32 +96,43 @@ export function KioskScreen({ locale }: { locale: string }) {
     }
   }, [state, t, scheduleRevert]);
 
-  const startNfc = useCallback(async () => {
-    const NDEFReaderCtor = (window as any).NDEFReader ?? (navigator as any).NDEFReader;
-    if (!NDEFReaderCtor) {
+  const handleNfcScan = useCallback(async () => {
+    if (!("NDEFReader" in window)) {
       setNfcError("not_available");
       return;
     }
-    if (!window.isSecureContext) {
-      setNfcError("insecure");
-      return;
-    }
+
+    const reader = new NDEFReader();
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
+    setNfcActive(true);
+    setNfcError(null);
+
     try {
-      const reader = new NDEFReaderCtor();
-      await reader.scan();
-      nfcRef.current = reader;
-      setNfcActive(true);
-      setNfcError(null);
-      reader.addEventListener("reading", (event: any) => {
+      await reader.scan({ signal: controller.signal });
+
+      reader.onreading = (event: NDEFReadingEvent) => {
+        controller.abort();
+        setNfcActive(false);
+
         for (const record of event.message.records) {
           if (record.recordType === "text") {
-            const text = record.data.getRecordText?.() ?? "";
-            if (text.trim()) {
-              handleCardTap(text.trim());
+            const textDecoder = new TextDecoder();
+            const rfidCode = textDecoder.decode(record.data);
+            const trimmed = rfidCode.trim();
+            if (trimmed) {
+              handleCardTap(trimmed);
             }
+            return;
           }
         }
-      });
+      };
+
+      reader.onreadingerror = () => {
+        setNfcError("scan_error");
+        setNfcActive(false);
+      };
     } catch {
       setNfcActive(false);
       setNfcError("permission_denied");
@@ -137,9 +141,8 @@ export function KioskScreen({ locale }: { locale: string }) {
 
   useEffect(() => {
     return () => {
-      if (nfcRef.current) {
-        nfcRef.current = null;
-      }
+      abortControllerRef.current?.abort();
+      if (revertTimer.current) clearTimeout(revertTimer.current);
     };
   }, []);
 
@@ -165,7 +168,7 @@ export function KioskScreen({ locale }: { locale: string }) {
             {nfcSupported && !nfcActive && (
               <div className="flex flex-col items-center gap-2">
                 <button
-                  onClick={startNfc}
+                  onClick={handleNfcScan}
                   className="rounded-xl bg-primary px-8 py-4 text-xl font-semibold text-primary-foreground shadow-lg transition hover:bg-primary/90 active:scale-95"
                 >
                   {t("enableNfc")}
@@ -173,18 +176,16 @@ export function KioskScreen({ locale }: { locale: string }) {
                 {nfcError === "permission_denied" && (
                   <p className="text-sm text-destructive">{t("nfcPermissionDenied")}</p>
                 )}
+                {nfcError === "scan_error" && (
+                  <p className="text-sm text-destructive">{t("scanError")}</p>
+                )}
               </div>
             )}
             {nfcSupported && nfcActive && (
               <p className="text-2xl font-semibold">{t("tapPrompt")}</p>
             )}
             {!nfcSupported && (
-              <div className="flex flex-col items-center gap-2">
-                <p className="text-lg text-muted-foreground">{t("nfcNotSupported")}</p>
-                {nfcError === "insecure" && (
-                  <p className="text-sm text-destructive">{t("nfcInsecure")}</p>
-                )}
-              </div>
+              <p className="text-lg text-muted-foreground">{t("nfcNotSupported")}</p>
             )}
           </div>
           <button
