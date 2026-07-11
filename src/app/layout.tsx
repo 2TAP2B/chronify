@@ -7,12 +7,13 @@ export const metadata: Metadata = {
   },
   description: "Zeiterfassung für Mitarbeiter",
   applicationName: "Puku Zeiterfassung",
+  manifest: "/manifest",
+  themeColor: "#2563eb",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
     title: "Puku Zeiterfassung",
   },
-  manifest: "/manifest",
 };
 
 export default function RootLayout({

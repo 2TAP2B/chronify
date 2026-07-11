@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
+    id: "puku-zeiterfassung",
     name: "Puku Zeiterfassung",
     short_name: "Puku",
     description: "Zeiterfassung für Mitarbeiter",
