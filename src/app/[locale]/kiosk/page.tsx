@@ -11,13 +11,13 @@ export const viewport: Viewport = {
   initialScale: 1,
   viewportFit: "cover",
   userScalable: false,
+  themeColor: "#2563eb",
 };
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
     manifest: "/kiosk-manifest",
     title: "Puku Kiosk",
-    themeColor: "#2563eb",
     appleWebApp: {
       capable: true,
       statusBarStyle: "black-translucent",

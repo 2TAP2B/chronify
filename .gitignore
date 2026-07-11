@@ -54,3 +54,4 @@ public/workbox-*.js
 public/workbox-*.js.map
 backups/
 data/
+public/swe-worker-*.js

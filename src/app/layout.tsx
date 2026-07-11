@@ -1,4 +1,8 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
+
+export const viewport: Viewport = {
+  themeColor: "#2563eb",
+};
 
 export const metadata: Metadata = {
   title: {
@@ -8,7 +12,6 @@ export const metadata: Metadata = {
   description: "Zeiterfassung für Mitarbeiter",
   applicationName: "Puku Zeiterfassung",
   manifest: "/manifest",
-  themeColor: "#2563eb",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
