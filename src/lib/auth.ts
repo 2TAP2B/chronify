@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { rateLimit } from "@/lib/rate-limit";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  debug: process.env.AUTH_DEBUG === "true",
   trustHost: true,
   adapter: PrismaAdapter(db),
   session: {
@@ -78,6 +79,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               name: profile.name ?? profile.email ?? "",
             };
           },
+          allowDangerousEmailAccountLinking: true,
         }]
       : []),
   ],
