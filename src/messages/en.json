@@ -30,6 +30,7 @@
     "reports": "Reports",
     "team": "Team",
     "admin": "Admin",
+    "adminDashboard": "Admin Dashboard",
     "users": "Users",
     "workingModels": "Working Models",
     "holidays": "Holidays",
@@ -49,13 +50,25 @@
     "loginTitle": "Sign in",
     "loginSubtitle": "Sign in to your account",
     "email": "Email",
+    "emailOrUsername": "Email or username",
     "password": "Password",
     "loginButton": "Sign in",
     "loginError": "Email or password is incorrect",
     "logoutSuccess": "You have been signed out",
     "loginQuote": "Track your working time simply and precisely – compliant with German labor law.",
     "oidcLogin": "Sign in with Pocket-ID",
-    "or": "or"
+    "or": "or",
+    "forgotPassword": "Forgot password?",
+    "forgotPasswordTitle": "Reset password",
+    "forgotPasswordDescription": "Enter your email address. We'll send you a link to reset your password.",
+    "forgotPasswordButton": "Send link",
+    "forgotPasswordSent": "If the email exists, a reset link has been sent.",
+    "resetPasswordTitle": "Set new password",
+    "resetPasswordDescription": "Enter your new password.",
+    "resetPasswordButton": "Set password",
+    "resetPasswordSuccess": "Password has been reset. You can now sign in.",
+    "resetPasswordInvalid": "Link invalid or expired.",
+    "backToLogin": "Back to login"
   },
   "changePassword": {
     "title": "Change password",
@@ -548,7 +561,8 @@
     "title": "Notifications",
     "markRead": "Mark as read",
     "noNotifications": "No notifications",
-    "unread": "Unread"
+    "unread": "Unread",
+    "markAllRead": "Mark all as read"
   },
   "team": {
     "title": "Team",
@@ -622,5 +636,27 @@
     "overtime": "Use overtime",
     "overtimeDescription": "Hours are deducted from your overtime balance.",
     "saving": "Saving…"
+  },
+  "branding": {
+    "sectionBranding": "Branding",
+    "sectionBrandingHint": "Customize the app name and logo.",
+    "appName": "App name",
+    "appNameHint": "Max 50 characters. Shown in the sidebar and on the login page.",
+    "logo": "Logo",
+    "logoHint": "SVG, PNG, or JPG. Max 200 KB. Shown in the sidebar and on the login page.",
+    "logoTooLarge": "Logo is too large (max 200 KB).",
+    "sectionLogin": "Login page",
+    "sectionLoginHint": "Customize the image and quote on the login page.",
+    "loginImage": "Background image",
+    "loginImageHint": "SVG, PNG, JPG, or WebP. Max 500 KB. Shown as background on the right side of the login card.",
+    "imageTooLarge": "Image is too large (max 500 KB).",
+    "loginQuote": "Quote",
+    "loginQuoteHint": "Max 200 characters. Leave empty for the default quote.",
+    "loginQuoteAuthor": "Author / source",
+    "loginQuoteAuthorHint": "Max 50 characters. Shown below the quote.",
+    "upload": "Upload",
+    "remove": "Remove",
+    "save": "Save",
+    "saved": "Branding saved."
   }
 }

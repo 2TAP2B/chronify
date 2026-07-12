@@ -15,17 +15,23 @@ export default async function AppLayout({
   const session = await auth();
   if (!session?.user?.id) return null;
 
-  const user = await db.user.findUnique({
-    where: { id: session.user.id },
-    select: {
-      name: true,
-      email: true,
-      role: true,
-      firstName: true,
-      lastName: true,
-      mustChangePassword: true,
-    },
-  });
+  const [user, settings] = await Promise.all([
+    db.user.findUnique({
+      where: { id: session.user.id },
+      select: {
+        name: true,
+        email: true,
+        role: true,
+        firstName: true,
+        lastName: true,
+        mustChangePassword: true,
+      },
+    }),
+    db.orgSettings.findUnique({
+      where: { id: "singleton" },
+      select: { appName: true, appLogo: true },
+    }),
+  ]);
 
   if (!user) {
     redirect("/api/auth/signout");
@@ -56,8 +62,8 @@ export default async function AppLayout({
   const adminItems =
     user?.role === "ADMIN"
       ? [
+          { href: "/admin", label: t("adminDashboard") },
           { href: "/admin/users", label: t("users") },
-          { href: "/admin/working-models", label: t("workingModels") },
           { href: "/admin/holidays", label: t("holidays") },
           {
             href: "/admin/business-closures",
@@ -68,11 +74,12 @@ export default async function AppLayout({
             label: t("vacationApprovals"),
           },
           { href: "/admin/sickness", label: t("sickness") },
-          { href: "/admin/settings", label: t("settings") },
-          { href: "/admin/import", label: t("import") },
-          { href: "/admin/audit-log", label: t("auditLog") },
         ]
       : [];
+
+  const branding = settings
+    ? { appName: settings.appName, appLogo: settings.appLogo }
+    : { appName: "Puku Zeiterfassung", appLogo: null };
 
   return (
     <SidebarProvider>
@@ -84,6 +91,7 @@ export default async function AppLayout({
           name: user?.name ?? "Benutzer",
           email: user?.email ?? "",
         }}
+        branding={branding}
       />
       <SidebarInset>
         <SiteHeader />

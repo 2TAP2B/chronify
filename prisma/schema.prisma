@@ -271,6 +271,11 @@ model OrgSettings {
   timeEntryLockWindowDays         Int          @default(7)
   autoBreakDefault                BreakMode    @default(AUTO)
   defaultVacationDays             Float        @default(30)
+  appName                         String       @default("Puku Zeiterfassung")
+  appLogo                         String?
+  loginImage                       String?
+  loginQuote                       String?
+  loginQuoteAuthor                 String?
   createdAt                       DateTime     @default(now())
   updatedAt                       DateTime     @updatedAt
 }

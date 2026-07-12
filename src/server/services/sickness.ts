@@ -1,5 +1,7 @@
 import { db } from "@/lib/db";
 import { audit, getUserContext, type SessionUser } from "@/server/context";
+import { sendMail } from "@/server/services/mail";
+import { sickNoteReminderEmail } from "@/lib/email-templates";
 import {
   businessDaysInRange,
   makeHolidayResolver,
@@ -119,6 +121,25 @@ export async function createSickNote(opts: {
     entityId: note.id,
     payload: { from: from.toISOString(), to: to.toISOString(), days: businessDays.length },
   });
+
+  if (!opts.input.aubUntil) {
+    const appUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
+    const appName = process.env.APP_NAME ?? "Puku Zeiterfassung";
+    const sicknessUrl = `${appUrl}/${ctx.user.locale ?? "de"}/sickness`;
+    const mailContent = sickNoteReminderEmail({
+      locale: (ctx.user.locale ?? "de") as "de" | "en",
+      appName,
+      recipientName: ctx.user.name,
+      sickFrom: from.toISOString().slice(0, 10),
+      sicknessUrl,
+    });
+    await sendMail({
+      to: ctx.user.email,
+      subject: mailContent.subject,
+      html: mailContent.html,
+      text: mailContent.text,
+    }).catch(() => {});
+  }
 
   return note;
 }

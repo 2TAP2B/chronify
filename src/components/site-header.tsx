@@ -9,6 +9,7 @@ import { Moon, Play, Square, Sun } from "lucide-react"
 
 import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
+import { NotificationBell } from "@/components/notifications/notification-bell"
 import { useTimerInit, useTimer } from "@/stores/timer-store"
 import { Button } from "@/components/ui/button"
 import {
@@ -118,6 +119,7 @@ export function SiteHeader() {
           >
             {timer.active ? <Square className="size-4" /> : <Play className="size-4" />}
           </Button>
+          <NotificationBell />
           <Button
             variant="ghost"
             size="icon"

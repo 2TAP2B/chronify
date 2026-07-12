@@ -20,6 +20,11 @@ export const updateSettingsSchema = z.object({
   timeEntryLockWindowDays: z.number().int().min(0).max(365).optional(),
   autoBreakDefault: z.enum(["AUTO", "MANUAL"]).optional(),
   defaultVacationDays: z.number().min(0).max(60).optional(),
+  appName: z.string().max(50).optional(),
+  appLogo: z.string().nullable().optional(),
+  loginImage: z.string().nullable().optional(),
+  loginQuote: z.string().max(200).nullable().optional(),
+  loginQuoteAuthor: z.string().max(50).nullable().optional(),
 });
 
 export type UpdateSettingsInput = z.infer<typeof updateSettingsSchema>;

@@ -48,7 +48,7 @@ export function TeamCalendar({
                 <th
                   key={d.date}
                   className={`border-b border-r p-1 text-center font-medium min-w-[40px] ${
-                    d.isWeekend ? "bg-muted/50" : "bg-background"
+                    d.isWeekend ? "bg-foreground/[0.04]" : "bg-background"
                   }`}
                   title={d.holidayName ?? d.closureName ?? ""}
                 >
@@ -61,7 +61,7 @@ export function TeamCalendar({
         </thead>
         <tbody>
           {users.map((u) => (
-            <tr key={u.id} className="hover:bg-muted/30">
+            <tr key={u.id} className="hover:bg-foreground/[0.04]">
               <td className="sticky left-0 z-10 border-b border-r bg-background p-2 font-medium whitespace-nowrap">
                 {u.name}
               </td>
@@ -81,7 +81,7 @@ export function TeamCalendar({
                     </span>
                   );
                 } else if (isWeekend) {
-                  cellClass += " bg-muted/30";
+                  cellClass += " bg-foreground/[0.03]";
                 }
 
                 return (

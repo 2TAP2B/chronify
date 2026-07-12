@@ -176,7 +176,7 @@ export function DataTable({
       <div className="overflow-hidden rounded-lg border">
         <div className="overflow-x-auto">
         <Table className="min-w-[640px]">
-          <TableHeader className="bg-muted">
+          <TableHeader className="bg-foreground/[0.05]">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {

@@ -30,6 +30,7 @@
     "reports": "Berichte",
     "team": "Team",
     "admin": "Verwaltung",
+    "adminDashboard": "Admin-Dashboard",
     "users": "Benutzer",
     "workingModels": "Arbeitszeitmodelle",
     "holidays": "Feiertage",
@@ -49,13 +50,25 @@
     "loginTitle": "Anmelden",
     "loginSubtitle": "Melden Sie sich bei Ihrem Konto an",
     "email": "E-Mail",
+    "emailOrUsername": "E-Mail oder Benutzername",
     "password": "Passwort",
     "loginButton": "Anmelden",
     "loginError": "E-Mail oder Passwort ist falsch",
     "logoutSuccess": "Sie wurden abgemeldet",
     "loginQuote": "Erfassen Sie Ihre Arbeitszeit einfach und präzise – nach deutschen Arbeitsgesetzen.",
     "oidcLogin": "Mit Pocket-ID anmelden",
-    "or": "oder"
+    "or": "oder",
+    "forgotPassword": "Passwort vergessen?",
+    "forgotPasswordTitle": "Passwort zurücksetzen",
+    "forgotPasswordDescription": "Geben Sie Ihre E-Mail-Adresse ein. Wir senden Ihnen einen Link zum Zurücksetzen Ihres Passworts.",
+    "forgotPasswordButton": "Link senden",
+    "forgotPasswordSent": "Falls die E-Mail existiert, wurde ein Link zum Zurücksetzen versendet.",
+    "resetPasswordTitle": "Neues Passwort festlegen",
+    "resetPasswordDescription": "Geben Sie Ihr neues Passwort ein.",
+    "resetPasswordButton": "Passwort festlegen",
+    "resetPasswordSuccess": "Passwort wurde zurückgesetzt. Sie können sich jetzt anmelden.",
+    "resetPasswordInvalid": "Link ungültig oder abgelaufen.",
+    "backToLogin": "Zurück zur Anmeldung"
   },
   "changePassword": {
     "title": "Passwort ändern",
@@ -548,7 +561,8 @@
     "title": "Benachrichtigungen",
     "markRead": "Als gelesen markieren",
     "noNotifications": "Keine Benachrichtigungen",
-    "unread": "Ungelesen"
+    "unread": "Ungelesen",
+    "markAllRead": "Alle als gelesen markieren"
   },
   "team": {
     "title": "Team",
@@ -622,5 +636,27 @@
     "overtime": "Überstunden abbauen",
     "overtimeDescription": "Die Stunden werden von deinem Überstundenkonto abgezogen.",
     "saving": "Wird gespeichert…"
+  },
+  "branding": {
+    "sectionBranding": "Branding",
+    "sectionBrandingHint": "Passen Sie Name und Logo der Anwendung an.",
+    "appName": "App-Name",
+    "appNameHint": "Maximal 50 Zeichen. Wird in der Sidebar und auf der Login-Seite angezeigt.",
+    "logo": "Logo",
+    "logoHint": "SVG, PNG oder JPG. Maximal 200 KB. Wird in der Sidebar und auf der Login-Seite angezeigt.",
+    "logoTooLarge": "Logo ist zu groß (max. 200 KB).",
+    "sectionLogin": "Login-Seite",
+    "sectionLoginHint": "Passen Sie das Bild und den Spruch auf der Login-Seite an.",
+    "loginImage": "Hintergrundbild",
+    "loginImageHint": "SVG, PNG, JPG oder WebP. Maximal 500 KB. Wird als Hintergrund auf der rechten Seite der Login-Karte angezeigt.",
+    "imageTooLarge": "Bild ist zu groß (max. 500 KB).",
+    "loginQuote": "Spruch / Zitat",
+    "loginQuoteHint": "Maximal 200 Zeichen. Leer lassen für den Standard-Spruch.",
+    "loginQuoteAuthor": "Autor / Quellenangabe",
+    "loginQuoteAuthorHint": "Maximal 50 Zeichen. Wird unter dem Spruch angezeigt.",
+    "upload": "Hochladen",
+    "remove": "Entfernen",
+    "save": "Speichern",
+    "saved": "Branding gespeichert."
   }
 }

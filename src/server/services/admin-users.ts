@@ -3,6 +3,8 @@ import { audit, type SessionUser } from "@/server/context";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import type { Role, Locale, FederalState, BreakMode } from "@prisma/client";
+import { sendMail } from "@/server/services/mail";
+import { welcomeEmail } from "@/lib/email-templates";
 
 export class AdminError extends Error {
   constructor(
@@ -123,6 +125,25 @@ export async function createUser(opts: {
     entityId: user.id,
     payload: { email: user.email, role: opts.input.role },
   });
+
+  const appUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
+  const appName = process.env.APP_NAME ?? "Puku Zeiterfassung";
+  const loginUrl = `${appUrl}/${opts.input.locale}/login`;
+  const mailContent = welcomeEmail({
+    locale: opts.input.locale as "de" | "en",
+    appName,
+    recipientName: user.name,
+    email: user.email,
+    tempPassword: opts.input.password,
+    loginUrl,
+  });
+  await sendMail({
+    to: user.email,
+    subject: mailContent.subject,
+    html: mailContent.html,
+    text: mailContent.text,
+  }).catch(() => {});
+
   return user;
 }
 

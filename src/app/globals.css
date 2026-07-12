@@ -371,10 +371,15 @@
 
 @layer base {
   * {
-    @apply border-border;
+    @apply border-transparent;
   }
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  .rounded-lg.border,
+  .rounded-md.border {
+    border-color: hsl(var(--border) / 0.4);
   }
 }

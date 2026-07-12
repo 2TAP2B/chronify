@@ -137,9 +137,9 @@ export function TimesheetGrid({
               key={day.date}
               className={`rounded-lg border shadow-sm overflow-hidden ${
                 day.isToday ? "ring-2 ring-primary/50" : ""
-              } ${isWeekend && day.entries.length === 0 ? "bg-muted/20" : "bg-card"}`}
+              } ${isWeekend && day.entries.length === 0 ? "bg-foreground/[0.03]" : "bg-card"}`}
             >
-              <div className="flex items-center justify-between border-b bg-muted/40 px-3 py-2.5">
+              <div className="flex items-center justify-between border-b bg-foreground/[0.05] px-3 py-2.5">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-semibold capitalize">{day.label}</span>
                   {day.isToday && <Badge variant="default">{t("today")}</Badge>}
@@ -160,7 +160,7 @@ export function TimesheetGrid({
               ) : (
                 <Table>
                   <TableHeader>
-                    <TableRow className="border-b bg-muted/20 hover:bg-muted/20">
+                    <TableRow className="border-b bg-foreground/[0.04] hover:bg-foreground/[0.04]">
                       <TableHead className="w-[18%] text-xs font-semibold uppercase tracking-wide">{t("start")}</TableHead>
                       <TableHead className="w-[18%] text-xs font-semibold uppercase tracking-wide">{t("end")}</TableHead>
                       <TableHead className="w-[16%] text-xs font-semibold uppercase tracking-wide">{t("break")}</TableHead>
@@ -170,10 +170,10 @@ export function TimesheetGrid({
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {day.entries.map((e, idx) => (
+                    {day.entries.map((e) => (
                       <TableRow
                         key={e.id}
-                        className={`border-b ${idx % 2 === 1 ? "bg-muted/15" : ""} hover:bg-accent/50`}
+                        className="hover:bg-accent/50"
                       >
                         <TableCell className="font-mono text-sm tabular-nums font-medium">
                           {e.startAt ? formatInZone(new Date(e.startAt), timeZone, "HH:mm") : "—"}

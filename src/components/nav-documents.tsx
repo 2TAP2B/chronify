@@ -11,6 +11,7 @@ import {
   CheckCheck,
   HeartPulse,
   Settings,
+  LayoutDashboard,
   Circle,
   type LucideIcon,
 } from "lucide-react"
@@ -27,6 +28,7 @@ import { cn } from "@/lib/utils"
 import type { NavItem } from "@/components/nav-main"
 
 const iconMap: Record<string, LucideIcon> = {
+  "/admin": LayoutDashboard,
   "/admin/users": UserCog,
   "/admin/working-models": Clock,
   "/admin/holidays": CalendarOff,

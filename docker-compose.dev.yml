@@ -16,5 +16,12 @@ services:
     ports:
       - "5433:5432"
 
+  mailpit:
+    image: axllent/mailpit
+    restart: unless-stopped
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
 volumes:
   dev-db-data:

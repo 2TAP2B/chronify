@@ -19,27 +19,37 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
     Credentials({
       credentials: {
-        email: { label: "Email", type: "email" },
+        email: { label: "Email oder Benutzername", type: "text" },
         password: { label: "Passwort", type: "password" },
       },
       authorize: async (credentials, req) => {
-        const email = credentials?.email as string | undefined;
+        const identifier = credentials?.email as string | undefined;
         const password = credentials?.password as string | undefined;
-        if (!email || !password) return null;
+        if (!identifier || !password) return null;
+
+        const lookupKey = identifier.toLowerCase().trim();
 
         const ip =
           req?.headers?.get("x-forwarded-for")?.split(",")[0]?.trim() ??
           req?.headers?.get("x-real-ip") ??
           "unknown";
-        const rl = rateLimit({ key: `login:${ip}:${email.toLowerCase()}`, max: 10, windowMs: 60_000 });
+        const rl = rateLimit({ key: `login:${ip}:${lookupKey}`, max: 10, windowMs: 60_000 });
         if (!rl.ok) {
           throw new Error("Too many login attempts. Please try again later.");
         }
 
-        const user = await db.user.findUnique({
-          where: { email: email.toLowerCase() },
+        const user = await db.user.findFirst({
+          where: {
+            OR: [
+              { email: lookupKey },
+              { name: lookupKey },
+              { firstName: lookupKey },
+              { lastName: lookupKey },
+            ],
+            active: true,
+          },
         });
-        if (!user || !user.active) return null;
+        if (!user) return null;
 
         const valid = await bcrypt.compare(password, user.passwordHash);
         if (!valid) return null;

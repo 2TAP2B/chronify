@@ -10,6 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { SettingsForm } from "@/components/admin/settings-form";
+import { BrandingSettings } from "@/components/admin/branding-settings";
 import { YearSetupCard } from "@/components/admin/year-setup-card";
 import { HolidaySync } from "@/components/admin/holiday-sync";
 
@@ -31,6 +32,8 @@ export default async function AdminSettingsPage({ params }: Props) {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
+
+      <BrandingSettings settings={settings} />
 
       <SettingsForm settings={settings} />
 

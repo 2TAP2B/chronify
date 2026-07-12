@@ -1,6 +1,8 @@
 import { db } from "@/lib/db";
 import { audit, getUserContext, type SessionUser } from "@/server/context";
 import { notifyUser } from "@/server/services/notification";
+import { sendMail } from "@/server/services/mail";
+import { vacationRequestedAdminEmail } from "@/lib/email-templates";
 import { computeYearOvertime } from "@/server/services/overtime";
 import {
   businessDaysInRange,
@@ -154,7 +156,7 @@ export async function createVacationRequest(opts: {
   // Notify admins
   const admins = await db.user.findMany({
     where: { role: "ADMIN", active: true },
-    select: { id: true },
+    select: { id: true, email: true, name: true, locale: true },
   });
   if (admins.length) {
     await db.notification.createMany({
@@ -167,6 +169,29 @@ export async function createVacationRequest(opts: {
         channel: "APP",
       })),
     });
+
+    const appUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
+    const appName = process.env.APP_NAME ?? "Puku Zeiterfassung";
+    const approvalUrl = `${appUrl}/de/admin/vacation-approvals`;
+
+    for (const admin of admins) {
+      const mailContent = vacationRequestedAdminEmail({
+        locale: (admin.locale ?? "de") as "de" | "en",
+        appName,
+        adminName: admin.name,
+        requesterName: actor.name ?? actor.email ?? "User",
+        fromDate: from.toISOString().slice(0, 10),
+        toDate: to.toISOString().slice(0, 10),
+        days: businessDays.length,
+        approvalUrl,
+      });
+      await sendMail({
+        to: admin.email,
+        subject: mailContent.subject,
+        html: mailContent.html,
+        text: mailContent.text,
+      }).catch(() => {});
+    }
   }
 
   await audit({
@@ -298,6 +323,17 @@ export async function approveVacationRequest(opts: {
     body: `Urlaub ${req.from.toISOString().slice(0, 10)} – ${req.to.toISOString().slice(0, 10)} wurde genehmigt.`,
     payload: { requestId: req.id },
     url: "/de/vacation",
+    email: {
+      template: "vacation_approved",
+      locale: (ctx.user.locale ?? "de") as "de" | "en",
+      recipientName: ctx.user.name,
+      appName: process.env.APP_NAME ?? "Puku Zeiterfassung",
+      vars: {
+        fromDate: req.from.toISOString().slice(0, 10),
+        toDate: req.to.toISOString().slice(0, 10),
+        days: businessDays.length,
+      },
+    },
   });
 
   await audit({
@@ -334,6 +370,8 @@ export async function rejectVacationRequest(opts: {
     },
   });
 
+  const rejectCtx = await getUserContext(req.userId);
+
   await notifyUser({
     userId: req.userId,
     type: "VACATION_REJECTED",
@@ -341,6 +379,17 @@ export async function rejectVacationRequest(opts: {
     body: `Urlaub ${req.from.toISOString().slice(0, 10)} – ${req.to.toISOString().slice(0, 10)} wurde abgelehnt.`,
     payload: { requestId: req.id },
     url: "/de/vacation",
+    email: {
+      template: "vacation_rejected",
+      locale: (rejectCtx.user.locale ?? "de") as "de" | "en",
+      recipientName: rejectCtx.user.name,
+      appName: process.env.APP_NAME ?? "Puku Zeiterfassung",
+      vars: {
+        fromDate: req.from.toISOString().slice(0, 10),
+        toDate: req.to.toISOString().slice(0, 10),
+        reason: opts.approverNote ?? "",
+      },
+    },
   });
 
   await audit({

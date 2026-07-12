@@ -22,13 +22,20 @@ export function AppSidebar({
   navItems,
   adminItems,
   user,
+  branding,
   ...props
 }: {
   navItems: NavItem[]
   adminItems: NavItem[]
   user: { name: string; email: string }
-  } & React.ComponentProps<typeof Sidebar>) {
+  branding?: { appName: string; appLogo: string | null }
+} & React.ComponentProps<typeof Sidebar>) {
   const { setOpenMobile } = useSidebar()
+  const appName = branding?.appName ?? "Puku Zeiterfassung"
+  const appLogo = branding?.appLogo
+  const nameParts = appName.split(" ")
+  const primary = nameParts[0] ?? "Puku"
+  const secondary = nameParts.slice(1).join(" ") || "Zeiterfassung"
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -41,11 +48,15 @@ export function AppSidebar({
               onClick={() => setOpenMobile(false)}
             >
               <Link href="/de/dashboard">
-                <Logo className="h-7 w-7" />
+                {appLogo ? (
+                  <img src={appLogo} alt={appName} className="h-7 w-7 object-contain" />
+                ) : (
+                  <Logo className="h-7 w-7" />
+                )}
                 <div className="flex flex-col gap-0.5 leading-none">
-                  <span className="font-semibold">Puku</span>
+                  <span className="font-semibold">{primary}</span>
                   <span className="text-xs text-muted-foreground">
-                    Zeiterfassung
+                    {secondary}
                   </span>
                 </div>
               </Link>

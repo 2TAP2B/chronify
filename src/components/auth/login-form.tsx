@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { signIn } from "next-auth/react";
 import { useTranslations, useLocale } from "next-intl";
-import { AlertCircle, KeyRound } from "lucide-react";
+import { useTheme } from "next-themes";
+import { AlertCircle, KeyRound, Moon, Sun } from "lucide-react";
+import { Link } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,6 +15,14 @@ import { Logo } from "@/components/layout/logo";
 
 const OIDC_ENABLED = !!process.env.NEXT_PUBLIC_OIDC_ENABLED;
 
+type Branding = {
+  appName: string;
+  appLogo: string | null;
+  loginImage: string | null;
+  loginQuote: string | null;
+  loginQuoteAuthor: string | null;
+};
+
 export function LoginForm({
   className,
   ...props
@@ -20,8 +30,22 @@ export function LoginForm({
   const t = useTranslations("auth");
   const tCommon = useTranslations("common");
   const locale = useLocale();
+  const { theme, setTheme } = useTheme();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [branding, setBranding] = useState<Branding | null>(null);
+
+  useEffect(() => {
+    fetch("/api/branding")
+      .then((r) => r.json())
+      .then((d: Branding) => setBranding(d))
+      .catch(() => {});
+  }, []);
+
+  const displayQuote = branding?.loginQuote ?? t("loginQuote");
+  const displayAuthor = branding?.loginQuoteAuthor ?? tCommon("appName");
+  const loginImage = branding?.loginImage;
+  const appLogo = branding?.appLogo;
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -41,13 +65,28 @@ export function LoginForm({
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
+      <div className="flex justify-end">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-8"
+          aria-label="Toggle theme"
+          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+        >
+          {theme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
+        </Button>
+      </div>
       <Card className="overflow-hidden">
         <CardContent className="grid p-0 md:grid-cols-2">
           <form onSubmit={onSubmit} className="p-6 md:p-8">
             <div className="flex flex-col gap-6">
               <div className="flex flex-col items-center text-center">
                 <div className="mb-4 flex h-12 w-12 items-center justify-center">
-                  <Logo className="h-12 w-12" />
+                  {appLogo ? (
+                    <img src={appLogo} alt="Logo" className="h-12 w-12 object-contain" />
+                  ) : (
+                    <Logo className="h-12 w-12" />
+                  )}
                 </div>
                 <h1 className="text-2xl font-bold">{t("loginTitle")}</h1>
                 <p className="text-balance text-muted-foreground">
@@ -55,19 +94,27 @@ export function LoginForm({
                 </p>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="email">{t("email")}</Label>
+                <Label htmlFor="email">{t("emailOrUsername")}</Label>
                 <Input
                   id="email"
                   name="email"
-                  type="email"
-                  autoComplete="email"
+                  type="text"
+                  autoComplete="username"
                   placeholder="m@example.com"
                   required
                   autoFocus
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="password">{t("password")}</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password">{t("password")}</Label>
+                  <Link
+                    href="/forgot-password"
+                    className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {t("forgotPassword")}
+                  </Link>
+                </div>
                 <Input
                   id="password"
                   name="password"
@@ -117,21 +164,31 @@ export function LoginForm({
             </div>
           </form>
           <div className="relative hidden bg-primary md:block">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-primary-foreground/20" />
+            {loginImage ? (
+              <div className="absolute inset-0">
+                <img src={loginImage} alt="" className="h-full w-full object-cover" />
+              </div>
+            ) : (
+              <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-primary-foreground/20" />
+            )}
             <div className="relative flex h-full flex-col items-center justify-center p-8 text-primary-foreground">
-              <Logo className="mb-6 h-16 w-16 text-white" />
+              {appLogo ? (
+                <img src={appLogo} alt="Logo" className="mb-6 h-16 w-16 object-contain" />
+              ) : (
+                <Logo className="mb-6 h-16 w-16 text-white" />
+              )}
               <blockquote className="text-center text-lg font-medium leading-relaxed">
-                {t("loginQuote")}
+                {displayQuote}
               </blockquote>
               <p className="mt-4 text-sm text-primary-foreground/80">
-                {tCommon("appName")}
+                {displayAuthor}
               </p>
             </div>
           </div>
         </CardContent>
       </Card>
       <div className="text-balance text-center text-xs text-muted-foreground">
-        {tCommon("appName")}
+        {branding?.appName ?? tCommon("appName")}
       </div>
     </div>
   );
