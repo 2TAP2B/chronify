@@ -80,6 +80,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             };
           },
           allowDangerousEmailAccountLinking: true,
+          checks: ["pkce", "state"] as ("pkce" | "state")[],
         }]
       : []),
   ],
