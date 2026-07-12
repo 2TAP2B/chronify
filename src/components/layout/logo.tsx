@@ -11,19 +11,25 @@ export function Logo({ className }: { className?: string }) {
     >
       <rect width="32" height="32" rx="8" fill="currentColor" />
       <path
-        d="M21 9.5a8 8 0 1 0 3 11.5"
+        d="M 21 8.8 A 9 9 0 1 0 21 23.2"
+        stroke="white"
+        strokeWidth="3"
+        strokeLinecap="round"
+      />
+      <line
+        x1="16"
+        y1="16"
+        x2="13"
+        y2="14.3"
         stroke="white"
         strokeWidth="2.5"
         strokeLinecap="round"
       />
-      <path
-        d="M16 16V10.5"
-        stroke="white"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
-      <path
-        d="M16 16l4.5-2.5"
+      <line
+        x1="16"
+        y1="16"
+        x2="20.3"
+        y2="13.5"
         stroke="white"
         strokeWidth="2"
         strokeLinecap="round"
