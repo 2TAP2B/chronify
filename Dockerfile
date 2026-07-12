@@ -5,7 +5,7 @@ FROM node:20-alpine AS deps
 RUN apk add --no-cache libc6-compat openssl
 WORKDIR /app
 COPY package.json package-lock.json* ./
-RUN npm ci --include=dev
+RUN npm ci --include=dev --omit=peer
 
 # ---------- builder ----------
 FROM node:20-alpine AS builder
