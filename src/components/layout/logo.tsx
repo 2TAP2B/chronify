@@ -11,13 +11,24 @@ export function Logo({ className }: { className?: string }) {
     >
       <rect width="32" height="32" rx="8" fill="currentColor" />
       <path
-        d="M10 9v14M10 16h6a4 4 0 0 0 4-4v0a4 4 0 0 0-4-4h-6"
+        d="M21 9.5a8 8 0 1 0 3 11.5"
         stroke="white"
         strokeWidth="2.5"
         strokeLinecap="round"
-        strokeLinejoin="round"
       />
-      <circle cx="22" cy="22" r="2" fill="white" />
+      <path
+        d="M16 16V10.5"
+        stroke="white"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+      <path
+        d="M16 16l4.5-2.5"
+        stroke="white"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+      <circle cx="16" cy="16" r="1.3" fill="white" />
     </svg>
   );
 }

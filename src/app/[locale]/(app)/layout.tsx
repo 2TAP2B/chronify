@@ -79,7 +79,7 @@ export default async function AppLayout({
 
   const branding = settings
     ? { appName: settings.appName, appLogo: settings.appLogo }
-    : { appName: "Puku Zeiterfassung", appLogo: null };
+    : { appName: "Chronify", appLogo: null };
 
   return (
     <SidebarProvider>

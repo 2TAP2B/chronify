@@ -2,9 +2,9 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    id: "puku-zeiterfassung",
-    name: "Puku Zeiterfassung",
-    short_name: "Puku",
+    id: "chronify",
+    name: "Chronify",
+    short_name: "Chronify",
     description: "Zeiterfassung für Mitarbeiter",
     start_url: "/de/dashboard",
     scope: "/",

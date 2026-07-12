@@ -33,7 +33,7 @@ services:
       SMTP_PORT: "${SMTP_PORT:-587}"
       SMTP_USER: "${SMTP_USER:-}"
       SMTP_PASS: "${SMTP_PASS:-}"
-      SMTP_FROM: "${SMTP_FROM:-puku-timetracking@example.com}"
+      SMTP_FROM: "${SMTP_FROM:-chronify@example.com}"
       SMTP_TLS: "${SMTP_TLS:-true}"
       NAGER_DATE_API_URL: "https://date.nager.at/api/v3"
       NAGER_DATE_DEFAULT_REGION: "DE"

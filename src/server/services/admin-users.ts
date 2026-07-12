@@ -127,7 +127,7 @@ export async function createUser(opts: {
   });
 
   const appUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
-  const appName = process.env.APP_NAME ?? "Puku Zeiterfassung";
+  const appName = process.env.APP_NAME ?? "Chronify";
   const loginUrl = `${appUrl}/${opts.input.locale}/login`;
   const mailContent = welcomeEmail({
     locale: opts.input.locale as "de" | "en",

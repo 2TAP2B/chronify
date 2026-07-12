@@ -2,9 +2,9 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    id: "puku-kiosk",
-    name: "Puku Kiosk",
-    short_name: "Puku Kiosk",
+    id: "chronify-kiosk",
+    name: "Chronify Kiosk",
+    short_name: "Chronify Kiosk",
     description: "Kiosk-Modus für Stempeluhr",
     start_url: "/de/kiosk",
     scope: "/de/kiosk",

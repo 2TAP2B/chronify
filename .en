@@ -29,6 +29,6 @@ PUSH_VAPID_PRIVATE_KEY=""
 PUSH_VAPID_SUBJECT="mailto:admin@example.com"
 
 # App
-APP_NAME="Puku Zeiterfassung"
+APP_NAME="Chronify"
 DEFAULT_LOCALE="de"
 DEFAULT_TIMEZONE="Europe/Berlin"

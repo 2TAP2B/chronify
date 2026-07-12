@@ -110,7 +110,7 @@ export function BrandingSettings({ settings }: { settings: BrandingForm }) {
               value={form.appName}
               onChange={(e) => setForm({ ...form, appName: e.target.value })}
               maxLength={50}
-              placeholder="Puku Zeiterfassung"
+              placeholder="Chronify"
             />
             <p className="text-xs text-muted-foreground">{t("appNameHint")}</p>
           </div>
@@ -225,7 +225,7 @@ export function BrandingSettings({ settings }: { settings: BrandingForm }) {
               value={form.loginQuoteAuthor ?? ""}
               onChange={(e) => setForm({ ...form, loginQuoteAuthor: e.target.value || null })}
               maxLength={50}
-              placeholder="Puku Zeiterfassung"
+              placeholder="Chronify"
             />
             <p className="text-xs text-muted-foreground">{t("loginQuoteAuthorHint")}</p>
           </div>

@@ -15,7 +15,7 @@ export async function GET() {
 
   if (!settings) {
     return NextResponse.json({
-      appName: "Puku Zeiterfassung",
+      appName: "Chronify",
       appLogo: null,
       loginImage: null,
       loginQuote: null,

@@ -31,10 +31,10 @@ export function AppSidebar({
   branding?: { appName: string; appLogo: string | null }
 } & React.ComponentProps<typeof Sidebar>) {
   const { setOpenMobile } = useSidebar()
-  const appName = branding?.appName ?? "Puku Zeiterfassung"
+  const appName = branding?.appName ?? "Chronify"
   const appLogo = branding?.appLogo
   const nameParts = appName.split(" ")
-  const primary = nameParts[0] ?? "Puku"
+  const primary = nameParts[0] ?? "Chronify"
   const secondary = nameParts.slice(1).join(" ") || "Zeiterfassung"
   return (
     <Sidebar collapsible="offcanvas" {...props}>

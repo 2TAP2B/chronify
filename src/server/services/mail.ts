@@ -35,7 +35,7 @@ export type SendMailInput = {
 };
 
 export async function sendMail(input: SendMailInput): Promise<void> {
-  const from = process.env.SMTP_FROM ?? "puku-timetracking@example.com";
+  const from = process.env.SMTP_FROM ?? "chronify@example.com";
 
   if (!process.env.SMTP_HOST) {
     console.log("[mail] SMTP not configured — logging instead of sending:");

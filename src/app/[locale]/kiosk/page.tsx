@@ -17,11 +17,11 @@ export const viewport: Viewport = {
 export async function generateMetadata(): Promise<Metadata> {
   return {
     manifest: "/kiosk-manifest",
-    title: "Puku Kiosk",
+    title: "Chronify Kiosk",
     appleWebApp: {
       capable: true,
       statusBarStyle: "black-translucent",
-      title: "Puku Kiosk",
+      title: "Chronify Kiosk",
     },
   };
 }

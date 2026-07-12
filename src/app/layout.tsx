@@ -6,16 +6,16 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: {
-    default: "Puku Zeiterfassung",
-    template: "%s | Puku Zeiterfassung",
+    default: "Chronify",
+    template: "%s | Chronify",
   },
   description: "Zeiterfassung für Mitarbeiter",
-  applicationName: "Puku Zeiterfassung",
+  applicationName: "Chronify",
   manifest: "/manifest",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Puku Zeiterfassung",
+    title: "Chronify",
   },
 };
 

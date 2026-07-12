@@ -171,7 +171,7 @@ export async function createVacationRequest(opts: {
     });
 
     const appUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
-    const appName = process.env.APP_NAME ?? "Puku Zeiterfassung";
+    const appName = process.env.APP_NAME ?? "Chronify";
     const approvalUrl = `${appUrl}/de/admin/vacation-approvals`;
 
     for (const admin of admins) {
@@ -327,7 +327,7 @@ export async function approveVacationRequest(opts: {
       template: "vacation_approved",
       locale: (ctx.user.locale ?? "de") as "de" | "en",
       recipientName: ctx.user.name,
-      appName: process.env.APP_NAME ?? "Puku Zeiterfassung",
+      appName: process.env.APP_NAME ?? "Chronify",
       vars: {
         fromDate: req.from.toISOString().slice(0, 10),
         toDate: req.to.toISOString().slice(0, 10),
@@ -383,7 +383,7 @@ export async function rejectVacationRequest(opts: {
       template: "vacation_rejected",
       locale: (rejectCtx.user.locale ?? "de") as "de" | "en",
       recipientName: rejectCtx.user.name,
-      appName: process.env.APP_NAME ?? "Puku Zeiterfassung",
+      appName: process.env.APP_NAME ?? "Chronify",
       vars: {
         fromDate: req.from.toISOString().slice(0, 10),
         toDate: req.to.toISOString().slice(0, 10),

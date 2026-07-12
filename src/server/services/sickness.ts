@@ -124,7 +124,7 @@ export async function createSickNote(opts: {
 
   if (!opts.input.aubUntil) {
     const appUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
-    const appName = process.env.APP_NAME ?? "Puku Zeiterfassung";
+    const appName = process.env.APP_NAME ?? "Chronify";
     const sicknessUrl = `${appUrl}/${ctx.user.locale ?? "de"}/sickness`;
     const mailContent = sickNoteReminderEmail({
       locale: (ctx.user.locale ?? "de") as "de" | "en",

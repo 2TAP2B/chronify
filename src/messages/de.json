@@ -1,6 +1,6 @@
 {
   "common": {
-    "appName": "Puku Zeiterfassung",
+    "appName": "Chronify",
     "loading": "Wird geladen…",
     "save": "Speichern",
     "cancel": "Abbrechen",
@@ -602,7 +602,7 @@
   },
   "pwa": {
     "installTitle": "App installieren",
-    "installDescription": "Puku als App auf dem Gerät speichern",
+    "installDescription": "Chronify als App auf dem Gerät speichern",
     "install": "Installieren",
     "offline": "Keine Internetverbindung",
     "backOnline": "Wieder online",

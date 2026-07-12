@@ -29,7 +29,7 @@ type CreateNotificationInput = {
   };
 };
 
-const APP_NAME = process.env.APP_NAME ?? "Puku Zeiterfassung";
+const APP_NAME = process.env.APP_NAME ?? "Chronify";
 const APP_URL = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
 
 export async function notifyUser(input: CreateNotificationInput) {
