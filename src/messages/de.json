@@ -562,7 +562,8 @@
     "markRead": "Als gelesen markieren",
     "noNotifications": "Keine Benachrichtigungen",
     "unread": "Ungelesen",
-    "markAllRead": "Alle als gelesen markieren"
+    "markAllRead": "Alle als gelesen markieren",
+    "clearAll": "Alle löschen"
   },
   "team": {
     "title": "Team",

@@ -23,6 +23,17 @@ export async function GET() {
   }
 }
 
+export async function DELETE() {
+  try {
+    const user = await requireUser();
+    await db.notification.deleteMany({ where: { userId: user.id } });
+    return NextResponse.json({ ok: true });
+  } catch (e) {
+    if (e instanceof Response) return e;
+    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+  }
+}
+
 export async function POST(req: Request) {
   try {
     const user = await requireUser();

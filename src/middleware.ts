@@ -65,6 +65,17 @@ export async function middleware(request: NextRequest) {
     return checkApiCsrf(request) ?? NextResponse.next();
   }
 
+  // Kiosk subdomain: serve only the kiosk page, no auth
+  const kioskHost = process.env.KIOSK_HOST;
+  const requestHost = request.headers.get("host");
+  if (kioskHost && requestHost === kioskHost) {
+    const locale = pathname.split("/")[1] || routing.defaultLocale || "de";
+    if (!pathname.endsWith("/kiosk")) {
+      return NextResponse.redirect(redirectUrl(request, `/${locale}/kiosk`));
+    }
+    return intlMiddleware(request) ?? NextResponse.next();
+  }
+
   const intlResponse = intlMiddleware(request);
 
   const session = await getSession(request);

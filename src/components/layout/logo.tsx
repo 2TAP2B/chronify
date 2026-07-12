@@ -11,37 +11,32 @@ export function Logo({ className }: { className?: string }) {
     >
       <rect width="32" height="32" rx="8" fill="currentColor" />
 
-      <path
-        d="M 20 8.5 A 8.5 8.5 0 1 0 20 23.5"
-        stroke="white"
-        strokeWidth="3.5"
-        strokeLinecap="round"
-      />
-
-      <circle cx="16" cy="8" r="1.1" fill="white" />
-      <circle cx="8" cy="16" r="1.1" fill="white" />
-      <circle cx="16" cy="24" r="1.1" fill="white" />
-
-      <line
-        x1="16"
-        y1="16"
-        x2="11.7"
-        y2="13.5"
+      <g
+        fill="none"
         stroke="white"
         strokeWidth="2.5"
         strokeLinecap="round"
-      />
-      <line
-        x1="16"
-        y1="16"
-        x2="21.5"
-        y2="12.8"
-        stroke="white"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
-
-      <circle cx="16" cy="16" r="1.5" fill="white" />
+        strokeLinejoin="round"
+      >
+        <circle
+          cx="16" cy="16" r="11.5"
+          pathLength="100"
+          strokeDasharray="75 25"
+          strokeDashoffset="12.5"
+        />
+        <circle
+          cx="16" cy="16" r="8"
+          pathLength="100"
+          strokeDasharray="75 25"
+          strokeDashoffset="12.5"
+        />
+        <circle
+          cx="16" cy="16" r="4.5"
+          pathLength="100"
+          strokeDasharray="75 25"
+          strokeDashoffset="12.5"
+        />
+      </g>
     </svg>
   );
 }

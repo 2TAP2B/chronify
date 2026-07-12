@@ -562,7 +562,8 @@
     "markRead": "Mark as read",
     "noNotifications": "No notifications",
     "unread": "Unread",
-    "markAllRead": "Mark all as read"
+    "markAllRead": "Mark all as read",
+    "clearAll": "Clear all"
   },
   "team": {
     "title": "Team",

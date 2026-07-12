@@ -6,6 +6,7 @@ import { useLocale, useTranslations } from "next-intl";
 import {
   Bell,
   CheckCheck,
+  Trash2,
   CheckCircle2,
   XCircle,
   CalendarPlus,
@@ -86,6 +87,13 @@ export function NotificationBell() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["notifications"] }),
   });
 
+  const clearAll = useMutation({
+    mutationFn: async () => {
+      await fetch("/api/notifications", { method: "DELETE" });
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["notifications"] }),
+  });
+
   const notifications = data?.notifications ?? [];
   const unreadCount = data?.unreadCount ?? 0;
 
@@ -112,15 +120,26 @@ export function NotificationBell() {
       >
         <div className="flex items-center justify-between border-b px-3 py-2">
           <span className="text-sm font-semibold">{t("title")}</span>
-          {unreadCount > 0 && (
-            <button
-              onClick={() => markAllRead.mutate()}
-              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <CheckCheck className="h-3.5 w-3.5" />
-              {t("markAllRead")}
-            </button>
-          )}
+          <div className="flex items-center gap-2">
+            {unreadCount > 0 && (
+              <button
+                onClick={() => markAllRead.mutate()}
+                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <CheckCheck className="h-3.5 w-3.5" />
+                {t("markAllRead")}
+              </button>
+            )}
+            {notifications.length > 0 && (
+              <button
+                onClick={() => clearAll.mutate()}
+                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive transition-colors"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                {t("clearAll")}
+              </button>
+            )}
+          </div>
         </div>
         <div className="max-h-[55vh] overflow-y-auto">
           {notifications.length === 0 ? (
