@@ -7,7 +7,7 @@ export default function manifest(): MetadataRoute.Manifest {
     short_name: "Chronify Kiosk",
     description: "Kiosk-Modus für Stempeluhr",
     start_url: "/de/kiosk",
-    scope: "/de/kiosk",
+    scope: "/",
     display: "fullscreen",
     display_override: ["fullscreen", "standalone"],
     orientation: "portrait-primary",

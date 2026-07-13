@@ -475,7 +475,9 @@
     "enableNfc": "Enable NFC",
     "nfcNotSupported": "NFC is not supported on this device",
     "nfcInsecure": "NFC requires HTTPS. Please open via https://",
-    "nfcPermissionDenied": "NFC permission denied. Please allow in settings."
+    "nfcPermissionDenied": "NFC permission denied. Please allow in settings.",
+    "installApp": "Install app",
+    "installDescription": "Install as fullscreen app on this device"
   },
   "import": {
     "title": "CSV Import",

@@ -4,7 +4,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useTranslations } from "next-intl";
-import { Play, Square, XCircle, CreditCard } from "lucide-react";
+import { Play, Square, XCircle, CreditCard, Download } from "lucide-react";
 
 type KioskState = "idle" | "loading" | "started" | "stopped" | "error";
 
@@ -19,6 +19,11 @@ type ErrorResponse = {
   error: string;
 };
 
+type BeforeInstallPromptEvent = Event & {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
+};
+
 export function KioskScreen({ locale }: { locale: string }) {
   const t = useTranslations("kiosk");
   const [state, setState] = useState<KioskState>("idle");
@@ -31,12 +36,45 @@ export function KioskScreen({ locale }: { locale: string }) {
   const [nfcSupported, setNfcSupported] = useState(false);
   const [nfcActive, setNfcActive] = useState(false);
   const [nfcError, setNfcError] = useState<string | null>(null);
+  const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [isStandalone, setIsStandalone] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
   const revertTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     setNfcSupported(typeof window !== "undefined" && "NDEFReader" in window);
   }, []);
+
+  useEffect(() => {
+    setIsStandalone(
+      window.matchMedia("(display-mode: standalone)").matches ||
+        window.matchMedia("(display-mode: fullscreen)").matches ||
+        (window.navigator as unknown as { standalone?: boolean }).standalone === true
+    );
+
+    if ("serviceWorker" in navigator && process.env.NODE_ENV === "production") {
+      navigator.serviceWorker
+        .register("/sw.js")
+        .catch((err) => console.error("SW registration failed:", err));
+    }
+
+    const handleBeforeInstall = (e: Event) => {
+      e.preventDefault();
+      setInstallPrompt(e as BeforeInstallPromptEvent);
+    };
+    window.addEventListener("beforeinstallprompt", handleBeforeInstall);
+    return () => window.removeEventListener("beforeinstallprompt", handleBeforeInstall);
+  }, []);
+
+  const handleInstall = useCallback(async () => {
+    if (!installPrompt) return;
+    await installPrompt.prompt();
+    const choice = await installPrompt.userChoice;
+    if (choice.outcome === "accepted") {
+      setInstallPrompt(null);
+      setIsStandalone(true);
+    }
+  }, [installPrompt]);
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 1000);
@@ -219,6 +257,15 @@ export function KioskScreen({ locale }: { locale: string }) {
                 OK
               </button>
             </form>
+          )}
+          {installPrompt && !isStandalone && (
+            <button
+              onClick={handleInstall}
+              className="flex items-center gap-2 rounded-xl border-2 border-primary px-6 py-3 text-base font-semibold text-primary transition hover:bg-primary/5 active:scale-95"
+            >
+              <Download className="h-5 w-5" />
+              {t("installApp")}
+            </button>
           )}
         </div>
       )}
