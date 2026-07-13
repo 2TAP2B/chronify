@@ -1,17 +1,24 @@
 # syntax=docker/dockerfile:1.7
 
-# ---------- deps ----------
-FROM node:20-alpine AS deps
+# ---------- deps (dev — needed for build) ----------
+FROM node:20-alpine AS deps-dev
 RUN apk add --no-cache libc6-compat openssl
 WORKDIR /app
 COPY package.json package-lock.json* ./
 RUN npm ci --include=dev --omit=peer
 
+# ---------- deps (production only) ----------
+FROM node:20-alpine AS deps-prod
+RUN apk add --no-cache libc6-compat openssl
+WORKDIR /app
+COPY package.json package-lock.json* ./
+RUN npm ci --omit=dev --omit=peer
+
 # ---------- builder ----------
 FROM node:20-alpine AS builder
 RUN apk add --no-cache libc6-compat openssl
 WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps-dev /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NEXT_PUBLIC_OIDC_ENABLED=true
@@ -30,7 +37,9 @@ RUN npm install -g tsx
 
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/node_modules ./node_modules
+COPY --from=deps-prod /app/node_modules ./node_modules
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/node_modules/@prisma/client ./node_modules/@prisma/client
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/next.config.mjs ./next.config.mjs
