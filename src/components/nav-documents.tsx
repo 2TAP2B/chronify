@@ -12,6 +12,7 @@ import {
   HeartPulse,
   Settings,
   LayoutDashboard,
+  Shield,
   Circle,
   type LucideIcon,
 } from "lucide-react"
@@ -36,6 +37,7 @@ const iconMap: Record<string, LucideIcon> = {
   "/admin/vacation-approvals": CheckCheck,
   "/admin/sickness": HeartPulse,
   "/admin/settings": Settings,
+  "/admin/gdpr": Shield,
 }
 
 export function NavAdmin({ items }: { items: NavItem[] }) {

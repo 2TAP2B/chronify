@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# DB restore script for puku-timetracking
-# Usage: ./scripts/restore-db.sh <backup-file>
+# DB restore script for Chronify — GPG encrypted backups
+# Usage: ./scripts/restore-db.sh <backup-file.gpg>
 # Env: DATABASE_URL (required)
 
 set -euo pipefail
 
 BACKUP_FILE="${1:-}"
 if [ -z "${BACKUP_FILE}" ]; then
-  echo "Usage: $0 <backup-file>" >&2
+  echo "Usage: $0 <backup-file.gpg>" >&2
   exit 1
 fi
 if [ ! -f "${BACKUP_FILE}" ]; then
@@ -20,7 +20,7 @@ if [ -z "${DATABASE_URL:-}" ]; then
   exit 1
 fi
 
-DB_HOST="$(echo "${DATABASE_URL}" | sed -E 's|.*@([^:@/]+).*)|\1|')"
+DB_HOST="$(echo "${DATABASE_URL}" | sed -E 's|.*@([^:@/]+).*|\1|')"
 DB_PORT="$(echo "${DATABASE_URL}" | sed -E 's|.*:([0-9]+)/.*|\1|')"
 DB_NAME="$(echo "${DATABASE_URL}" | sed -E 's|.*/([^?]+)(\?.*)?|\1|')"
 DB_USER="$(echo "${DATABASE_URL}" | sed -E 's|.*://([^:]+):.*|\1|')"
@@ -44,8 +44,8 @@ psql \
   --dbname="${DB_NAME}" \
   --command="DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
 
-echo "Restoring from backup..."
-gunzip -c "${BACKUP_FILE}" | pg_restore \
+echo "Decrypting and restoring from backup..."
+gpg --batch --yes --decrypt "${BACKUP_FILE}" | gunzip | pg_restore \
   --host="${DB_HOST}" \
   --port="${DB_PORT}" \
   --username="${DB_USER}" \

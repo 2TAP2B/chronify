@@ -115,6 +115,28 @@ prisma/
 | `bash scripts/backup-db.sh` | DB-Backup erstellen |
 | `bash scripts/restore-db.sh <file>` | DB wiederherstellen |
 
+## Push-Benachrichtigungen (VAPID-Keys)
+
+Web Push ermöglicht Benachrichtigungen auch bei geschlossenem Browser (Timer-Erinnerungen,
+Urlaubs-Genehmigungen, Krankmeldungen). Dazu werden VAPID-Keys benötigt:
+
+```bash
+npx web-push generate-vapid-keys
+```
+
+Ausgabe in `.env` eintragen:
+
+```env
+PUSH_VAPID_PUBLIC_KEY="BBbb…"
+PUSH_VAPID_PRIVATE_KEY="EEee…"
+PUSH_VAPID_SUBJECT="mailto:admin@example.com"
+NEXT_PUBLIC_PUSH_VAPID_PUBLIC_KEY="BBbb…"   # gleicher Wert wie PUBLIC
+```
+
+**Wenn keine Push-Benachrichtigungen gewünscht sind**, können die Keys leer bleiben.
+Der Subscribe-Button im Benutzer-Menü wird dann ausgeblendet und der Push-Dienst
+initialisiert sich nicht.
+
 ## Standard-Anmeldedaten (nach Seed)
 
 - Email: `admin@puku.local`
@@ -178,7 +200,66 @@ Caddy stellt automatisch TLS-Zertifikate aus (Let's Encrypt).
 
 - Backups landen in `/opt/puku/backups/`
 - Standard-Aufbewahrung: 14 Tage (`BACKUP_RETENTION_DAYS`)
-- Wiederherstellung: `bash scripts/restore-db.sh backups/puku-backup-YYYYMMDD-HHMMSS.sql.gz`
+- **Verschlüsselt** mit GPG (asymmetrisch, RSA 4096)
+- Wiederherstellung: `bash scripts/restore-db.sh backups/chronify-backup-YYYYMMDD-HHMMSS.sql.gz.gpg`
+
+#### GPG-Schlüssel einrichten (einmalig)
+
+```bash
+./scripts/backup-gpg-init.sh
+# → Generiert Schlüsselpaar
+# → Public Key bleibt auf dem Server
+# → Private Key exportieren und OFFSITE lagern (USB-Stick, Passwort-Manager)
+# → Dann private Key-Datei vom Server löschen!
+# → In .env: BACKUP_GPG_RECIPIENT="backup@chronify.local"
+```
+
+### DSGVO / Datenschutz
+
+#### Verschlüsselung
+
+- **Backups**: GPG asymmetrisch (Public Key auf Server, Private Key offsite)
+- **AU-Zertifikate**: AES-256-GCM Verschlüsselung at rest (Art. 9 DSGVO)
+  - Schlüssel generieren: `openssl rand -hex 32`
+  - In `.env`: `AU_CERT_ENCRYPTION_KEY="<hex-key>"`
+  - Bestehende Dateien migrieren: `npx tsx scripts/migrate-au-encryption.ts`
+
+#### Datenlöschung (Retention)
+
+Konfigurierbar über Admin-DSGVO-Seite (`/admin/gdpr`):
+- Arbeitszeitdaten: 2 Jahre (ArbZG §16)
+- Krankmeldungen: 12 Monate (Art. 9 DSGVO)
+- Audit-Logs: 6 Monate
+
+Automatische Löschung per Cron:
+```bash
+# /etc/cron.d/chronify-retention
+0 3 * * 0 root docker exec chronify-app tsx scripts/retention-cleanup.ts >> /var/log/chronify-retention.log 2>&1
+```
+
+Dry-Run (zeigt was gelöscht würde, ohne zu löschen):
+```bash
+docker exec chronify-app tsx scripts/retention-cleanup.ts --dry-run
+```
+
+#### DSGVO-Export (Art. 15/20)
+
+- Profil → "Meine Daten" → JSON-Export aller persönlichen Daten
+- API: `GET /api/gdpr/export`
+
+#### Mitarbeiter-Anonymisierung
+
+Bei Mitarbeiteraustritt:
+1. Mitarbeiter deaktivieren (Admin → Users)
+2. Admin → DSGVO → Anonymisieren
+3. Alle personenbezogenen Daten werden gelöscht (name, email, NFC-Karte, Passwort)
+4. Arbeitszeitdaten bleiben anonymisiert erhalten (Statistik)
+
+#### Datenschutz & Impressum
+
+- `/privacy` — Datenschutzerklärung (öffentlich)
+- `/imprint` — Impressum (öffentlich)
+- Inhalt konfigurierbar über Admin → DSGVO → Einstellungen
 
 ### 6. Updates
 

@@ -51,7 +51,6 @@ export default async function AppLayout({
   const navItems = [
     { href: "/dashboard", label: t("dashboard") },
     { href: "/timesheet", label: t("timesheet") },
-    { href: "/calendar", label: t("calendar") },
     { href: "/overtime", label: t("overtime") },
     { href: "/vacation", label: t("vacation") },
     { href: "/sickness", label: t("sickness") },
@@ -74,6 +73,7 @@ export default async function AppLayout({
             label: t("vacationApprovals"),
           },
           { href: "/admin/sickness", label: t("sickness") },
+          { href: "/admin/gdpr", label: t("gdpr") },
         ]
       : [];
 

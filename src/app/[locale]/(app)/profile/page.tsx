@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/card";
 import { ThemePicker } from "@/components/theme-picker";
 import { OidcLinkManager } from "@/components/auth/oidc-link-manager";
+import { GdprExportButton } from "@/components/profile/gdpr-export-button";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -45,6 +46,19 @@ export default async function ProfilePage({ params }: Props) {
         </CardHeader>
         <CardContent>
           <ThemePicker />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{t("dataTitle")}</CardTitle>
+          <CardDescription>{t("dataHint")}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-3">
+            <GdprExportButton />
+            <p className="text-xs text-muted-foreground">{t("dataExportDescription")}</p>
+          </div>
         </CardContent>
       </Card>
     </div>

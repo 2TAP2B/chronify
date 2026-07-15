@@ -6,7 +6,7 @@ import { isMutationMethod, checkCsrfOrigin } from "@/lib/csrf";
 
 const intlMiddleware = createMiddleware(routing);
 
-const publicRoutes = ["/login", "/kiosk"];
+const publicRoutes = ["/login", "/kiosk", "/privacy", "/imprint"];
 
 type Session = { user: { id: string; role: "EMPLOYEE" | "ADMIN" } } | null;
 

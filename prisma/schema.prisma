@@ -276,6 +276,14 @@ model OrgSettings {
   loginImage                       String?
   loginQuote                       String?
   loginQuoteAuthor                 String?
+  retentionYears                   Int          @default(2)
+  sickNoteRetentionMonths          Int          @default(12)
+  auditLogRetentionMonths         Int          @default(6)
+  imprintName                      String?
+  imprintAddress                   String?
+  imprintEmail                     String?
+  imprintPhone                     String?
+  privacyPolicyUrl                 String?
   createdAt                       DateTime     @default(now())
   updatedAt                       DateTime     @updatedAt
 }

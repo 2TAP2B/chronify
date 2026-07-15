@@ -11,6 +11,7 @@ import { writeFile, mkdir, readFile, unlink } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { join, extname } from "node:path";
 import { randomUUID } from "node:crypto";
+import { encryptFile, decryptFile } from "@/lib/file-crypto";
 import type { SickNote, FederalState } from "@prisma/client";
 
 export class SicknessError extends Error {
@@ -263,7 +264,7 @@ export async function attachCertificate(opts: {
   const storedName = `${existing.userId}-${existing.id}-${randomUUID()}${ext}`;
   const fullPath = join(UPLOAD_DIR, storedName);
 
-  await writeFile(fullPath, opts.buffer);
+  await writeFile(fullPath, encryptFile(opts.buffer));
 
   // Remove old certificate if exists
   if (existing.certificateUrl) {
@@ -302,6 +303,7 @@ export async function readCertificate(opts: {
   const filePath = existing.certificateUrl.replace(/^file:/, "");
   if (!existsSync(filePath)) return null;
   const buffer = await readFile(filePath);
+  const decrypted = decryptFile(buffer);
   const ext = extname(filePath).toLowerCase();
   const contentType =
     ext === ".pdf" ? "application/pdf" :
@@ -309,7 +311,7 @@ export async function readCertificate(opts: {
     ext === ".jpg" || ext === ".jpeg" ? "image/jpeg" :
     "application/octet-stream";
   const filename = `au-certificate${ext}`;
-  return { buffer, filename, contentType };
+  return { buffer: decrypted, filename, contentType };
 }
 
 function resolveTarget(actor: SessionUser, targetUserId?: string): string {

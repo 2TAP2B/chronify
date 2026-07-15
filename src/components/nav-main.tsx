@@ -6,7 +6,6 @@ import { useLocale } from "next-intl"
 import {
   LayoutDashboard,
   CalendarDays,
-  Calendar,
   Clock,
   Plane,
   HeartPulse,
@@ -35,7 +34,6 @@ export type NavItem = {
 const iconMap: Record<string, LucideIcon> = {
   "/dashboard": LayoutDashboard,
   "/timesheet": CalendarDays,
-  "/calendar": Calendar,
   "/overtime": Clock,
   "/vacation": Plane,
   "/sickness": HeartPulse,

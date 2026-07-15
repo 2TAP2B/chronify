@@ -187,8 +187,12 @@ export function LoginForm({
           </div>
         </CardContent>
       </Card>
-      <div className="text-balance text-center text-xs text-muted-foreground">
-        {branding?.appName ?? tCommon("appName")}
+      <div className="flex flex-col items-center gap-1 text-center text-xs text-muted-foreground">
+        <span>{branding?.appName ?? tCommon("appName")}</span>
+        <div className="flex gap-3">
+          <a href={`/${locale}/privacy`} className="hover:text-foreground underline">{tCommon("privacy")}</a>
+          <a href={`/${locale}/imprint`} className="hover:text-foreground underline">{tCommon("imprint")}</a>
+        </div>
       </div>
     </div>
   );
