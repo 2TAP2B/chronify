@@ -200,25 +200,23 @@ Caddy stellt automatisch TLS-Zertifikate aus (Let's Encrypt).
 
 - Backups landen in `/opt/puku/backups/`
 - Standard-Aufbewahrung: 14 Tage (`BACKUP_RETENTION_DAYS`)
-- **Verschlüsselt** mit GPG (asymmetrisch, RSA 4096)
-- Wiederherstellung: `bash scripts/restore-db.sh backups/chronify-backup-YYYYMMDD-HHMMSS.sql.gz.gpg`
+- **Verschlüsselt** mit OpenSSL AES-256-CBC + PBKDF2
+- Wiederherstellung: `bash scripts/restore-db.sh backups/chronify-backup-YYYYMMDD-HHMMSS.sql.gz.enc`
 
-#### GPG-Schlüssel einrichten (einmalig)
+#### Backup-Passphrase einrichten (einmalig)
 
 ```bash
-./scripts/backup-gpg-init.sh
-# → Generiert Schlüsselpaar
-# → Public Key bleibt auf dem Server
-# → Private Key exportieren und OFFSITE lagern (USB-Stick, Passwort-Manager)
-# → Dann private Key-Datei vom Server löschen!
-# → In .env: BACKUP_GPG_RECIPIENT="backup@chronify.local"
+# Starke Passphrase generieren
+openssl rand -base64 32
+# → In .env eintragen:
+# BACKUP_ENCRYPTION_PASSPHRASE="K7m2Rf8sQ3hN1zB6vY4cW9pX2dL5jT0a"
 ```
 
 ### DSGVO / Datenschutz
 
 #### Verschlüsselung
 
-- **Backups**: GPG asymmetrisch (Public Key auf Server, Private Key offsite)
+- **Backups**: OpenSSL AES-256-CBC + PBKDF2 (Passphrase in `.env`)
 - **AU-Zertifikate**: AES-256-GCM Verschlüsselung at rest (Art. 9 DSGVO)
   - Schlüssel generieren: `openssl rand -hex 32`
   - In `.env`: `AU_CERT_ENCRYPTION_KEY="<hex-key>"`

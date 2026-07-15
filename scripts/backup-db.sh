@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
-# DB backup script for Chronify — GPG encrypted
+# DB backup script for Chronify — OpenSSL encrypted
 # Usage: ./scripts/backup-db.sh [output-dir]
 # Env: DATABASE_URL (required), BACKUP_RETENTION_DAYS (default 14),
-#      BACKUP_GPG_RECIPIENT (required for encryption)
+#      BACKUP_ENCRYPTION_PASSPHRASE (required for encryption)
 
 set -euo pipefail
 
 OUTPUT_DIR="${1:-./backups}"
 RETENTION_DAYS="${BACKUP_RETENTION_DAYS:-14}"
 TIMESTAMP="$(date +%Y%m%d-%H%M%S)"
-FILENAME="chronify-backup-${TIMESTAMP}.sql.gz.gpg"
+FILENAME="chronify-backup-${TIMESTAMP}.sql.gz.enc"
 OUTPUT_PATH="${OUTPUT_DIR}/${FILENAME}"
 
 mkdir -p "${OUTPUT_DIR}"
@@ -19,10 +19,10 @@ if [ -z "${DATABASE_URL:-}" ]; then
   exit 1
 fi
 
-if [ -z "${BACKUP_GPG_RECIPIENT:-}" ]; then
-  echo "ERROR: BACKUP_GPG_RECIPIENT is not set." >&2
-  echo "Generate a GPG key with: ./scripts/backup-gpg-init.sh" >&2
-  echo "Then set BACKUP_GPG_RECIPIENT to the key email." >&2
+if [ -z "${BACKUP_ENCRYPTION_PASSPHRASE:-}" ]; then
+  echo "ERROR: BACKUP_ENCRYPTION_PASSPHRASE is not set." >&2
+  echo "Generate with: openssl rand -base64 32" >&2
+  echo "Set it in .env" >&2
   exit 1
 fi
 
@@ -35,7 +35,7 @@ DB_PASS="$(echo "${DATABASE_URL}" | sed -E 's|.*://[^:]+:([^@]+)@.*|\1|')"
 
 export PGPASSWORD="${DB_PASS}"
 
-echo "Backing up database '${DB_NAME}' on ${DB_HOST}:${DB_PORT} → ${OUTPUT_PATH} (GPG encrypted)"
+echo "Backing up database '${DB_NAME}' on ${DB_HOST}:${DB_PORT} → ${OUTPUT_PATH} (OpenSSL encrypted)"
 
 pg_dump \
   --host="${DB_HOST}" \
@@ -46,7 +46,7 @@ pg_dump \
   --no-privileges \
   --format=custom \
   | gzip \
-  | gpg --batch --yes --encrypt --recipient "${BACKUP_GPG_RECIPIENT}" \
+  | openssl enc -aes-256-cbc -pbkdf2 -salt -pass env:BACKUP_ENCRYPTION_PASSPHRASE \
   > "${OUTPUT_PATH}"
 
 echo "Backup complete: ${OUTPUT_PATH} ($(du -h "${OUTPUT_PATH}" | cut -f1))"
@@ -54,6 +54,6 @@ echo "Backup complete: ${OUTPUT_PATH} ($(du -h "${OUTPUT_PATH}" | cut -f1))"
 # Prune old backups
 if [ "${RETENTION_DAYS}" -gt 0 ]; then
   echo "Pruning backups older than ${RETENTION_DAYS} days..."
-  find "${OUTPUT_DIR}" -name "chronify-backup-*.sql.gz.gpg" -type f -mtime "+${RETENTION_DAYS}" -delete
+  find "${OUTPUT_DIR}" -name "chronify-backup-*.sql.gz.enc" -type f -mtime "+${RETENTION_DAYS}" -delete
   echo "Pruned."
 fi

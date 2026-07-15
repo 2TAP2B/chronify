@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# DB restore script for Chronify — GPG encrypted backups
-# Usage: ./scripts/restore-db.sh <backup-file.gpg>
-# Env: DATABASE_URL (required)
+# DB restore script for Chronify — OpenSSL encrypted backups
+# Usage: ./scripts/restore-db.sh <backup-file.enc>
+# Env: DATABASE_URL (required), BACKUP_ENCRYPTION_PASSPHRASE (required)
 
 set -euo pipefail
 
 BACKUP_FILE="${1:-}"
 if [ -z "${BACKUP_FILE}" ]; then
-  echo "Usage: $0 <backup-file.gpg>" >&2
+  echo "Usage: $0 <backup-file.enc>" >&2
   exit 1
 fi
 if [ ! -f "${BACKUP_FILE}" ]; then
@@ -17,6 +17,11 @@ fi
 
 if [ -z "${DATABASE_URL:-}" ]; then
   echo "ERROR: DATABASE_URL is not set" >&2
+  exit 1
+fi
+
+if [ -z "${BACKUP_ENCRYPTION_PASSPHRASE:-}" ]; then
+  echo "ERROR: BACKUP_ENCRYPTION_PASSPHRASE is not set" >&2
   exit 1
 fi
 
@@ -45,7 +50,9 @@ psql \
   --command="DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
 
 echo "Decrypting and restoring from backup..."
-gpg --batch --yes --decrypt "${BACKUP_FILE}" | gunzip | pg_restore \
+openssl enc -d -aes-256-cbc -pbkdf2 -pass env:BACKUP_ENCRYPTION_PASSPHRASE -in "${BACKUP_FILE}" \
+  | gunzip \
+  | pg_restore \
   --host="${DB_HOST}" \
   --port="${DB_PORT}" \
   --username="${DB_USER}" \
