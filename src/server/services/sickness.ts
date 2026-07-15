@@ -304,12 +304,20 @@ export async function readCertificate(opts: {
   if (!existsSync(filePath)) return null;
   const buffer = await readFile(filePath);
   const decrypted = decryptFile(buffer);
-  const ext = extname(filePath).toLowerCase();
-  const contentType =
-    ext === ".pdf" ? "application/pdf" :
-    ext === ".png" ? "image/png" :
-    ext === ".jpg" || ext === ".jpeg" ? "image/jpeg" :
-    "application/octet-stream";
+
+  let contentType = "application/octet-stream";
+  if (decrypted.length >= 4 && decrypted[0] === 0x25 && decrypted[1] === 0x50 && decrypted[2] === 0x44 && decrypted[3] === 0x46) {
+    contentType = "application/pdf";
+  } else if (decrypted.length >= 4 && decrypted[0] === 0x89 && decrypted[1] === 0x50 && decrypted[2] === 0x4e && decrypted[3] === 0x47) {
+    contentType = "image/png";
+  } else if (decrypted.length >= 3 && decrypted[0] === 0xff && decrypted[1] === 0xd8 && decrypted[2] === 0xff) {
+    contentType = "image/jpeg";
+  }
+
+  const ext = contentType === "application/pdf" ? ".pdf" :
+    contentType === "image/png" ? ".png" :
+    contentType === "image/jpeg" ? ".jpeg" :
+    extname(filePath).toLowerCase();
   const filename = `au-certificate${ext}`;
   return { buffer: decrypted, filename, contentType };
 }

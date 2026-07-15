@@ -4,6 +4,28 @@ import { attachCertificate, readCertificate, SicknessError } from "@/server/serv
 
 const MAX_SIZE = 10 * 1024 * 1024; // 10 MB
 
+const ALLOWED_MIME: Record<string, string> = {
+  "application/pdf": ".pdf",
+  "image/png": ".png",
+  "image/jpeg": ".jpeg",
+  "image/jpg": ".jpg",
+};
+
+const MAGIC_BYTES: Array<{ bytes: number[]; mime: string }> = [
+  { bytes: [0x25, 0x50, 0x44, 0x46], mime: "application/pdf" },     // %PDF
+  { bytes: [0x89, 0x50, 0x4e, 0x47], mime: "image/png" },           // PNG
+  { bytes: [0xff, 0xd8, 0xff], mime: "image/jpeg" },                // JPEG
+];
+
+function detectMime(buffer: Buffer): string | null {
+  for (const sig of MAGIC_BYTES) {
+    if (buffer.length >= sig.bytes.length && sig.bytes.every((b, i) => buffer[i] === b)) {
+      return sig.mime;
+    }
+  }
+  return null;
+}
+
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -23,10 +45,22 @@ export async function POST(
       return NextResponse.json({ error: "File too large (max 10 MB)" }, { status: 413 });
     }
     const buffer = Buffer.from(await file.arrayBuffer());
+
+    const detectedMime = detectMime(buffer);
+    if (!detectedMime) {
+      return NextResponse.json({ error: "Invalid file type — only PDF, PNG, JPEG allowed" }, { status: 415 });
+    }
+
+    const declaredExt = ALLOWED_MIME[detectedMime];
+    if (!declaredExt) {
+      return NextResponse.json({ error: "Unsupported file type" }, { status: 415 });
+    }
+
+    const safeFilename = `certificate${declaredExt}`;
     const note = await attachCertificate({
       actor: user,
       noteId: id,
-      filename: file.name,
+      filename: safeFilename,
       buffer,
     });
     return NextResponse.json({ note });
@@ -54,7 +88,7 @@ export async function GET(
       status: 200,
       headers: {
         "Content-Type": result.contentType,
-        "Content-Disposition": `inline; filename="${result.filename}"`,
+        "Content-Disposition": `attachment; filename="${result.filename}"`,
       },
     });
   } catch (e) {
