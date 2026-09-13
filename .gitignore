@@ -38,6 +38,14 @@ yarn-error.log*
 *.swo
 *~
 
+# Nix / direnv
+.direnv/
+result
+result-*
+
+# Local dev PostgreSQL cluster (dev-db)
+.dev-db/
+
 # OS
 .DS_Store
 Thumbs.db
