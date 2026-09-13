@@ -28,24 +28,38 @@ docker-compose up --build
 App: http://localhost:3000
 Admin-Login: `admin@puku.local` / `admin123` (nach erstem Seed)
 
-### Lokale Entwicklung
+### Lokale Entwicklung (Nix dev shell)
+
+Alle Werkzeuge (Node 22, PostgreSQL 16, Prisma-Engines, Playwright-Browser)
+kommen aus dem Nix-Flake — nichts muss global installiert sein.
 
 ```bash
-# Postgres starten
-docker run -d --name puku-db -e POSTGRES_USER=puku -e POSTGRES_PASSWORD=puku -e POSTGRES_DB=puku -p 5432:5432 postgres:16-alpine
+nix develop            # oder: direnv allow  (lädt die Shell beim cd automatisch)
 
-# Env anlegen
+npm ci                 # Abhängigkeiten
+dev-env-init           # .env aus .env.example + generierte Secrets
+dev-db start           # lokale PostgreSQL-16-Instanz in ./.dev-db (kein Docker)
+npm run db:setup       # Migrationen + Seed
+npm run dev            # Dev-Server auf http://localhost:3001
+```
+
+Qualitäts-Gates: `npm run typecheck`, `npm run lint`, `npm test`,
+`npm run build`, `npm run format:check` (fixen mit `npm run format`) sowie
+`npm run test:e2e` (baut und startet dafür einen Production-Server auf :3100).
+
+`dev-db` kennt `start`, `stop`, `status`, `psql` und `reset`. Details und alle
+Konventionen für Agenten: siehe `AGENTS.md`.
+
+### Alternative: Docker für die Datenbank
+
+```bash
+docker compose -f docker-compose.dev.yml up -d   # Postgres auf 5433, Mailpit 1025/8025
+# DATABASE_URL="postgresql://puku:puku@localhost:5433/puku?schema=public"
+
 cp .env.example .env
-# DATABASE_URL="postgresql://puku:puku@localhost:5432/puku?schema=public"
-
-# Abhängigkeiten
 npm install
-
-# Prisma (Hinweis für NixOS: prisma CLI in Docker ausführen, siehe unten)
 npx prisma migrate dev
 npx tsx prisma/seed.ts
-
-# Dev-Server
 npm run dev
 ```
 
@@ -53,12 +67,12 @@ npm run dev
 
 Auf NixOS fehlen Prisma die vorgefertigten Engine-Binaries für `linux-nixos`.
 Die App läuft dank `@prisma/adapter-pg` (driver adapter) zur Laufzeit ohne
-Query-Engine-Binary. Für `prisma migrate`/`prisma generate` empfiehlt sich die
-Ausführung in Docker:
+Query-Engine-Binary. Im Nix dev shell setzt `pkgs.prisma-engines_6` die
+`PRISMA_*_ENGINE*`-Variablen, damit `prisma generate`/`migrate` auch ohne Docker
+funktionieren. Außerhalb der Shell (oder in einem anderen Container) die CLI in
+Docker ausführen:
 
 ```bash
-docker build -f Dockerfile -t puku-helper .
-# oder mit einem temporären Image:
 docker run --rm --network host -v "$PWD:/app" \
   -e DATABASE_URL="postgresql://puku:puku@localhost:5432/puku?schema=public" \
   node:20-alpine sh -c "apk add --no-cache libc6-compat openssl && npm ci && npx prisma migrate dev"
@@ -70,13 +84,14 @@ docker run --rm --network host -v "$PWD:/app" \
 src/
 ├── app/[locale]/       # lokalisierte Routen
 │   ├── (app)/          # auth-geschützt (Dashboard, Stundenzettel, …)
-│   ├── (admin)/        # admin-only (folgt)
+│   │   └── admin/      # admin-only (users, settings, holidays, gdpr)
 │   └── login/
 ├── app/api/            # API-Routen (auth, health, …)
 ├── components/         # UI (shadcn primitives + eigene)
 ├── lib/                # auth, db, utils
 ├── i18n/               # next-intl routing + request config
 ├── messages/           # de.json, en.json
+├── server/             # Services (DB-Zugriff) + context.ts
 └── types/              # Type-Augmentations
 prisma/
 ├── schema.prisma
@@ -84,7 +99,7 @@ prisma/
 └── migrations/
 ```
 
-## Features (v1-Plan)
+## Features
 
 - Live-Timer + wöchentlicher Stundenzettel (7-Tage-Sperrfenster)
 - Urlaub mit Genehmigungsworkflow + Resturlaubsanzeige
@@ -98,22 +113,25 @@ prisma/
 
 ## Skripte
 
-| Befehl | Beschreibung |
-|---|---|
-| `npm run dev` | Dev-Server |
-| `npm run build` | Production-Build |
-| `npm run start` | Production-Server |
-| `npm run typecheck` | TypeScript prüfen |
-| `npm run lint` | ESLint |
-| `npm run prisma:migrate` | Migration erzeugen |
-| `npm run prisma:deploy` | Migration anwenden (prod) |
-| `npm run prisma:seed` | Seed ausführen |
-| `npm run prisma:studio` | Prisma Studio |
-| `npm test` | Vitest |
-| `npm run test:e2e` | Playwright |
-| `npm run test:e2e -- --ui` | Playwright interaktiv |
-| `bash scripts/backup-db.sh` | DB-Backup erstellen |
-| `bash scripts/restore-db.sh <file>` | DB wiederherstellen |
+| Befehl                              | Beschreibung              |
+| ----------------------------------- | ------------------------- |
+| `npm run dev`                       | Dev-Server                |
+| `npm run build`                     | Production-Build          |
+| `npm run start`                     | Production-Server         |
+| `npm run typecheck`                 | TypeScript prüfen         |
+| `npm run lint`                      | ESLint                    |
+| `npm run prisma:migrate`            | Migration erzeugen        |
+| `npm run prisma:deploy`             | Migration anwenden (prod) |
+| `npm run prisma:seed`               | Seed ausführen            |
+| `npm run prisma:studio`             | Prisma Studio             |
+| `npm test`                          | Vitest                    |
+| `npm run test:e2e`                  | Playwright                |
+| `npm run test:e2e -- --ui`          | Playwright interaktiv     |
+| `npm run format`                    | Prettier (schreibt)       |
+| `npm run format:check`              | Prettier (prüft)          |
+| `dev-db start\|stop\|status\|reset` | Lokale Postgres-Instanz   |
+| `bash scripts/backup-db.sh`         | DB-Backup erstellen       |
+| `bash scripts/restore-db.sh <file>` | DB wiederherstellen       |
 
 ## Push-Benachrichtigungen (VAPID-Keys)
 
@@ -145,6 +163,7 @@ initialisiert sich nicht.
 ## Produktion-Deployment
 
 ### Voraussetzungen
+
 - Docker 24+ und Docker Compose v2
 - Ein Server mit mindestens 1 GB RAM, 10 GB Festplatte
 - Eine Domain mit DNS-Eintrag auf den Server
@@ -177,6 +196,7 @@ docker compose up -d --build
 ```
 
 Das `docker-entrypoint.sh` führt automatisch aus:
+
 1. `prisma migrate deploy` (Migrationen anwenden)
 2. Bedingtes Seeding (wenn die DB leer ist)
 3. `next start` (Production-Server auf Port 3000)
@@ -220,24 +240,27 @@ openssl rand -base64 32
 - **AU-Zertifikate**: AES-256-GCM Verschlüsselung at rest (Art. 9 DSGVO)
   - Schlüssel generieren: `openssl rand -hex 32`
   - In `.env`: `AU_CERT_ENCRYPTION_KEY="<hex-key>"`
-  - Bestehende Dateien migrieren: `npx tsx scripts/migrate-au-encryption.ts`
+  - Bestehende Dateien migrieren: `npm run migrate:au-encryption`
 
 #### Datenlöschung (Retention)
 
 Konfigurierbar über Admin-DSGVO-Seite (`/admin/gdpr`):
+
 - Arbeitszeitdaten: 2 Jahre (ArbZG §16)
 - Krankmeldungen: 12 Monate (Art. 9 DSGVO)
 - Audit-Logs: 6 Monate
 
 Automatische Löschung per Cron:
+
 ```bash
 # /etc/cron.d/chronify-retention
-0 3 * * 0 root docker exec chronify-app tsx scripts/retention-cleanup.ts >> /var/log/chronify-retention.log 2>&1
+0 3 * * 0 root docker exec chronify-app npm run retention:run >> /var/log/chronify-retention.log 2>&1
 ```
 
 Dry-Run (zeigt was gelöscht würde, ohne zu löschen):
+
 ```bash
-docker exec chronify-app tsx scripts/retention-cleanup.ts --dry-run
+docker exec chronify-app npm run retention:dry-run
 ```
 
 #### DSGVO-Export (Art. 15/20)
@@ -248,6 +271,7 @@ docker exec chronify-app tsx scripts/retention-cleanup.ts --dry-run
 #### Mitarbeiter-Anonymisierung
 
 Bei Mitarbeiteraustritt:
+
 1. Mitarbeiter deaktivieren (Admin → Users)
 2. Admin → DSGVO → Anonymisieren
 3. Alle personenbezogenen Daten werden gelöscht (name, email, NFC-Karte, Passwort)

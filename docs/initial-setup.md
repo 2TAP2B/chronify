@@ -67,6 +67,7 @@ docker compose up -d
 ```
 
 The app automatically:
+
 1. Runs Prisma database migrations (`prisma migrate deploy`)
 2. Seeds the database if empty (creates admin user + org settings)
 3. Starts Next.js on port 3000
@@ -81,55 +82,55 @@ All variables live in `.env` (gitignored). The compose file reads them via `${VA
 
 ### Required
 
-| Variable | Description | How to generate |
-|---|---|---|
-| `NEXTAUTH_SECRET` | JWT signing secret for Auth.js sessions | `openssl rand -base64 32` |
-| `APP_DOMAIN` | Main app domain (e.g. `chronify.example.com`) | Your DNS record |
-| `KIOSK_DOMAIN` | Kiosk subdomain (e.g. `kiosk.chronify.example.com`) | Your DNS record |
-| `BACKUP_ENCRYPTION_PASSPHRASE` | OpenSSL passphrase for encrypted backups | `openssl rand -base64 32` |
-| `AU_CERT_ENCRYPTION_KEY` | AES-256 key for encrypting sick note certificates | `openssl rand -hex 32` |
+| Variable                       | Description                                         | How to generate           |
+| ------------------------------ | --------------------------------------------------- | ------------------------- |
+| `NEXTAUTH_SECRET`              | JWT signing secret for Auth.js sessions             | `openssl rand -base64 32` |
+| `APP_DOMAIN`                   | Main app domain (e.g. `chronify.example.com`)       | Your DNS record           |
+| `KIOSK_DOMAIN`                 | Kiosk subdomain (e.g. `kiosk.chronify.example.com`) | Your DNS record           |
+| `BACKUP_ENCRYPTION_PASSPHRASE` | OpenSSL passphrase for encrypted backups            | `openssl rand -base64 32` |
+| `AU_CERT_ENCRYPTION_KEY`       | AES-256 key for encrypting sick note certificates   | `openssl rand -hex 32`    |
 
 ### Optional (with defaults)
 
-| Variable | Default | Description |
-|---|---|---|
-| `AUTH_SECURE_COOKIE` | `true` | Set `__Secure-` prefix on auth cookies (keep `true` in production) |
-| `AUTH_DEBUG` | (empty) | Set to `true` for verbose Auth.js/OIDC logging |
-| `DEFAULT_LOCALE` | `de` | App default locale (`de` or `en`) |
-| `DEFAULT_TIMEZONE` | `Europe/Berlin` | Fallback timezone for users without one set |
-| `BACKUP_RETENTION_DAYS` | `14` | Days to keep backup files before pruning |
+| Variable                | Default         | Description                                                        |
+| ----------------------- | --------------- | ------------------------------------------------------------------ |
+| `AUTH_SECURE_COOKIE`    | `true`          | Set `__Secure-` prefix on auth cookies (keep `true` in production) |
+| `AUTH_DEBUG`            | (empty)         | Set to `true` for verbose Auth.js/OIDC logging                     |
+| `DEFAULT_LOCALE`        | `de`            | App default locale (`de` or `en`)                                  |
+| `DEFAULT_TIMEZONE`      | `Europe/Berlin` | Fallback timezone for users without one set                        |
+| `BACKUP_RETENTION_DAYS` | `14`            | Days to keep backup files before pruning                           |
 
 ### Email (optional — features disabled if empty)
 
-| Variable | Default | Description |
-|---|---|---|
-| `SMTP_HOST` | (empty) | SMTP server hostname |
-| `SMTP_PORT` | `587` | SMTP port |
-| `SMTP_USER` | (empty) | SMTP username |
-| `SMTP_PASS` | (empty) | SMTP password |
-| `SMTP_FROM` | `chronify@example.com` | From address |
-| `SMTP_TLS` | `true` | Use TLS |
+| Variable    | Default                | Description          |
+| ----------- | ---------------------- | -------------------- |
+| `SMTP_HOST` | (empty)                | SMTP server hostname |
+| `SMTP_PORT` | `587`                  | SMTP port            |
+| `SMTP_USER` | (empty)                | SMTP username        |
+| `SMTP_PASS` | (empty)                | SMTP password        |
+| `SMTP_FROM` | `chronify@example.com` | From address         |
+| `SMTP_TLS`  | `true`                 | Use TLS              |
 
 If `SMTP_HOST` is empty, emails are logged to console instead of sent. Used for: password reset, vacation approvals/rejections, sick note reminders, welcome emails.
 
 ### OIDC / Single Sign-On (optional)
 
-| Variable | Default | Description |
-|---|---|---|
-| `OIDC_ISSUER` | `https://idp.sohn.uk` | OIDC provider issuer URL |
-| `OIDC_CLIENT_ID` | (empty) | OAuth client ID |
-| `OIDC_CLIENT_SECRET` | (empty) | OAuth client secret |
+| Variable             | Default               | Description              |
+| -------------------- | --------------------- | ------------------------ |
+| `OIDC_ISSUER`        | `https://idp.sohn.uk` | OIDC provider issuer URL |
+| `OIDC_CLIENT_ID`     | (empty)               | OAuth client ID          |
+| `OIDC_CLIENT_SECRET` | (empty)               | OAuth client secret      |
 
 `NEXT_PUBLIC_OIDC_ENABLED` is baked into the Docker image as `true` at build time (see Dockerfile line 24). If you don't use OIDC, the login button still appears but will fail — to fully disable, rebuild with `NEXT_PUBLIC_OIDC_ENABLED=""`.
 
 ### Push Notifications (optional)
 
-| Variable | Description |
-|---|---|
-| `PUSH_VAPID_PUBLIC_KEY` | VAPID public key |
-| `PUSH_VAPID_PRIVATE_KEY` | VAPID private key |
-| `PUSH_VAPID_SUBJECT` | Sender identifier (e.g. `mailto:admin@example.com`) |
-| `NEXT_PUBLIC_PUSH_VAPID_PUBLIC_KEY` | Same public key, exposed to browser |
+| Variable                            | Description                                         |
+| ----------------------------------- | --------------------------------------------------- |
+| `PUSH_VAPID_PUBLIC_KEY`             | VAPID public key                                    |
+| `PUSH_VAPID_PRIVATE_KEY`            | VAPID private key                                   |
+| `PUSH_VAPID_SUBJECT`                | Sender identifier (e.g. `mailto:admin@example.com`) |
+| `NEXT_PUBLIC_PUSH_VAPID_PUBLIC_KEY` | Same public key, exposed to browser                 |
 
 Generate with: `npx web-push generate-vapid-keys`
 
@@ -137,11 +138,11 @@ If empty, the push subscription button is hidden in the UI and the push service 
 
 ### Public Holidays
 
-| Variable | Default | Description |
-|---|---|---|
-| `NAGER_DATE_API_URL` | `https://date.nager.at/api/v3` | Holiday API base URL |
-| `NAGER_DATE_DEFAULT_REGION` | `DE` | Country code |
-| `NAGER_DATE_DEFAULT_STATE` | `NW` | Default federal state (North Rhine-Westphalia) |
+| Variable                    | Default                        | Description                                    |
+| --------------------------- | ------------------------------ | ---------------------------------------------- |
+| `NAGER_DATE_API_URL`        | `https://date.nager.at/api/v3` | Holiday API base URL                           |
+| `NAGER_DATE_DEFAULT_REGION` | `DE`                           | Country code                                   |
+| `NAGER_DATE_DEFAULT_STATE`  | `NW`                           | Default federal state (North Rhine-Westphalia) |
 
 Holidays are fetched per federal state. Admin can sync holidays from the admin panel.
 
@@ -183,11 +184,13 @@ kiosk.chronify.example.com  → <server IP>
 ### Traefik Requirements
 
 Your Traefik instance must have:
+
 - Entrypoint `websecure` on port 443
 - TLS certificate resolver named `cloudflare`
 - External Docker network `frontend` (created once with `docker network create frontend`)
 
 The compose labels configure two routers:
+
 - `chroify` → matches `Host(<APP_DOMAIN>)` → main app
 - `kiosk` → matches `Host(<KIOSK_DOMAIN>)` → same app service (kiosk middleware redirects to `/de/kiosk`)
 
@@ -250,6 +253,7 @@ Users can now sign in with either credentials (email/password) or the OIDC butto
 ### Disable OIDC
 
 The `NEXT_PUBLIC_OIDC_ENABLED` flag is set at **build time** in the Dockerfile. To disable, rebuild:
+
 ```dockerfile
 ENV NEXT_PUBLIC_OIDC_ENABLED=""
 ```
@@ -259,6 +263,7 @@ ENV NEXT_PUBLIC_OIDC_ENABLED=""
 ## 8. Email (SMTP)
 
 Email is used for:
+
 - Password reset links
 - Vacation request notifications (to admins)
 - Vacation approved/rejected (to employee)
@@ -279,6 +284,7 @@ SMTP_TLS="true"
 ### Testing without a real SMTP server (development)
 
 Use Mailpit (included in `docker-compose.dev.yml`):
+
 ```env
 SMTP_HOST="localhost"
 SMTP_PORT="1025"
@@ -286,6 +292,7 @@ SMTP_TLS="false"
 SMTP_USER=""
 SMTP_PASS=""
 ```
+
 Web UI: `http://localhost:8025`
 
 ---
@@ -301,6 +308,7 @@ npx web-push generate-vapid-keys
 ```
 
 Add to `.env`:
+
 ```env
 PUSH_VAPID_PUBLIC_KEY="<public key>"
 PUSH_VAPID_PRIVATE_KEY="<private key>"
@@ -328,6 +336,7 @@ AU_CERT_ENCRYPTION_KEY="a1b2c3d4e5f6..."
 ```
 
 **Important:**
+
 - Do NOT lose this key — encrypted files cannot be recovered without it
 - Do NOT change this key after files are encrypted
 - New uploads are automatically encrypted
@@ -338,7 +347,7 @@ AU_CERT_ENCRYPTION_KEY="a1b2c3d4e5f6..."
 If you already have uploaded certificates before setting the encryption key, run this **once**:
 
 ```bash
-docker exec chronify-app tsx scripts/migrate-au-encryption.ts
+docker exec chronify-app npm run migrate:au-encryption
 ```
 
 This reads all existing certificate files, encrypts them, and overwrites the originals. If no certificates exist yet, skip this step.
@@ -374,6 +383,7 @@ docker exec chronify-app bash -c '
 ```
 
 Or from the host (if `psql`/`pg_dump` are installed):
+
 ```bash
 source .env
 bash scripts/backup-db.sh ./backups
@@ -393,6 +403,7 @@ bash scripts/backup-db.sh ./backups
 ### Offsite storage
 
 For disaster recovery, copy encrypted backup files to an offsite location:
+
 - Encrypted S3 bucket
 - External server via rsync
 - USB drive
@@ -411,6 +422,7 @@ bash scripts/restore-db.sh backups/chronify-backup-YYYYMMDD-HHMMSS.sql.gz.enc
 You will be prompted to type `CONFIRM` — this **overwrites the entire database**.
 
 The script:
+
 1. Drops the existing `public` schema
 2. Decrypts the backup with OpenSSL
 3. Restores via `pg_restore`
@@ -425,11 +437,11 @@ The script:
 
 Configurable via **Admin → DSGVO**:
 
-| Setting | Default | Legal basis |
-|---|---|---|
-| Working time retention | 2 years | ArbZG §16 |
-| Sick note retention | 12 months | Art. 9 GDPR (health data) |
-| Audit log retention | 6 months | Security purposes |
+| Setting                | Default   | Legal basis               |
+| ---------------------- | --------- | ------------------------- |
+| Working time retention | 2 years   | ArbZG §16                 |
+| Sick note retention    | 12 months | Art. 9 GDPR (health data) |
+| Audit log retention    | 6 months  | Security purposes         |
 
 ### Automated cleanup (cron)
 
@@ -454,23 +466,25 @@ docker exec chronify-app tsx scripts/retention-cleanup.ts --dry-run
 
 ### What gets deleted
 
-| Data type | Retention | Action |
-|---|---|---|
-| Time entries | `retentionYears` (2) | Deleted |
-| Vacation requests | `retentionYears` (2) | Deleted |
-| Sick notes | `sickNoteRetentionMonths` (12) | Deleted + certificate files removed |
-| Audit logs | `auditLogRetentionMonths` (6) | Deleted |
-| Notifications | 90 days | Deleted |
-| Inactive users | `retentionYears` (2) | Anonymized (name, email, NFC card, password wiped) |
+| Data type         | Retention                      | Action                                             |
+| ----------------- | ------------------------------ | -------------------------------------------------- |
+| Time entries      | `retentionYears` (2)           | Deleted                                            |
+| Vacation requests | `retentionYears` (2)           | Deleted                                            |
+| Sick notes        | `sickNoteRetentionMonths` (12) | Deleted + certificate files removed                |
+| Audit logs        | `auditLogRetentionMonths` (6)  | Deleted                                            |
+| Notifications     | 90 days                        | Deleted                                            |
+| Inactive users    | `retentionYears` (2)           | Anonymized (name, email, NFC card, password wiped) |
 
 ### User anonymization (employee departure)
 
 When an employee leaves:
+
 1. Admin → Users → Deactivate the user
 2. Admin → DSGVO → Anonymize section → Click the trash icon next to the user
 3. Confirm the dialog
 
 This:
+
 - Sets name to "Gelöscht", clears first/last name, email, NFC card ID, password hash
 - Deletes their notifications, push subscriptions, timer sessions
 - Deletes their AU certificate files
@@ -479,6 +493,7 @@ This:
 ### GDPR data export (Art. 15/20)
 
 Users can download all their personal data:
+
 - **Profile → My data → Export my data**
 - Downloads a JSON file with: profile, working models, time entries, vacation requests, sick notes (metadata only, not certificate files), overtime balances, notifications, audit logs
 - API: `GET /api/gdpr/export`
@@ -578,16 +593,17 @@ npm run dev
 
 ### Dev services
 
-| Service | Port | Purpose |
-|---|---|---|
-| Next.js dev server | 3001 | App |
-| PostgreSQL | 5433 | Database (mapped to 5432 inside container) |
-| Mailpit SMTP | 1025 | Catch-all email |
-| Mailpit Web UI | 8025 | View caught emails |
+| Service            | Port | Purpose                                    |
+| ------------------ | ---- | ------------------------------------------ |
+| Next.js dev server | 3001 | App                                        |
+| PostgreSQL         | 5433 | Database (mapped to 5432 inside container) |
+| Mailpit SMTP       | 1025 | Catch-all email                            |
+| Mailpit Web UI     | 8025 | View caught emails                         |
 
 ### Dev environment
 
 Create `.env` for local dev:
+
 ```env
 DATABASE_URL="postgresql://puku:puku@localhost:5433/puku?schema=public"
 NEXTAUTH_SECRET="dev-secret-not-secure"
@@ -599,17 +615,17 @@ AU_CERT_ENCRYPTION_KEY=""  # optional in dev, encryption still works if set
 
 ### Useful commands
 
-| Command | Description |
-|---|---|
-| `npm run dev` | Start dev server |
-| `npm run build` | Production build |
-| `npm run typecheck` | TypeScript check |
-| `npm run lint` | ESLint |
-| `npm run prisma:studio` | Prisma Studio (DB GUI) |
+| Command                  | Description              |
+| ------------------------ | ------------------------ |
+| `npm run dev`            | Start dev server         |
+| `npm run build`          | Production build         |
+| `npm run typecheck`      | TypeScript check         |
+| `npm run lint`           | ESLint                   |
+| `npm run prisma:studio`  | Prisma Studio (DB GUI)   |
 | `npm run prisma:migrate` | Create + apply migration |
-| `npm run prisma:seed` | Re-seed database |
-| `npm test` | Run Vitest tests |
-| `npm run test:e2e` | Run Playwright E2E tests |
+| `npm run prisma:seed`    | Re-seed database         |
+| `npm test`               | Run Vitest tests         |
+| `npm run test:e2e`       | Run Playwright E2E tests |
 
 ---
 
@@ -618,6 +634,7 @@ AU_CERT_ENCRYPTION_KEY=""  # optional in dev, encryption still works if set
 ### Docker build fails with `npm ci` peer dependency error
 
 The `Dockerfile` uses `--omit=peer` to avoid conflicts. If you still see errors, ensure `package-lock.json` is in sync:
+
 ```bash
 npm install
 docker compose build --no-cache
@@ -657,6 +674,7 @@ docker exec chronify-app npx prisma migrate deploy
 ### Certificate decryption fails
 
 If you see errors when downloading AU certificates:
+
 - `AU_CERT_ENCRYPTION_KEY` must be exactly 64 hex characters (32 bytes)
 - The key must match the one used when the file was encrypted
 - If the key was changed, old files cannot be decrypted — they must be re-uploaded
