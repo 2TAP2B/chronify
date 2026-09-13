@@ -17,13 +17,10 @@ export async function POST(req: Request) {
 
     const rl = rateLimit({ key: `forgot:${ip}`, max: 5, windowMs: 60_000 });
     if (!rl.ok) {
-      return NextResponse.json(
-        { error: "Too many requests" },
-        { status: 429 }
-      );
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
     }
 
-    const body = await req.json() as { email?: string };
+    const body = (await req.json()) as { email?: string };
     const email = body.email?.toLowerCase().trim();
 
     if (!email) {

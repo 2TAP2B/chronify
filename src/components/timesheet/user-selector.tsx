@@ -37,7 +37,9 @@ export function UserSelector({
     >
       <option value={currentUserId}>{t("myTimesheet")}</option>
       {users.map((u) => (
-        <option key={u.id} value={u.id}>{u.name}</option>
+        <option key={u.id} value={u.id}>
+          {u.name}
+        </option>
       ))}
     </select>
   );

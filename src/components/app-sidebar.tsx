@@ -1,12 +1,12 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import Link from "next/link"
-import type { NavItem } from "@/components/nav-main"
-import { NavMain } from "@/components/nav-main"
-import { NavAdmin } from "@/components/nav-documents"
-import { NavUser } from "@/components/nav-user"
-import { Logo } from "@/components/layout/logo"
+import * as React from "react";
+import Link from "next/link";
+import type { NavItem } from "@/components/nav-main";
+import { NavMain } from "@/components/nav-main";
+import { NavAdmin } from "@/components/nav-documents";
+import { NavUser } from "@/components/nav-user";
+import { Logo } from "@/components/layout/logo";
 import {
   Sidebar,
   SidebarContent,
@@ -16,7 +16,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from "@/components/ui/sidebar"
+} from "@/components/ui/sidebar";
 
 export function AppSidebar({
   navItems,
@@ -25,17 +25,17 @@ export function AppSidebar({
   branding,
   ...props
 }: {
-  navItems: NavItem[]
-  adminItems: NavItem[]
-  user: { name: string; email: string }
-  branding?: { appName: string; appLogo: string | null }
+  navItems: NavItem[];
+  adminItems: NavItem[];
+  user: { name: string; email: string };
+  branding?: { appName: string; appLogo: string | null };
 } & React.ComponentProps<typeof Sidebar>) {
-  const { setOpenMobile } = useSidebar()
-  const appName = branding?.appName ?? "Chronify"
-  const appLogo = branding?.appLogo
-  const nameParts = appName.split(" ")
-  const primary = nameParts[0] ?? "Chronify"
-  const secondary = nameParts.slice(1).join(" ") || "Zeiterfassung"
+  const { setOpenMobile } = useSidebar();
+  const appName = branding?.appName ?? "Chronify";
+  const appLogo = branding?.appLogo;
+  const nameParts = appName.split(" ");
+  const primary = nameParts[0] ?? "Chronify";
+  const secondary = nameParts.slice(1).join(" ") || "Zeiterfassung";
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -55,9 +55,7 @@ export function AppSidebar({
                 )}
                 <div className="flex flex-col gap-0.5 leading-none">
                   <span className="font-semibold">{primary}</span>
-                  <span className="text-xs text-muted-foreground">
-                    {secondary}
-                  </span>
+                  <span className="text-xs text-muted-foreground">{secondary}</span>
                 </div>
               </Link>
             </SidebarMenuButton>
@@ -72,5 +70,5 @@ export function AppSidebar({
         <NavUser user={user} />
       </SidebarFooter>
     </Sidebar>
-  )
+  );
 }

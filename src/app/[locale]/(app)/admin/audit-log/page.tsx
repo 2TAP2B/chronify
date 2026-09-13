@@ -2,13 +2,7 @@ import { getTranslations, setRequestLocale, getLocale } from "next-intl/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -26,8 +20,14 @@ type Props = {
 };
 
 const ENTITIES = [
-  "User", "WorkingModel", "TimeEntry", "TimerSession",
-  "VacationRequest", "SickNote", "OrgSettings", "PublicHoliday",
+  "User",
+  "WorkingModel",
+  "TimeEntry",
+  "TimerSession",
+  "VacationRequest",
+  "SickNote",
+  "OrgSettings",
+  "PublicHoliday",
 ];
 
 export default async function AdminAuditLogPage({ params, searchParams }: Props) {
@@ -84,7 +84,9 @@ export default async function AdminAuditLogPage({ params, searchParams }: Props)
       <Card>
         <CardHeader>
           <CardTitle>{t("title")}</CardTitle>
-          <CardDescription>{t("total")}: {total}</CardDescription>
+          <CardDescription>
+            {t("total")}: {total}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {entries.length === 0 ? (
@@ -92,37 +94,39 @@ export default async function AdminAuditLogPage({ params, searchParams }: Props)
           ) : (
             <div className="overflow-x-auto">
               <Table className="min-w-[600px] whitespace-nowrap">
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t("at")}</TableHead>
-                  <TableHead>{t("actor")}</TableHead>
-                  <TableHead>{t("action")}</TableHead>
-                  <TableHead>{t("entity")}</TableHead>
-                  <TableHead>{t("target")}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {entries.map((e) => (
-                  <TableRow key={e.id}>
-                    <TableCell className="font-mono text-xs">
-                      {formatInZone(e.at, "Europe/Berlin", "dd.MM.yyyy HH:mm:ss", appLocale)}
-                    </TableCell>
-                    <TableCell className="text-xs">
-                      {e.actor?.name ?? "—"}
-                      <div className="text-muted-foreground">{e.actor?.email ?? ""}</div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="secondary" className="text-xs">{e.action}</Badge>
-                    </TableCell>
-                    <TableCell className="text-xs">{e.entity}</TableCell>
-                    <TableCell className="text-xs">
-                      {e.target?.name ?? "—"}
-                      <div className="text-muted-foreground">{e.target?.email ?? ""}</div>
-                    </TableCell>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t("at")}</TableHead>
+                    <TableHead>{t("actor")}</TableHead>
+                    <TableHead>{t("action")}</TableHead>
+                    <TableHead>{t("entity")}</TableHead>
+                    <TableHead>{t("target")}</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {entries.map((e) => (
+                    <TableRow key={e.id}>
+                      <TableCell className="font-mono text-xs">
+                        {formatInZone(e.at, "Europe/Berlin", "dd.MM.yyyy HH:mm:ss", appLocale)}
+                      </TableCell>
+                      <TableCell className="text-xs">
+                        {e.actor?.name ?? "—"}
+                        <div className="text-muted-foreground">{e.actor?.email ?? ""}</div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="secondary" className="text-xs">
+                          {e.action}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-xs">{e.entity}</TableCell>
+                      <TableCell className="text-xs">
+                        {e.target?.name ?? "—"}
+                        <div className="text-muted-foreground">{e.target?.email ?? ""}</div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
           )}
         </CardContent>
@@ -130,13 +134,21 @@ export default async function AdminAuditLogPage({ params, searchParams }: Props)
 
       <div className="flex items-center gap-2">
         {offset > 0 && (
-          <a href={`?entity=${entity ?? ""}&offset=${Math.max(0, offset - limit)}`} className="rounded-md border px-3 py-1.5 text-sm hover:bg-accent">
+          <a
+            href={`?entity=${entity ?? ""}&offset=${Math.max(0, offset - limit)}`}
+            className="rounded-md border px-3 py-1.5 text-sm hover:bg-accent"
+          >
             ←
           </a>
         )}
-        <span className="text-xs text-muted-foreground">{offset + 1}–{Math.min(offset + limit, total)} / {total}</span>
+        <span className="text-xs text-muted-foreground">
+          {offset + 1}–{Math.min(offset + limit, total)} / {total}
+        </span>
         {offset + limit < total && (
-          <a href={`?entity=${entity ?? ""}&offset=${offset + limit}`} className="rounded-md border px-3 py-1.5 text-sm hover:bg-accent">
+          <a
+            href={`?entity=${entity ?? ""}&offset=${offset + limit}`}
+            className="rounded-md border px-3 py-1.5 text-sm hover:bg-accent"
+          >
             →
           </a>
         )}

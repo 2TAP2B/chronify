@@ -87,12 +87,26 @@ export function TimesheetGrid({
   }
 
   async function onDelete(entry: GridEntry) {
-    if (!await confirm({ title: t("confirmDelete"), variant: "destructive", confirmLabel: t("delete") })) return;
+    if (
+      !(await confirm({
+        title: t("confirmDelete"),
+        variant: "destructive",
+        confirmLabel: t("delete"),
+      }))
+    )
+      return;
     startTransition(async () => {
-      const res = await fetch(`/api/time-entries/${entry.id}${adminUserId ? `?userId=${adminUserId}` : ""}`, { method: "DELETE" });
+      const res = await fetch(
+        `/api/time-entries/${entry.id}${adminUserId ? `?userId=${adminUserId}` : ""}`,
+        { method: "DELETE" }
+      );
       if (!res.ok) {
         const b = await res.json().catch(() => ({}));
-        await confirm({ title: "Fehler", description: (b as { error?: string }).error ?? "error", confirmLabel: "OK" });
+        await confirm({
+          title: "Fehler",
+          description: (b as { error?: string }).error ?? "error",
+          confirmLabel: "OK",
+        });
       }
       window.location.reload();
     });
@@ -161,20 +175,29 @@ export function TimesheetGrid({
                 <Table>
                   <TableHeader>
                     <TableRow className="border-b bg-foreground/[0.04] hover:bg-foreground/[0.04]">
-                      <TableHead className="w-[18%] text-xs font-semibold uppercase tracking-wide">{t("start")}</TableHead>
-                      <TableHead className="w-[18%] text-xs font-semibold uppercase tracking-wide">{t("end")}</TableHead>
-                      <TableHead className="w-[16%] text-xs font-semibold uppercase tracking-wide">{t("break")}</TableHead>
-                      <TableHead className="w-[18%] text-xs font-semibold uppercase tracking-wide">{t("duration")}</TableHead>
-                      <TableHead className="hidden md:table-cell text-xs font-semibold uppercase tracking-wide">{t("note")}</TableHead>
-                      <TableHead className="w-[60px] text-xs font-semibold uppercase tracking-wide">{t("actions")}</TableHead>
+                      <TableHead className="w-[18%] text-xs font-semibold uppercase tracking-wide">
+                        {t("start")}
+                      </TableHead>
+                      <TableHead className="w-[18%] text-xs font-semibold uppercase tracking-wide">
+                        {t("end")}
+                      </TableHead>
+                      <TableHead className="w-[16%] text-xs font-semibold uppercase tracking-wide">
+                        {t("break")}
+                      </TableHead>
+                      <TableHead className="w-[18%] text-xs font-semibold uppercase tracking-wide">
+                        {t("duration")}
+                      </TableHead>
+                      <TableHead className="hidden md:table-cell text-xs font-semibold uppercase tracking-wide">
+                        {t("note")}
+                      </TableHead>
+                      <TableHead className="w-[60px] text-xs font-semibold uppercase tracking-wide">
+                        {t("actions")}
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {day.entries.map((e) => (
-                      <TableRow
-                        key={e.id}
-                        className="hover:bg-accent/50"
-                      >
+                      <TableRow key={e.id} className="hover:bg-accent/50">
                         <TableCell className="font-mono text-sm tabular-nums font-medium">
                           {e.startAt ? formatInZone(new Date(e.startAt), timeZone, "HH:mm") : "—"}
                         </TableCell>
@@ -190,7 +213,9 @@ export function TimesheetGrid({
                         <TableCell className="hidden md:table-cell max-w-[200px] truncate text-sm">
                           {e.note ?? <span className="text-muted-foreground">—</span>}
                           {e.source === "TIMER" && (
-                            <Badge variant="secondary" className="ml-2 text-[10px]">T</Badge>
+                            <Badge variant="secondary" className="ml-2 text-[10px]">
+                              T
+                            </Badge>
                           )}
                         </TableCell>
                         <TableCell className="pr-3">
@@ -235,9 +260,7 @@ export function TimesheetGrid({
           {formatDurationShort(weekTotalMs)}
         </span>
       </div>
-      <p className="text-xs text-muted-foreground">
-        {t("lockedHint", { days: lockWindowDays })}
-      </p>
+      <p className="text-xs text-muted-foreground">{t("lockedHint", { days: lockWindowDays })}</p>
 
       {dialogOpen && (
         <TimeEntryDialog

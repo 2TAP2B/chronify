@@ -56,11 +56,7 @@ export function isWeekend(date: Date): boolean {
   return dow === 0 || dow === 6;
 }
 
-export function isBusinessDay(
-  date: Date,
-  state: FederalState,
-  resolver: HolidayResolver
-): boolean {
+export function isBusinessDay(date: Date, state: FederalState, resolver: HolidayResolver): boolean {
   if (isWeekend(date)) return false;
   if (resolver(date, state)) return false;
   return true;

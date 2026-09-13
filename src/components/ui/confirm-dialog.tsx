@@ -41,16 +41,13 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  const handleClose = useCallback(
-    (result: boolean) => {
-      setOpen(false);
-      setResolver((prev: ((v: boolean) => void) | null) => {
-        prev?.(result);
-        return null;
-      });
-    },
-    []
-  );
+  const handleClose = useCallback((result: boolean) => {
+    setOpen(false);
+    setResolver((prev: ((v: boolean) => void) | null) => {
+      prev?.(result);
+      return null;
+    });
+  }, []);
 
   const tCancel = "Abbrechen";
 

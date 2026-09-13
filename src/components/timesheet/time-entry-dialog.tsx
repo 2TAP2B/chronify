@@ -138,9 +138,14 @@ export function TimeEntryDialog({
 }) {
   const t = useTranslations("timesheet");
   const isCreate = mode === "create";
-  const initStart = initial.startAt ? isoToTimeInput(initial.startAt) : (isCreate ? DEFAULT_START : "");
-  const initEnd = initial.endAt ? isoToTimeInput(initial.endAt) : (isCreate ? DEFAULT_END : "");
-  const initBreak = initial.breakMinutes != null ? String(initial.breakMinutes) : (isCreate ? DEFAULT_BREAK : "0");
+  const initStart = initial.startAt
+    ? isoToTimeInput(initial.startAt)
+    : isCreate
+      ? DEFAULT_START
+      : "";
+  const initEnd = initial.endAt ? isoToTimeInput(initial.endAt) : isCreate ? DEFAULT_END : "";
+  const initBreak =
+    initial.breakMinutes != null ? String(initial.breakMinutes) : isCreate ? DEFAULT_BREAK : "0";
 
   const [date, setDate] = useState(toLocalDateInput(initial.date));
   const [startAt, setStartAt] = useState(initStart);
@@ -178,38 +183,46 @@ export function TimeEntryDialog({
     setDurationInput("");
   }, []);
 
-  const onDurationChange = useCallback((raw: string) => {
-    const formatted = raw.includes(":") || raw.includes(",") || raw.includes(".")
-      ? raw
-      : autoFormatDuration(raw);
-    setDurationInput(formatted);
-    const parsed = parseDuration(formatted);
-    if (parsed != null && startMin != null) {
-      const snapped = snapToStep(parsed);
-      const newEnd = startMin + snapped;
-      setEndAt(formatHHMM(newEnd));
-    }
-  }, [startMin]);
+  const onDurationChange = useCallback(
+    (raw: string) => {
+      const formatted =
+        raw.includes(":") || raw.includes(",") || raw.includes(".") ? raw : autoFormatDuration(raw);
+      setDurationInput(formatted);
+      const parsed = parseDuration(formatted);
+      if (parsed != null && startMin != null) {
+        const snapped = snapToStep(parsed);
+        const newEnd = startMin + snapped;
+        setEndAt(formatHHMM(newEnd));
+      }
+    },
+    [startMin]
+  );
 
-  const stepDuration = useCallback((delta: number) => {
-    const current = durationInput ? parseDuration(durationInput) : computedDuration;
-    if (current == null) return;
-    const next = snapToStep(current + delta);
-    setDurationInput(formatDuration(next));
-    if (startMin != null) {
-      setEndAt(formatHHMM(startMin + next));
-    }
-  }, [durationInput, computedDuration, startMin]);
+  const stepDuration = useCallback(
+    (delta: number) => {
+      const current = durationInput ? parseDuration(durationInput) : computedDuration;
+      if (current == null) return;
+      const next = snapToStep(current + delta);
+      setDurationInput(formatDuration(next));
+      if (startMin != null) {
+        setEndAt(formatHHMM(startMin + next));
+      }
+    },
+    [durationInput, computedDuration, startMin]
+  );
 
-  const onDurationKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === "ArrowUp") {
-      e.preventDefault();
-      stepDuration(STEP_MIN);
-    } else if (e.key === "ArrowDown") {
-      e.preventDefault();
-      stepDuration(-STEP_MIN);
-    }
-  }, [stepDuration]);
+  const onDurationKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        stepDuration(STEP_MIN);
+      } else if (e.key === "ArrowDown") {
+        e.preventDefault();
+        stepDuration(-STEP_MIN);
+      }
+    },
+    [stepDuration]
+  );
 
   const durationDisplay = useMemo(() => {
     if (displayedDuration == null) return durationInput;
@@ -237,7 +250,8 @@ export function TimeEntryDialog({
         note: note || null,
       };
       const qs = adminUserId ? `?userId=${adminUserId}` : "";
-      const url = mode === "edit" ? `/api/time-entries/${initial.id}${qs}` : `/api/time-entries${qs}`;
+      const url =
+        mode === "edit" ? `/api/time-entries/${initial.id}${qs}` : `/api/time-entries${qs}`;
       const method = mode === "edit" ? "PATCH" : "POST";
       const res = await fetch(url, {
         method,
@@ -247,9 +261,10 @@ export function TimeEntryDialog({
       if (!res.ok) {
         const b = await res.json().catch(() => ({}));
         const code = (b as { code?: string }).code;
-        const msg = code === "OVERLAP"
-          ? t("overlapError")
-          : (b as { error?: string }).error ?? `HTTP ${res.status}`;
+        const msg =
+          code === "OVERLAP"
+            ? t("overlapError")
+            : ((b as { error?: string }).error ?? `HTTP ${res.status}`);
         throw new Error(msg);
       }
       onSaved();
@@ -265,9 +280,7 @@ export function TimeEntryDialog({
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>
-            {mode === "edit" ? t("edit") : t("add")}
-          </DialogTitle>
+          <DialogTitle>{mode === "edit" ? t("edit") : t("add")}</DialogTitle>
           <DialogDescription>{date}</DialogDescription>
         </DialogHeader>
         <form onSubmit={onSubmit} className="space-y-4">
@@ -296,19 +309,11 @@ export function TimeEntryDialog({
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="start">{t("start")}</Label>
-              <TimeInput
-                placeholder="08:00"
-                value={startAt}
-                onChange={onStartTimeChange}
-              />
+              <TimeInput placeholder="08:00" value={startAt} onChange={onStartTimeChange} />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="end">{t("end")}</Label>
-              <TimeInput
-                placeholder="16:00"
-                value={endAt}
-                onChange={onEndTimeChange}
-              />
+              <TimeInput placeholder="16:00" value={endAt} onChange={onEndTimeChange} />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="duration">{t("duration")}</Label>
@@ -349,7 +354,9 @@ export function TimeEntryDialog({
               )}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="break">{t("break")} ({t("minutes")})</Label>
+              <Label htmlFor="break">
+                {t("break")} ({t("minutes")})
+              </Label>
               <Input
                 id="break"
                 type="number"
@@ -361,11 +368,7 @@ export function TimeEntryDialog({
             </div>
             <div className="col-span-2 space-y-1.5">
               <Label htmlFor="note">{t("note")}</Label>
-              <Input
-                id="note"
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-              />
+              <Input id="note" value={note} onChange={(e) => setNote(e.target.value)} />
             </div>
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}

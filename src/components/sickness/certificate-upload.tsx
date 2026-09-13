@@ -65,13 +65,31 @@ export function CertificateUpload({
             <FileText className="mr-1 h-3.5 w-3.5" />
             {t("downloadCertificate")}
           </Button>
-          <Button size="sm" variant="ghost" onClick={() => inputRef.current?.click()} disabled={uploading}>
-            {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => inputRef.current?.click()}
+            disabled={uploading}
+          >
+            {uploading ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Upload className="h-3.5 w-3.5" />
+            )}
           </Button>
         </>
       ) : (
-        <Button size="sm" variant="ghost" onClick={() => inputRef.current?.click()} disabled={uploading}>
-          {uploading ? <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> : <Upload className="mr-1 h-3.5 w-3.5" />}
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => inputRef.current?.click()}
+          disabled={uploading}
+        >
+          {uploading ? (
+            <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
+          ) : (
+            <Upload className="mr-1 h-3.5 w-3.5" />
+          )}
           {t("uploadCertificate")}
         </Button>
       )}

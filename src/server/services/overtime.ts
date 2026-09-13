@@ -18,7 +18,12 @@ export type DaySummaryWithMeta = DaySummary & {
   hasTimerEntry: boolean;
 };
 
-export function workedMsFromEntry(e: { startAt: Date | null; endAt: Date | null; breakMinutes: number; type: string }): number {
+export function workedMsFromEntry(e: {
+  startAt: Date | null;
+  endAt: Date | null;
+  breakMinutes: number;
+  type: string;
+}): number {
   if (e.type !== "WORK" || !e.startAt || !e.endAt) return 0;
   const gross = e.endAt.getTime() - e.startAt.getTime();
   return Math.max(0, gross - e.breakMinutes * 60_000);
@@ -94,9 +99,7 @@ export async function computeDaysForRange(opts: {
 
   function modelForDate(d: Date): WorkingModel | null {
     return (
-      workingModels.find(
-        (m) => m.validFrom <= d && (m.validTo == null || m.validTo >= d)
-      ) ?? null
+      workingModels.find((m) => m.validFrom <= d && (m.validTo == null || m.validTo >= d)) ?? null
     );
   }
 
@@ -143,7 +146,12 @@ export async function computeYearOvertime(opts: {
   userId: string;
   year: number;
   timeZone: string;
-}): Promise<{ computation: OvertimeComputation; days: DaySummaryWithMeta[]; carriedOverMinutes: number; consumedOvertimeMinutes: number }> {
+}): Promise<{
+  computation: OvertimeComputation;
+  days: DaySummaryWithMeta[];
+  carriedOverMinutes: number;
+  consumedOvertimeMinutes: number;
+}> {
   const yearStart = new Date(Date.UTC(opts.year, 0, 1));
   const yearEnd = new Date(Date.UTC(opts.year + 1, 0, 1));
 
@@ -216,7 +224,11 @@ export async function getOvertimeView(opts: {
   });
   const settings = await db.orgSettings.findUniqueOrThrow({ where: { id: "singleton" } });
   const cutoff = settings.overtimeCarryoverCutoffEnabled
-    ? carryoverCutoffDate(year, settings.overtimeCarryoverCutoffMonth, settings.overtimeCarryoverCutoffDay)
+    ? carryoverCutoffDate(
+        year,
+        settings.overtimeCarryoverCutoffMonth,
+        settings.overtimeCarryoverCutoffDay
+      )
     : null;
 
   return {

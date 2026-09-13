@@ -6,13 +6,7 @@ import { Button } from "@/components/ui/button";
 import { RefreshCw, Loader2 } from "lucide-react";
 import type { FederalState } from "@prisma/client";
 
-export function HolidaySyncButtonInline({
-  year,
-  state,
-}: {
-  year: number;
-  state: FederalState;
-}) {
+export function HolidaySyncButtonInline({ year, state }: { year: number; state: FederalState }) {
   const t = useTranslations("adminHolidays");
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);

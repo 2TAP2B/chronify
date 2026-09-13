@@ -85,13 +85,24 @@ export function SickNoteRowActions({
 
   async function del() {
     setMenuOpen(false);
-    if (!await confirm({ title: t("confirmDelete"), variant: "destructive", confirmLabel: t("delete") })) return;
+    if (
+      !(await confirm({
+        title: t("confirmDelete"),
+        variant: "destructive",
+        confirmLabel: t("delete"),
+      }))
+    )
+      return;
     setLoading(true);
     try {
       const res = await fetch(`/api/sickness/${noteId}`, { method: "DELETE" });
       if (!res.ok) {
         const b = await res.json().catch(() => ({}));
-        await confirm({ title: "Fehler", description: (b as { error?: string }).error ?? "error", confirmLabel: "OK" });
+        await confirm({
+          title: "Fehler",
+          description: (b as { error?: string }).error ?? "error",
+          confirmLabel: "OK",
+        });
         return;
       }
       window.location.reload();
@@ -122,7 +133,13 @@ export function SickNoteRowActions({
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <Dialog open={editOpen} onOpenChange={(o) => { setEditOpen(o); if (!o) setError(null); }}>
+      <Dialog
+        open={editOpen}
+        onOpenChange={(o) => {
+          setEditOpen(o);
+          if (!o) setError(null);
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{t("edit")}</DialogTitle>

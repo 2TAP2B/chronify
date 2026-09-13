@@ -2,13 +2,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -57,7 +51,9 @@ export default async function AdminUsersPage({ params }: Props) {
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
-          <p className="text-sm text-muted-foreground">{users.length} {t("users")}</p>
+          <p className="text-sm text-muted-foreground">
+            {users.length} {t("users")}
+          </p>
         </div>
         <UserDialog mode="create" />
       </div>
@@ -70,39 +66,37 @@ export default async function AdminUsersPage({ params }: Props) {
         <CardContent>
           <div className="overflow-x-auto">
             <Table className="min-w-[500px] whitespace-nowrap">
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t("name")}</TableHead>
-                <TableHead>{t("email")}</TableHead>
-                <TableHead>{t("role")}</TableHead>
-                <TableHead>{t("active")}</TableHead>
-                <TableHead className="text-right">{t("actions")}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {users.map((u) => (
-                <TableRow key={u.id}>
-                  <TableCell className="font-medium">{u.name}</TableCell>
-                  <TableCell className="text-muted-foreground">{u.email}</TableCell>
-                  <TableCell>
-                    <Badge variant={u.role === "ADMIN" ? "default" : "secondary"}>
-                      {u.role}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    {u.active ? (
-                      <Badge variant="default">{t("active")}</Badge>
-                    ) : (
-                      <Badge variant="secondary">{t("inactive")}</Badge>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <UserRowMenu user={u} isSelf={u.id === session.user.id} />
-                  </TableCell>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t("name")}</TableHead>
+                  <TableHead>{t("email")}</TableHead>
+                  <TableHead>{t("role")}</TableHead>
+                  <TableHead>{t("active")}</TableHead>
+                  <TableHead className="text-right">{t("actions")}</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {users.map((u) => (
+                  <TableRow key={u.id}>
+                    <TableCell className="font-medium">{u.name}</TableCell>
+                    <TableCell className="text-muted-foreground">{u.email}</TableCell>
+                    <TableCell>
+                      <Badge variant={u.role === "ADMIN" ? "default" : "secondary"}>{u.role}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      {u.active ? (
+                        <Badge variant="default">{t("active")}</Badge>
+                      ) : (
+                        <Badge variant="secondary">{t("inactive")}</Badge>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <UserRowMenu user={u} isSelf={u.id === session.user.id} />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </div>
         </CardContent>
       </Card>

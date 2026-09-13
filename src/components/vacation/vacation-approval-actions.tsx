@@ -16,7 +16,14 @@ export function VacationApprovalActions({ requestId }: { requestId: string }) {
 
   async function act(action: "approve" | "reject") {
     const msg = action === "approve" ? t("confirmApprove") : t("confirmReject");
-    if (!await confirm({ title: msg, variant: action === "reject" ? "destructive" : "default", confirmLabel: t(action === "approve" ? "approve" : "reject") })) return;
+    if (
+      !(await confirm({
+        title: msg,
+        variant: action === "reject" ? "destructive" : "default",
+        confirmLabel: t(action === "approve" ? "approve" : "reject"),
+      }))
+    )
+      return;
     setLoading(action);
     setError(null);
     try {

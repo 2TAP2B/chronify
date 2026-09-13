@@ -2,13 +2,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -42,7 +36,9 @@ export default async function WorkingModelsPage({ params }: Props) {
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
-          <p className="text-sm text-muted-foreground">{templates.length} {t("templates")}</p>
+          <p className="text-sm text-muted-foreground">
+            {templates.length} {t("templates")}
+          </p>
         </div>
         <TemplateDialog mode="create" />
       </div>
@@ -58,40 +54,49 @@ export default async function WorkingModelsPage({ params }: Props) {
           ) : (
             <div className="overflow-x-auto">
               <Table className="min-w-[600px] whitespace-nowrap">
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t("templateName")}</TableHead>
-                  <TableHead>{t("weeklyTarget")}</TableHead>
-                  <TableHead>Mo–Fr</TableHead>
-                  <TableHead>Sa/So</TableHead>
-                  <TableHead>{t("default")}</TableHead>
-                  <TableHead className="text-right">{t("actions")}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {templates.map((tpl) => {
-                  const moFr = tpl.mondayMinutes + tpl.tuesdayMinutes + tpl.wednesdayMinutes + tpl.thursdayMinutes + tpl.fridayMinutes;
-                  const saSo = tpl.saturdayMinutes + tpl.sundayMinutes;
-                  return (
-                    <TableRow key={tpl.id}>
-                      <TableCell className="font-medium">{tpl.name}</TableCell>
-                      <TableCell>{(tpl.weeklyTargetMinutes / 60).toFixed(1)} h</TableCell>
-                      <TableCell>{(moFr / 60).toFixed(1)} h</TableCell>
-                      <TableCell>{(saSo / 60).toFixed(1)} h</TableCell>
-                      <TableCell>
-                        {tpl.isDefault ? <Badge>{t("default")}</Badge> : <span className="text-muted-foreground">—</span>}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-1">
-                          <TemplateDialog mode="edit" template={tpl} />
-                          <TemplateDelete templateId={tpl.id} templateName={tpl.name} />
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t("templateName")}</TableHead>
+                    <TableHead>{t("weeklyTarget")}</TableHead>
+                    <TableHead>Mo–Fr</TableHead>
+                    <TableHead>Sa/So</TableHead>
+                    <TableHead>{t("default")}</TableHead>
+                    <TableHead className="text-right">{t("actions")}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {templates.map((tpl) => {
+                    const moFr =
+                      tpl.mondayMinutes +
+                      tpl.tuesdayMinutes +
+                      tpl.wednesdayMinutes +
+                      tpl.thursdayMinutes +
+                      tpl.fridayMinutes;
+                    const saSo = tpl.saturdayMinutes + tpl.sundayMinutes;
+                    return (
+                      <TableRow key={tpl.id}>
+                        <TableCell className="font-medium">{tpl.name}</TableCell>
+                        <TableCell>{(tpl.weeklyTargetMinutes / 60).toFixed(1)} h</TableCell>
+                        <TableCell>{(moFr / 60).toFixed(1)} h</TableCell>
+                        <TableCell>{(saSo / 60).toFixed(1)} h</TableCell>
+                        <TableCell>
+                          {tpl.isDefault ? (
+                            <Badge>{t("default")}</Badge>
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-1">
+                            <TemplateDialog mode="edit" template={tpl} />
+                            <TemplateDelete templateId={tpl.id} templateName={tpl.name} />
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
             </div>
           )}
         </CardContent>

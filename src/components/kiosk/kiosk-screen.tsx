@@ -91,48 +91,51 @@ export function KioskScreen({ locale }: { locale: string }) {
     }, seconds * 1000);
   }, []);
 
-  const handleCardTap = useCallback(async (cardId: string) => {
-    if (state === "loading") return;
-    setState("loading");
-    setErrorMsg("");
+  const handleCardTap = useCallback(
+    async (cardId: string) => {
+      if (state === "loading") return;
+      setState("loading");
+      setErrorMsg("");
 
-    try {
-      const res = await fetch("/api/kiosk/tap", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cardId }),
-      });
-      const data = await res.json();
+      try {
+        const res = await fetch("/api/kiosk/tap", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ cardId }),
+        });
+        const data = await res.json();
 
-      if (!res.ok) {
-        const err = data as ErrorResponse;
+        if (!res.ok) {
+          const err = data as ErrorResponse;
+          setState("error");
+          setErrorMsg(
+            err.error === "card_not_found"
+              ? t("cardNotFound")
+              : err.error === "rate_limited"
+                ? t("rateLimited")
+                : t("scanError")
+          );
+          scheduleRevert(3);
+          return;
+        }
+
+        const tap = data as TapResponse;
+        setUserName(tap.userName);
+        if (tap.action === "started") {
+          setState("started");
+        } else {
+          setState("stopped");
+          setWorkedMinutes(tap.workedMinutes ?? 0);
+        }
+        scheduleRevert(5);
+      } catch {
         setState("error");
-        setErrorMsg(
-          err.error === "card_not_found"
-            ? t("cardNotFound")
-            : err.error === "rate_limited"
-            ? t("rateLimited")
-            : t("scanError")
-        );
+        setErrorMsg(t("scanError"));
         scheduleRevert(3);
-        return;
       }
-
-      const tap = data as TapResponse;
-      setUserName(tap.userName);
-      if (tap.action === "started") {
-        setState("started");
-      } else {
-        setState("stopped");
-        setWorkedMinutes(tap.workedMinutes ?? 0);
-      }
-      scheduleRevert(5);
-    } catch {
-      setState("error");
-      setErrorMsg(t("scanError"));
-      scheduleRevert(3);
-    }
-  }, [state, t, scheduleRevert]);
+    },
+    [state, t, scheduleRevert]
+  );
 
   const handleNfcScan = useCallback(async () => {
     if (!("NDEFReader" in window)) {
@@ -185,8 +188,17 @@ export function KioskScreen({ locale }: { locale: string }) {
   }, []);
 
   const localeStr = locale === "en" ? "en-US" : "de-DE";
-  const timeStr = now.toLocaleTimeString(localeStr, { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-  const dateStr = now.toLocaleDateString(localeStr, { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+  const timeStr = now.toLocaleTimeString(localeStr, {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+  const dateStr = now.toLocaleDateString(localeStr, {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
 
   const workedHours = Math.floor(workedMinutes / 60);
   const workedMins = workedMinutes % 60;
@@ -253,7 +265,10 @@ export function KioskScreen({ locale }: { locale: string }) {
                 maxLength={20}
                 autoFocus
               />
-              <button type="submit" className="rounded-lg bg-primary px-4 py-2 text-lg font-semibold text-primary-foreground">
+              <button
+                type="submit"
+                className="rounded-lg bg-primary px-4 py-2 text-lg font-semibold text-primary-foreground"
+              >
                 OK
               </button>
             </form>

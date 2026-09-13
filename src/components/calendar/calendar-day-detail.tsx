@@ -1,12 +1,7 @@
 "use client";
 
 import { useTranslations, useLocale } from "next-intl";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Clock, Plane, HeartPulse, CalendarDays, Store, FileText } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -14,13 +9,40 @@ import { cn } from "@/lib/utils";
 import type { CalendarEvent, CalendarEventType } from "@/server/services/calendar";
 import { formatInZone } from "@/lib/datetime";
 
-const TYPE_CONFIG: Record<CalendarEventType, { icon: LucideIcon; key: string; badgeClass: string }> = {
-  WORK: { icon: Clock, key: "work", badgeClass: "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-200" },
-  VACATION: { icon: Plane, key: "vacation", badgeClass: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200" },
-  VACATION_PENDING: { icon: Plane, key: "vacationPending", badgeClass: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-200" },
-  SICK: { icon: HeartPulse, key: "sick", badgeClass: "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-200" },
-  PUBLIC_HOLIDAY: { icon: CalendarDays, key: "publicHoliday", badgeClass: "bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-200" },
-  CLOSURE: { icon: Store, key: "closure", badgeClass: "bg-orange-100 text-orange-800 dark:bg-orange-950 dark:text-orange-200" },
+const TYPE_CONFIG: Record<
+  CalendarEventType,
+  { icon: LucideIcon; key: string; badgeClass: string }
+> = {
+  WORK: {
+    icon: Clock,
+    key: "work",
+    badgeClass: "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-200",
+  },
+  VACATION: {
+    icon: Plane,
+    key: "vacation",
+    badgeClass: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200",
+  },
+  VACATION_PENDING: {
+    icon: Plane,
+    key: "vacationPending",
+    badgeClass: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-200",
+  },
+  SICK: {
+    icon: HeartPulse,
+    key: "sick",
+    badgeClass: "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-200",
+  },
+  PUBLIC_HOLIDAY: {
+    icon: CalendarDays,
+    key: "publicHoliday",
+    badgeClass: "bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-200",
+  },
+  CLOSURE: {
+    icon: Store,
+    key: "closure",
+    badgeClass: "bg-orange-100 text-orange-800 dark:bg-orange-950 dark:text-orange-200",
+  },
 };
 
 export function CalendarDayDetail({
@@ -36,12 +58,15 @@ export function CalendarDayDetail({
   const locale = useLocale() as "de" | "en";
   const timeZone = "Europe/Berlin";
 
-  const dateStr = date
-    ? formatInZone(date, timeZone, "EEEE, d. MMMM yyyy", locale)
-    : "";
+  const dateStr = date ? formatInZone(date, timeZone, "EEEE, d. MMMM yyyy", locale) : "";
 
   return (
-    <Dialog open={date !== null} onOpenChange={(open) => { if (!open) onClose(); }}>
+    <Dialog
+      open={date !== null}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="capitalize">{dateStr}</DialogTitle>
@@ -55,11 +80,13 @@ export function CalendarDayDetail({
               const cfg = TYPE_CONFIG[e.type];
               const Icon = cfg.icon;
               return (
-                <div
-                  key={e.id}
-                  className="flex items-start gap-3 rounded-lg border p-3"
-                >
-                  <span className={cn("mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full", cfg.badgeClass)}>
+                <div key={e.id} className="flex items-start gap-3 rounded-lg border p-3">
+                  <span
+                    className={cn(
+                      "mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full",
+                      cfg.badgeClass
+                    )}
+                  >
                     <Icon className="h-4 w-4" />
                   </span>
                   <div className="min-w-0 flex-1">

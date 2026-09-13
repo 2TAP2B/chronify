@@ -2,13 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, Loader2 } from "lucide-react";
 import type { FederalState } from "@prisma/client";
@@ -49,14 +43,12 @@ export function HolidaySync({ defaultFederalState }: { defaultFederalState: Fede
     <Card>
       <CardHeader>
         <CardTitle>{t("syncTitle")}</CardTitle>
-        <CardDescription>{t("state")}: {stateName(defaultFederalState)}</CardDescription>
+        <CardDescription>
+          {t("state")}: {stateName(defaultFederalState)}
+        </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-wrap items-center gap-3">
-        <Button
-          variant="outline"
-          onClick={() => sync("single")}
-          disabled={loading !== null}
-        >
+        <Button variant="outline" onClick={() => sync("single")} disabled={loading !== null}>
           {loading === "single" ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : (
@@ -64,11 +56,7 @@ export function HolidaySync({ defaultFederalState }: { defaultFederalState: Fede
           )}
           {t("sync")}
         </Button>
-        <Button
-          variant="outline"
-          onClick={() => sync("all")}
-          disabled={loading !== null}
-        >
+        <Button variant="outline" onClick={() => sync("all")} disabled={loading !== null}>
           {loading === "all" ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : (

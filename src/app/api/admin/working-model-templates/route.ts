@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { requireUser } from "@/server/context";
-import { listTemplates, createTemplate, createTemplateSchema } from "@/server/services/admin-templates";
+import {
+  listTemplates,
+  createTemplate,
+  createTemplateSchema,
+} from "@/server/services/admin-templates";
 
 export async function GET() {
   const user = await requireUser();

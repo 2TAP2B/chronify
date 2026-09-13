@@ -14,13 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import type { OrgSettings } from "@prisma/client";
 import { STATE_NAMES, STATE_CODES } from "@/lib/federal-states";
 
@@ -39,7 +33,11 @@ export function SettingsForm({ settings }: { settings: OrgSettings }) {
   const [msg, setMsg] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const cutoffDate = new Date(2026, form.overtimeCarryoverCutoffMonth - 1, form.overtimeCarryoverCutoffDay);
+  const cutoffDate = new Date(
+    2026,
+    form.overtimeCarryoverCutoffMonth - 1,
+    form.overtimeCarryoverCutoffDay
+  );
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -87,16 +85,33 @@ export function SettingsForm({ settings }: { settings: OrgSettings }) {
         <CardContent className="grid grid-cols-2 gap-4">
           <div className="space-y-1.5">
             <Label htmlFor="fs">{t("defaultFederalState")}</Label>
-            <Select value={form.defaultFederalState} onValueChange={(v) => setForm({ ...form, defaultFederalState: v as never })}>
-              <SelectTrigger id="fs"><SelectValue /></SelectTrigger>
+            <Select
+              value={form.defaultFederalState}
+              onValueChange={(v) => setForm({ ...form, defaultFederalState: v as never })}
+            >
+              <SelectTrigger id="fs">
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
-                {STATE_CODES.map((s) => <SelectItem key={s} value={s}>{STATE_NAMES[s]}</SelectItem>)}
+                {STATE_CODES.map((s) => (
+                  <SelectItem key={s} value={s}>
+                    {STATE_NAMES[s]}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="vd">{t("defaultVacationDays")}</Label>
-            <Input id="vd" type="number" min={0} max={60} step="0.5" value={form.defaultVacationDays} onChange={(e) => setForm({ ...form, defaultVacationDays: e.target.value })} />
+            <Input
+              id="vd"
+              type="number"
+              min={0}
+              max={60}
+              step="0.5"
+              value={form.defaultVacationDays}
+              onChange={(e) => setForm({ ...form, defaultVacationDays: e.target.value })}
+            />
           </div>
         </CardContent>
       </Card>
@@ -116,7 +131,9 @@ export function SettingsForm({ settings }: { settings: OrgSettings }) {
             <Switch
               id="ab"
               checked={form.autoBreakDefault === "AUTO"}
-              onCheckedChange={(checked) => setForm({ ...form, autoBreakDefault: checked ? "AUTO" : "MANUAL" })}
+              onCheckedChange={(checked) =>
+                setForm({ ...form, autoBreakDefault: checked ? "AUTO" : "MANUAL" })
+              }
             />
           </div>
         </CardContent>
@@ -136,7 +153,9 @@ export function SettingsForm({ settings }: { settings: OrgSettings }) {
             </div>
             <Switch
               checked={form.overtimeCarryoverCutoffEnabled}
-              onCheckedChange={(checked) => setForm({ ...form, overtimeCarryoverCutoffEnabled: checked })}
+              onCheckedChange={(checked) =>
+                setForm({ ...form, overtimeCarryoverCutoffEnabled: checked })
+              }
             />
           </div>
 
@@ -169,7 +188,15 @@ export function SettingsForm({ settings }: { settings: OrgSettings }) {
         <CardContent>
           <div className="space-y-1.5">
             <Label htmlFor="lw">{t("lockWindowDays")}</Label>
-            <Input id="lw" type="number" min={0} max={365} value={form.timeEntryLockWindowDays} onChange={(e) => setForm({ ...form, timeEntryLockWindowDays: e.target.value })} className="max-w-[160px]" />
+            <Input
+              id="lw"
+              type="number"
+              min={0}
+              max={365}
+              value={form.timeEntryLockWindowDays}
+              onChange={(e) => setForm({ ...form, timeEntryLockWindowDays: e.target.value })}
+              className="max-w-[160px]"
+            />
             <p className="text-xs text-muted-foreground">{t("lockWindowHint")}</p>
           </div>
         </CardContent>
@@ -177,7 +204,9 @@ export function SettingsForm({ settings }: { settings: OrgSettings }) {
 
       {error && <p className="text-sm text-destructive">{error}</p>}
       {msg && <p className="text-sm text-emerald-600">{msg}</p>}
-      <Button type="submit" disabled={loading}>{t("save")}</Button>
+      <Button type="submit" disabled={loading}>
+        {t("save")}
+      </Button>
     </form>
   );
 }

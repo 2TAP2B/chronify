@@ -30,10 +30,27 @@ export const createUserSchema = z.object({
   lastName: z.string().optional(),
   role: z.enum(["EMPLOYEE", "ADMIN"]).default("EMPLOYEE"),
   locale: z.enum(["de", "en"]).default("de"),
-  federalState: z.enum([
-    "DE_BW", "DE_BY", "DE_BE", "DE_BB", "DE_HB", "DE_HE", "DE_HH", "DE_ME",
-    "DE_MV", "DE_NI", "DE_NW", "DE_RP", "DE_SL", "DE_SN", "DE_ST", "DE_SH", "DE_TH",
-  ]).default("DE_NW"),
+  federalState: z
+    .enum([
+      "DE_BW",
+      "DE_BY",
+      "DE_BE",
+      "DE_BB",
+      "DE_HB",
+      "DE_HE",
+      "DE_HH",
+      "DE_ME",
+      "DE_MV",
+      "DE_NI",
+      "DE_NW",
+      "DE_RP",
+      "DE_SL",
+      "DE_SN",
+      "DE_ST",
+      "DE_SH",
+      "DE_TH",
+    ])
+    .default("DE_NW"),
   timezone: z.string().default("Europe/Berlin"),
   breakMode: z.enum(["AUTO", "MANUAL"]).default("AUTO"),
   active: z.boolean().default(true),
@@ -49,10 +66,27 @@ export const updateUserSchema = z.object({
   lastName: z.string().optional(),
   role: z.enum(["EMPLOYEE", "ADMIN"]).optional(),
   locale: z.enum(["de", "en"]).optional(),
-  federalState: z.enum([
-    "DE_BW", "DE_BY", "DE_BE", "DE_BB", "DE_HB", "DE_HE", "DE_HH", "DE_ME",
-    "DE_MV", "DE_NI", "DE_NW", "DE_RP", "DE_SL", "DE_SN", "DE_ST", "DE_SH", "DE_TH",
-  ]).optional(),
+  federalState: z
+    .enum([
+      "DE_BW",
+      "DE_BY",
+      "DE_BE",
+      "DE_BB",
+      "DE_HB",
+      "DE_HE",
+      "DE_HH",
+      "DE_ME",
+      "DE_MV",
+      "DE_NI",
+      "DE_NW",
+      "DE_RP",
+      "DE_SL",
+      "DE_SN",
+      "DE_ST",
+      "DE_SH",
+      "DE_TH",
+    ])
+    .optional(),
   timezone: z.string().optional(),
   breakMode: z.enum(["AUTO", "MANUAL"]).optional(),
   active: z.boolean().optional(),
@@ -88,10 +122,7 @@ export async function listUsers(actor: SessionUser) {
   });
 }
 
-export async function createUser(opts: {
-  actor: SessionUser;
-  input: CreateUserInput;
-}) {
+export async function createUser(opts: { actor: SessionUser; input: CreateUserInput }) {
   requireAdmin(opts.actor);
   const existing = await db.user.findUnique({ where: { email: opts.input.email.toLowerCase() } });
   if (existing) {
@@ -167,13 +198,15 @@ export async function updateUser(opts: {
   if (opts.input.timezone !== undefined) data.timezone = opts.input.timezone;
   if (opts.input.breakMode !== undefined) data.breakMode = opts.input.breakMode;
   if (opts.input.active !== undefined) data.active = opts.input.active;
-  if (opts.input.hireDate !== undefined) data.hireDate = opts.input.hireDate ? new Date(opts.input.hireDate) : null;
+  if (opts.input.hireDate !== undefined)
+    data.hireDate = opts.input.hireDate ? new Date(opts.input.hireDate) : null;
   if (opts.input.nfcCardId !== undefined) data.nfcCardId = opts.input.nfcCardId?.trim() || null;
   if (opts.input.password) {
     data.passwordHash = await bcrypt.hash(opts.input.password, 12);
     data.mustChangePassword = true;
   }
-  if (opts.input.mustChangePassword !== undefined) data.mustChangePassword = opts.input.mustChangePassword;
+  if (opts.input.mustChangePassword !== undefined)
+    data.mustChangePassword = opts.input.mustChangePassword;
 
   const updated = await db.user.update({
     where: { id: opts.userId },
@@ -217,10 +250,7 @@ export async function toggleUserActive(opts: {
   return updated;
 }
 
-export async function deleteUser(opts: {
-  actor: SessionUser;
-  userId: string;
-}) {
+export async function deleteUser(opts: { actor: SessionUser; userId: string }) {
   requireAdmin(opts.actor);
   if (opts.userId === opts.actor.id) {
     throw new AdminError("Cannot delete yourself", "SELF_DELETE", 400);
@@ -278,7 +308,11 @@ export async function adjustVacationEntitlement(opts: {
     targetId: opts.userId,
     action: "vacation_entitlement.adjust",
     entity: "VacationEntitlement",
-    payload: { year: opts.year, totalDays: opts.totalDays, defaultDays: settings.defaultVacationDays },
+    payload: {
+      year: opts.year,
+      totalDays: opts.totalDays,
+      defaultDays: settings.defaultVacationDays,
+    },
   });
 }
 

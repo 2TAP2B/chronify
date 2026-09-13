@@ -1,18 +1,10 @@
 # NFC Kiosk Mode — Complete Implementation Guide
 
-
-
 This guide documents exactly how the **puku-kiosk** (Kimai Kiosk) project implements a rock-solid NFC-based kiosk mode for time tracking. It is written so you can reproduce the same approach in your own time-tracking app, with special focus on the part that trips most people up: **triggering the NFC interface on a mobile device and getting implicit permission to use it.**
-
-
 
 ---
 
-
-
 ## Table of Contents
-
-
 
 1. [How It Works — The Big Picture](#1-how-it-works--the-big-picture)
 
@@ -22,17 +14,15 @@ This guide documents exactly how the **puku-kiosk** (Kimai Kiosk) project implem
 
 4. [Step-by-Step Implementation](#4-step-by-step-implementation)
 
-    - 4.1 [Web NFC Type Definitions](#41-web-nfc-type-definitions)
+   - 4.1 [Web NFC Type Definitions](#41-web-nfc-type-definitions)
 
-    - 4.2 [The NFC Scan Component](#42-the-nfc-scan-component)
+   - 4.2 [The NFC Scan Component](#42-the-nfc-scan-component)
 
-    - 4.3 [Tag → User Lookup](#43-tag--user-lookup)
+   - 4.3 [Tag → User Lookup](#43-tag--user-lookup)
 
-    - 4.4 [Login → Time Tracker](#44-login--time-tracker)
+   - 4.4 [Login → Time Tracker](#44-login--time-tracker)
 
-    - 4.5 [The Backend API Client](#45-the-backend-api-client)
-
-    
+   - 4.5 [The Backend API Client](#45-the-backend-api-client)
 
 5. [Kiosk Mode (Fullscreen PWA)](#5-kiosk-mode-fullscreen-pwa)
 
@@ -44,15 +34,9 @@ This guide documents exactly how the **puku-kiosk** (Kimai Kiosk) project implem
 
 9. [File Map](#9-file-map)
 
-
-
 ---
 
-
-
 ## 1. How It Works — The Big Picture
-
-
 
 ```text
 
@@ -78,8 +62,6 @@ This guide documents exactly how the **puku-kiosk** (Kimai Kiosk) project implem
 
 ```
 
-
-
 - The **NFC tag stores a text payload** (e.g. `"86130978"`), NOT the tag UID.
 
 - The browser's **Web NFC API** (`NDEFReader`) reads the text.
@@ -90,15 +72,9 @@ This guide documents exactly how the **puku-kiosk** (Kimai Kiosk) project implem
 
 - NFC is used **for login only**. Clock-in/out is done with on-screen buttons after login.
 
-
-
 ---
 
-
-
 ## 2. Prerequisites & Device Requirements
-
-
 
 | Requirement | Why | Notes |
 
@@ -116,27 +92,15 @@ This guide documents exactly how the **puku-kiosk** (Kimai Kiosk) project implem
 
 | **PWA manifest + service worker** | Required for installability and fullscreen kiosk mode. | Not strictly required for NFC, but required for the kiosk experience. |
 
-
-
 > ⚠️ **iOS (iPhone/iPad) does NOT support Web NFC at all.** There is no `NDEFReader` in Safari or in iOS PWAs. If you need iOS, you must use a native app or a third-party browser that wraps a native NFC layer. This project targets Android kiosks.
-
-
 
 ---
 
-
-
 ## 3. The Implicit NFC Permission Model (The Key Part)
-
-
 
 This is the part that most developers get stuck on. Here is the exact truth about how this project gets permission to use NFC — and it is simpler than you think.
 
-
-
 ### What the project does NOT do
-
-
 
 - ❌ No `Permissions-Policy: nfc=(self)` header (the `next.config.ts` is completely empty).
 
@@ -148,74 +112,46 @@ This is the part that most developers get stuck on. Here is the exact truth abou
 
 - ❌ No native Android manifest / `AndroidManifest.xml` permissions (it's a PWA, not a native app).
 
-
-
 ### What the project DOES do (the only two rules that matter)
-
-
 
 **Rule 1 — Serve over HTTPS (or localhost).** Web NFC is gated behind the **secure context** requirement. If your page is served over plain HTTP (and not localhost), `window.NDEFReader` will simply not exist. HTTPS is the first "implicit allow."
 
-
-
 **Rule 2 — Call **`reader.scan()`** from a user gesture.** The `scan()` call must happen inside (or in a promise chain started by) a user-initiated event handler — typically an `onClick`. This is the second "implicit allow." Chrome will reject `scan()` calls that happen on page load, in `setTimeout`, or in any non-user-triggered code path.
 
-
-
-That's it. There is **no explicit permission request**, no permission prompt to handle in code. Chrome shows its own native NFC UI ("Tap a tag to scan") the first time the radio is activated. The user just taps a tag. You do not write *any* permission code.
-
-
+That's it. There is **no explicit permission request**, no permission prompt to handle in code. Chrome shows its own native NFC UI ("Tap a tag to scan") the first time the radio is activated. The user just taps a tag. You do not write _any_ permission code.
 
 ### The exact code that satisfies both rules
 
-
-
 From `src/components/RfidLogin.tsx`:
 
-
-
 ```tsx
-
 // Rule 2 is satisfied: this function is the onClick handler of the scan button.
 
 const handleNfcScan = async () => {
-
   // Feature-detect first (NDEFReader only exists in secure contexts on Chromium)
 
-  if (!('NDEFReader' in window)) {
-
-    setError('Web NFC wird von diesem Browser nicht unterstützt.');
+  if (!("NDEFReader" in window)) {
+    setError("Web NFC wird von diesem Browser nicht unterstützt.");
 
     return;
-
   }
 
-
-
   try {
-
     const reader = new NDEFReader();
 
     setIsScanning(true);
 
-    setError('');
-
-
+    setError("");
 
     // This scan() call is inside the click handler → user gesture is present.
 
     await reader.scan();
 
-
-
     reader.onreading = (event) => {
-
       const { message } = event as NDEFReadingEvent;
 
       for (const record of message.records) {
-
-        if (record.recordType === 'text') {
-
+        if (record.recordType === "text") {
           const textDecoder = new TextDecoder();
 
           const rfidCode = textDecoder.decode(record.data);
@@ -225,58 +161,34 @@ const handleNfcScan = async () => {
           setIsScanning(false);
 
           return;
-
         }
-
       }
-
     };
-
-
 
     reader.onreadingerror = (event) => {
+      console.error("NFC Error:", event);
 
-      console.error('NFC Error:', event);
-
-      setError('Fehler beim Scannen des NFC-Tags.');
+      setError("Fehler beim Scannen des NFC-Tags.");
 
       setIsScanning(false);
-
     };
-
-
-
   } catch (error) {
-
-    setError('NFC-Scan konnte nicht gestartet werden.');
+    setError("NFC-Scan konnte nicht gestartet werden.");
 
     setIsScanning(false);
-
   }
-
 };
-
 ```
 
-
-
 ```tsx
-
 // The button — the user gesture source
 
 <button onClick={handleNfcScan} disabled={isScanning}>
-
-  {isScanning ? 'Scanne jetzt...' : 'RFID-Chip scannen (NFC)'}
-
+  {isScanning ? "Scanne jetzt..." : "RFID-Chip scannen (NFC)"}
 </button>
-
 ```
 
-
-
 ### Why this "just works" on the phone
-
-
 
 1. You open the app over **HTTPS** on Chrome for Android → `NDEFReader` exists.
 
@@ -288,232 +200,139 @@ const handleNfcScan = async () => {
 
 5. The text is matched to a user → logged in.
 
-
-
 The "implicit allow" is literally: **HTTPS + a button click.** Nothing else.
-
-
 
 ---
 
-
-
 ## 4. Step-by-Step Implementation
-
-
 
 ### 4.1 Web NFC Type Definitions
 
-
-
 Create `src/types/web-nfc.d.ts`. This gives TypeScript knowledge of the Web NFC API so `'NDEFReader' in window` and `new NDEFReader()` type-check. You do **not** need an npm package for this — the file augments the global `Window` interface directly.
 
-
-
 ```ts
-
 // src/types/web-nfc.d.ts
 
-
-
 interface Window {
-
-    NDEFReader: NDEFReader;
-
+  NDEFReader: NDEFReader;
 }
-
-
 
 type NDEFMessageSource = string | BufferSource | NDEFMessageInit;
 
-
-
 interface NDEFReader extends EventTarget {
+  scan: (options?: NDEFScanOptions) => Promise<void>;
 
-    scan: (options?: NDEFScanOptions) => Promise<void>;
+  write: (message: NDEFMessageSource, options?: NDEFWriteOptions) => Promise<void>;
 
-    write: (message: NDEFMessageSource, options?: NDEFWriteOptions) => Promise<void>;
+  onreading: (this: this, event: NDEFReadingEvent) => any;
 
-    onreading: (this: this, event: NDEFReadingEvent) => any;
-
-    onreadingerror: (this: this, event: Event) => any;
-
+  onreadingerror: (this: this, event: Event) => any;
 }
-
-
 
 declare var NDEFReader: {
+  prototype: NDEFReader;
 
-    prototype: NDEFReader;
-
-    new (): NDEFReader;
-
+  new (): NDEFReader;
 };
 
-
-
 interface NDEFReadingEvent extends Event {
+  serialNumber: string;
 
-    serialNumber: string;
-
-    message: NDEFMessage;
-
+  message: NDEFMessage;
 }
-
-
 
 interface NDEFMessage {
-
-    records: ReadonlyArray<NDEFRecord>;
-
+  records: ReadonlyArray<NDEFRecord>;
 }
-
-
 
 interface NDEFRecord {
+  readonly recordType: string;
 
-    readonly recordType: string;
+  readonly mediaType?: string;
 
-    readonly mediaType?: string;
+  readonly id?: string;
 
-    readonly id?: string;
+  readonly data?: DataView;
 
-    readonly data?: DataView;
+  readonly encoding?: string;
 
-    readonly encoding?: string;
+  readonly lang?: string;
 
-    readonly lang?: string;
-
-    toRecords?: () => NDEFRecord[];
-
+  toRecords?: () => NDEFRecord[];
 }
-
-
 
 interface NDEFScanOptions {
-
-    signal: AbortSignal;
-
+  signal: AbortSignal;
 }
-
-
 
 interface NDEFWriteOptions {
+  overwrite?: boolean;
 
-    overwrite?: boolean;
-
-    signal?: AbortSignal;
-
+  signal?: AbortSignal;
 }
-
 ```
-
-
 
 > Your `tsconfig.json` must include `**/*.ts` (the default Next.js config does this) so this ambient file is picked up automatically. No import is needed — the triple-slash reference `/// <reference path="../types/web-nfc.d.ts" />` at the top of `RfidLogin.tsx` makes it explicit.
 
-
-
 ### 4.2 The NFC Scan Component
-
-
 
 This is the complete, minimal NFC login component. Put it at `src/components/RfidLogin.tsx`:
 
-
-
 ```tsx
-
 /// <reference path="../types/web-nfc.d.ts" />
 
+"use client";
 
+import { useState } from "react";
 
-'use client';
+import { User } from "@/types";
 
-
-
-import { useState } from 'react';
-
-import { User } from '@/types';
-
-import { getUserByRfidTag } from '@/lib/users';
-
-
+import { getUserByRfidTag } from "@/lib/users";
 
 interface RfidLoginProps {
-
   onUserLogin: (user: User) => void;
-
 }
 
-
-
 export default function RfidLogin({ onUserLogin }: RfidLoginProps) {
-
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   const [isScanning, setIsScanning] = useState(false);
 
-
-
   const handleRfidLogin = (rfidTag: string) => {
-
-    setError('');
+    setError("");
 
     const user = getUserByRfidTag(rfidTag);
 
-
-
     if (user) {
-
       onUserLogin(user);
-
     } else {
+      setError("RFID-Tag nicht erkannt. Bitte wenden Sie sich an den Administrator.");
 
-      setError('RFID-Tag nicht erkannt. Bitte wenden Sie sich an den Administrator.');
-
-      setTimeout(() => setError(''), 3000);
-
+      setTimeout(() => setError(""), 3000);
     }
-
   };
 
-
-
   const handleNfcScan = async () => {
-
-    if (!('NDEFReader' in window)) {
-
-      setError('Web NFC wird von diesem Browser nicht unterstützt.');
+    if (!("NDEFReader" in window)) {
+      setError("Web NFC wird von diesem Browser nicht unterstützt.");
 
       return;
-
     }
 
-
-
     try {
-
       const reader = new NDEFReader();
 
       setIsScanning(true);
 
-      setError('');
-
-
+      setError("");
 
       await reader.scan();
 
-
-
       reader.onreading = (event) => {
-
         const { message } = event as NDEFReadingEvent;
 
         for (const record of message.records) {
-
-          if (record.recordType === 'text') {
-
+          if (record.recordType === "text") {
             const textDecoder = new TextDecoder();
 
             const rfidCode = textDecoder.decode(record.data);
@@ -523,76 +342,55 @@ export default function RfidLogin({ onUserLogin }: RfidLoginProps) {
             setIsScanning(false);
 
             return;
-
           }
-
         }
-
       };
-
-
 
       reader.onreadingerror = (event) => {
+        console.error("NFC Error:", event);
 
-        console.error('NFC Error:', event);
-
-        setError('Fehler beim Scannen des NFC-Tags.');
+        setError("Fehler beim Scannen des NFC-Tags.");
 
         setIsScanning(false);
-
       };
-
-
-
     } catch (error) {
-
-      setError('NFC-Scan konnte nicht gestartet werden.');
+      setError("NFC-Scan konnte nicht gestartet werden.");
 
       setIsScanning(false);
-
     }
-
   };
 
-
-
   return (
-
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
-
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        minHeight: "100vh",
+      }}
+    >
       <div style={{ maxWidth: 400, padding: 32 }}>
-
         <h1>Time Tracking</h1>
 
         <p>Scan your NFC tag to log in</p>
 
-
-
-        <button onClick={handleNfcScan} disabled={isScanning} style={{ width: '100%', padding: '12px 16px' }}>
-
-          {isScanning ? 'Scanning...' : 'Scan NFC Tag'}
-
+        <button
+          onClick={handleNfcScan}
+          disabled={isScanning}
+          style={{ width: "100%", padding: "12px 16px" }}
+        >
+          {isScanning ? "Scanning..." : "Scan NFC Tag"}
         </button>
 
-
-
-        {error && <div style={{ color: 'red', marginTop: 16 }}>{error}</div>}
-
+        {error && <div style={{ color: "red", marginTop: 16 }}>{error}</div>}
       </div>
-
     </div>
-
   );
-
 }
-
 ```
 
-
-
 Key points:
-
-
 
 - `onClick={handleNfcScan}` — the click is the user gesture. Without this, `scan()` silently fails.
 
@@ -602,29 +400,21 @@ Key points:
 
 - `new TextDecoder().decode(record.data)` — converts the NDEF text payload bytes into a string.
 
-- The code does **not** use `event.serialNumber` (the tag UID). It uses the *written text*. This means you must write data to your tags — see section 6.
-
-
+- The code does **not** use `event.serialNumber` (the tag UID). It uses the _written text_. This means you must write data to your tags — see section 6.
 
 ### 4.3 Tag → User Lookup
 
-
-
 The scanned text is matched against a user list. The project stores users in `src/lib/users.ts`:
 
-
-
 ```ts
-
 // src/types/index.ts
 
 export interface User {
-
   id: string;
 
   name: string;
 
-  rfidTag: string;          // the text that must be written to the NFC tag
+  rfidTag: string; // the text that must be written to the NFC tag
 
   kimaiApiKey: string;
 
@@ -633,199 +423,127 @@ export interface User {
   activityId: number;
 
   projectId: number;
-
 }
-
 ```
 
-
-
 ```ts
-
 // src/lib/users.ts
 
-import { User } from '@/types';
+import { User } from "@/types";
 
-
-
-const USERS_STORAGE_KEY = 'kimai-kiosk-users';
-
-
+const USERS_STORAGE_KEY = "kimai-kiosk-users";
 
 export const defaultUsers: User[] = [
-
   {
+    id: "1",
 
-    id: '1',
+    name: "Anja",
 
-    name: 'Anja',
+    rfidTag: "86130978", // <-- this string must be on the tag
 
-    rfidTag: '86130978',              // <-- this string must be on the tag
+    kimaiApiKey: "b0e797a7e68cb8217dce20494",
 
-    kimaiApiKey: 'b0e797a7e68cb8217dce20494',
-
-    kimaiApiUrl: 'https://time.puku.info/api',
+    kimaiApiUrl: "https://time.puku.info/api",
 
     activityId: 1,
 
     projectId: 1,
-
   },
 
   // ... more users
-
 ];
 
-
-
 export function getUsers(): User[] {
-
-  if (typeof window === 'undefined') return defaultUsers;
+  if (typeof window === "undefined") return defaultUsers;
 
   const stored = localStorage.getItem(USERS_STORAGE_KEY);
 
   if (stored) {
-
-    try { return JSON.parse(stored); } catch { return defaultUsers; }
-
+    try {
+      return JSON.parse(stored);
+    } catch {
+      return defaultUsers;
+    }
   }
 
   return defaultUsers;
-
 }
-
-
 
 export function getUserByRfidTag(rfidTag: string): User | null {
-
   const users = getUsers();
 
-  return users.find(user => user.rfidTag === rfidTag) || null;
-
+  return users.find((user) => user.rfidTag === rfidTag) || null;
 }
-
 ```
-
-
 
 The match is a **simple string equality**: `user.rfidTag === rfidCode`. If your tag's text payload is `"86130978"` and a user has `rfidTag: '86130978'`, they log in. Otherwise the error "RFID-Tag nicht erkannt" is shown for 3 seconds.
 
-
-
 ### 4.4 Login → Time Tracker
-
-
 
 The main page holds the logged-in user in state and swaps between the login screen and the time tracker:
 
-
-
 ```tsx
-
 // src/app/page.tsx
 
-'use client';
+"use client";
 
+import { useState } from "react";
 
+import { User } from "@/types";
 
-import { useState } from 'react';
+import RfidLogin from "@/components/RfidLogin";
 
-import { User } from '@/types';
-
-import RfidLogin from '@/components/RfidLogin';
-
-import TimeTracker from '@/components/TimeTracker';
-
-
+import TimeTracker from "@/components/TimeTracker";
 
 export default function Home() {
-
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-
-
 
   const handleUserLogin = (user: User) => setCurrentUser(user);
 
   const handleLogout = () => setCurrentUser(null);
 
-
-
   return (
-
     <div>
-
       {currentUser ? (
-
         <TimeTracker user={currentUser} onLogout={handleLogout} />
-
       ) : (
-
         <RfidLogin onUserLogin={handleUserLogin} />
-
       )}
-
     </div>
-
   );
-
 }
-
 ```
-
-
 
 Once `onUserLogin(user)` is called (from inside the NFC `onreading` handler), `currentUser` is set and `TimeTracker` renders. The `TimeTracker` component creates a per-user API client and lets the user start/stop work and pause via on-screen buttons.
 
-
-
 ### 4.5 The Backend API Client
-
-
 
 The `KimaiApi` class in `src/lib/kimai-api.ts` makes authenticated REST calls to the Kimai backend using the per-user API key:
 
-
-
 ```ts
-
 export class KimaiApi {
-
   private apiUrl: string;
 
   private apiKey: string;
 
-
-
   constructor(apiUrl: string, apiKey: string) {
-
     this.apiUrl = apiUrl;
 
     this.apiKey = apiKey;
-
   }
-
-
 
   private get headers() {
-
     return {
+      Accept: "application/json",
 
-      'Accept': 'application/json',
+      Authorization: `Bearer ${this.apiKey}`,
 
-      'Authorization': `Bearer ${this.apiKey}`,
-
-      'Content-Type': 'application/json',
-
+      "Content-Type": "application/json",
     };
-
   }
 
-
-
-  async startTimer(user: User, description = 'Started working'): Promise<KimaiApiResponse> {
-
+  async startTimer(user: User, description = "Started working"): Promise<KimaiApiResponse> {
     const body = {
-
       begin: this.getBerlinTimestamp(),
 
       activity: user.activityId,
@@ -833,87 +551,58 @@ export class KimaiApi {
       project: user.projectId,
 
       description,
-
     };
 
     const response = await fetch(`${this.apiUrl}/timesheets`, {
-
-      method: 'POST',
+      method: "POST",
 
       headers: this.headers,
 
       body: JSON.stringify(body),
-
     });
 
     if (!response.ok) throw new Error(`Failed to start timer: ${response.statusText}`);
 
     return await response.json();
-
   }
 
-
-
   async stopAllTimers(): Promise<void> {
-
     const response = await fetch(`${this.apiUrl}/timesheets?running=1`, { headers: this.headers });
 
     const runningTimers: KimaiApiResponse[] = await response.json();
 
-    const stopPromises = runningTimers.map(timer =>
-
-      fetch(`${this.apiUrl}/timesheets/${timer.id}/stop`, { method: 'PATCH', headers: this.headers })
-
+    const stopPromises = runningTimers.map((timer) =>
+      fetch(`${this.apiUrl}/timesheets/${timer.id}/stop`, {
+        method: "PATCH",
+        headers: this.headers,
+      })
     );
 
     await Promise.all(stopPromises);
-
   }
 
-
-
   async getActiveTimesheets(): Promise<KimaiApiResponse[]> {
-
     const response = await fetch(`${this.apiUrl}/timesheets/active`, { headers: this.headers });
 
     return await response.json();
-
   }
-
 }
-
 ```
-
-
 
 > For your own app, replace this class with whatever your time-tracking backend requires. The NFC flow is independent of the backend.
 
-
-
 ---
-
-
 
 ## 5. Kiosk Mode (Fullscreen PWA)
 
-
-
 Kiosk mode is achieved through a **PWA manifest** declaring `"display": "fullscreen"`, plus a **service worker** for installability, plus **Apple/iOS meta tags** as a fallback, plus a **locked viewport** and **auto-logout**.
-
-
 
 ### 5.1 PWA Manifest
 
-
-
 `public/manifest.json`:
 
-
-
 ```json
-
 {
-
   "name": "Kimai Kiosk",
 
   "short_name": "Kimai Kiosk",
@@ -931,22 +620,16 @@ Kiosk mode is achieved through a **PWA manifest** declaring `"display": "fullscr
   "background_color": "#f3f4f6",
 
   "icons": [
-
     { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
 
     { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
-
   ],
 
   "categories": ["productivity", "business"],
 
   "prefer_related_applications": false
-
 }
-
 ```
-
-
 
 - `"display": "fullscreen"` — when installed to the home screen on Android, the app launches with no browser chrome and no status bar. This is the most aggressive display mode.
 
@@ -954,62 +637,32 @@ Kiosk mode is achieved through a **PWA manifest** declaring `"display": "fullscr
 
 - You must provide **real 192×192 and 512×512 PNG icons** for Chrome to consider the app installable.
 
-
-
 ### 5.2 Service Worker
-
-
 
 `public/sw.js` (a minimal cache-first service worker):
 
-
-
 ```js
+const CACHE_NAME = "kimai-kiosk-v1";
 
-const CACHE_NAME = 'kimai-kiosk-v1';
+const urlsToCache = ["/", "/manifest.json"];
 
-const urlsToCache = ['/', '/manifest.json'];
-
-
-
-self.addEventListener('install', (event) => {
-
-  event.waitUntil(
-
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(urlsToCache))
-
-  );
-
+self.addEventListener("install", (event) => {
+  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(urlsToCache)));
 });
 
-
-
-self.addEventListener('fetch', (event) => {
-
+self.addEventListener("fetch", (event) => {
   event.respondWith(
-
     caches.match(event.request).then((response) => response || fetch(event.request))
-
   );
-
 });
-
 ```
-
-
 
 ### 5.3 Root Layout — Manifest Link, Meta Tags, SW Registration
 
-
-
 `src/app/layout.tsx`:
 
-
-
 ```tsx
-
 export const metadata: Metadata = {
-
   title: "Kimai Kiosk - Time Tracker",
 
   description: "RFID-based time tracking kiosk for Kimai",
@@ -1021,27 +674,18 @@ export const metadata: Metadata = {
   viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no",
 
   appleWebApp: {
-
     capable: true,
 
     statusBarStyle: "default",
 
     title: "Kimai Kiosk",
-
   },
-
 };
 
-
-
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-
   return (
-
     <html lang="en">
-
       <head>
-
         <link rel="manifest" href="/manifest.json" />
 
         <meta name="theme-color" content="#2563eb" />
@@ -1052,9 +696,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
 
         <meta name="apple-mobile-web-app-title" content="Kimai Kiosk" />
 
-        <script dangerouslySetInnerHTML={{
-
-          __html: `
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
 
             if ('serviceWorker' in navigator) {
 
@@ -1071,26 +715,17 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             }
 
           `,
-
-        }} />
-
+          }}
+        />
       </head>
 
       <body>{children}</body>
-
     </html>
-
   );
-
 }
-
 ```
 
-
-
 Key kiosk hardening:
-
-
 
 - `viewport: maximum-scale=1, user-scalable=no` — disables pinch-to-zoom.
 
@@ -1098,73 +733,41 @@ Key kiosk hardening:
 
 - **Service worker registration** — makes the app installable (PWA).
 
-
-
 ### 5.4 Auto-Logout (Kiosk Hardening)
-
-
 
 The `TimeTracker` component logs the user out after 30 seconds of inactivity, returning to the NFC login screen so the next person can scan:
 
-
-
 ```tsx
-
 useEffect(() => {
+  const events = ["mousedown", "keydown", "touchstart"];
 
-  const events = ['mousedown', 'keydown', 'touchstart'];
-
-  events.forEach(event => document.addEventListener(event, handleActivity));
-
-
+  events.forEach((event) => document.addEventListener(event, handleActivity));
 
   const checkInactivity = setInterval(() => {
-
     const inactive = Date.now() - lastActivity;
 
     if (inactive > 25000 && inactive <= 30000) {
-
-      setShowWarning(true);   // 5-second warning
-
+      setShowWarning(true); // 5-second warning
     } else if (inactive > 30000) {
-
-      onLogout();             // force logout
-
+      onLogout(); // force logout
     }
-
   }, 1000);
 
-
-
   return () => {
-
-    events.forEach(event => document.removeEventListener(event, handleActivity));
+    events.forEach((event) => document.removeEventListener(event, handleActivity));
 
     clearInterval(checkInactivity);
-
   };
-
 }, [lastActivity, onLogout]);
-
 ```
-
-
 
 ---
 
-
-
 ## 6. Writing the NFC Tags
-
-
 
 This is critical and often missed: **the app reads the text content of the NDEF record, not the tag's serial number/UID.** You must write the user's `rfidTag` value onto the tag as a plain text NDEF record.
 
-
-
 ### How to write tags (using another Android phone)
-
-
 
 1. Install an NFC writing app such as **NFC Tools** (by Wakdev) from the Play Store.
 
@@ -1178,75 +781,52 @@ This is critical and often missed: **the app reads the text content of the NDEF 
 
 6. Verify by reading the tag back in the app — it should show the text `86130978`.
 
-
-
 ### How to write tags (using a Web NFC page)
-
-
 
 You can write a tiny HTML page that uses the same Web NFC API to write tags. Open it in Chrome on Android over HTTPS/localhost:
 
-
-
 ```html
-
 <!DOCTYPE html>
 
 <html>
+  <body>
+    <input id="text" placeholder="e.g. 86130978" />
 
-<body>
+    <button onclick="writeTag()">Write Tag</button>
 
-  <input id="text" placeholder="e.g. 86130978" />
+    <script>
+      async function writeTag() {
+        if (!("NDEFReader" in window)) {
+          alert("No Web NFC");
+          return;
+        }
 
-  <button onclick="writeTag()">Write Tag</button>
+        try {
+          const writer = new NDEFReader();
 
-  <script>
+          await writer.write({
+            records: [{ recordType: "text", data: document.getElementById("text").value }],
+          });
 
-    async function writeTag() {
-
-      if (!('NDEFReader' in window)) { alert('No Web NFC'); return; }
-
-      try {
-
-        const writer = new NDEFReader();
-
-        await writer.write({ records: [{ recordType: 'text', data: document.getElementById('text').value }] });
-
-        alert('Tag written!');
-
-      } catch (e) { alert('Write failed: ' + e); }
-
-    }
-
-  </script>
-
-</body>
-
+          alert("Tag written!");
+        } catch (e) {
+          alert("Write failed: " + e);
+        }
+      }
+    </script>
+  </body>
 </html>
-
 ```
-
-
 
 > The text on the tag must match a `rfidTag` in your user list **exactly** (case-sensitive, no trailing whitespace).
 
-
-
 ---
-
-
 
 ## 7. Getting It Working on Your Phone
 
-
-
 Follow these exact steps to test on a physical Android device:
 
-
-
 ### Development (localhost — secure context)
-
-
 
 1. Start your dev server: `npm run dev` → `http://localhost:3000`.
 
@@ -1254,17 +834,11 @@ Follow these exact steps to test on a physical Android device:
 
 3. To test on the phone, either:
 
-    - Use `chrome://inspect` → Port forwarding: forward `localhost:3000` on the phone to your dev machine. The phone's Chrome will then open `http://localhost:3000`, which **is** a secure context.
+   - Use `chrome://inspect` → Port forwarding: forward `localhost:3000` on the phone to your dev machine. The phone's Chrome will then open `http://localhost:3000`, which **is** a secure context.
 
-    - **Or** deploy behind HTTPS (see below).
-
-    
-
-
+   - **Or** deploy behind HTTPS (see below).
 
 ### Production (HTTPS — recommended)
-
-
 
 1. Deploy the app behind a TLS-terminating reverse proxy (nginx, Caddy, Cloudflare Tunnel, ngrok, etc.).
 
@@ -1280,23 +854,13 @@ Follow these exact steps to test on a physical Android device:
 
 7. Tap your pre-written NFC tag on the back of the phone. The `onreading` handler fires, the user is looked up, and you are logged in.
 
-
-
 ### First-scan permission prompt
-
-
 
 The very first time `reader.scan()` runs, Chrome on Android may show a system-level prompt asking permission to use NFC. This is handled by the OS, not by your code. Once the user taps "Allow," subsequent scans do not prompt again. There is nothing to code for this — it is the browser/OS doing the "implicit allow" after the user grants it once.
 
-
-
 ---
 
-
-
 ## 8. Common Pitfalls & Why "It Doesn't Work"
-
-
 
 | Symptom | Cause | Fix |
 
@@ -1322,25 +886,15 @@ The very first time `reader.scan()` runs, Chrome on Android may show a system-le
 
 | Multiple users log in too fast / scan reads twice | `onreading` can fire more than once if the tag stays on the reader. | The project calls `setIsScanning(false)` and returns after the first text record; consider adding an `AbortController` to stop scanning after one read. |
 
-
-
 ### Optional: clean scan cancellation (not in the original project)
-
-
 
 The original project does not pass an `AbortSignal` to `scan()`, so scanning cannot be cleanly cancelled. If you want to stop scanning after one read or on unmount, add:
 
-
-
 ```tsx
-
 const abortControllerRef = useRef<AbortController | null>(null);
 
-
-
 const handleNfcScan = async () => {
-
-  if (!('NDEFReader' in window)) return;
+  if (!("NDEFReader" in window)) return;
 
   const reader = new NDEFReader();
 
@@ -1350,45 +904,27 @@ const handleNfcScan = async () => {
 
   setIsScanning(true);
 
-
-
   try {
-
     await reader.scan({ signal: controller.signal });
 
     reader.onreading = (event) => {
-
-      controller.abort();   // stop scanning after first read
+      controller.abort(); // stop scanning after first read
 
       setIsScanning(false);
 
       // ... handle the text record
-
     };
-
   } catch (e) {
-
     setIsScanning(false);
-
   }
-
 };
 
-
-
 useEffect(() => () => abortControllerRef.current?.abort(), []); // cleanup on unmount
-
 ```
-
-
 
 ---
 
-
-
 ## 9. File Map
-
-
 
 | File | Role |
 
@@ -1418,15 +954,8 @@ useEffect(() => () => abortControllerRef.current?.abort(), []); // cleanup on un
 
 | `next.config.ts` | **Empty.** No `Permissions-Policy` header is needed for a top-level document. |
 
-
-
 ---
-
-
 
 ### Summary in one sentence
 
-
-
 The entire NFC kiosk "permission" trick is: **serve the page over HTTPS, and call **`new NDEFReader().scan()`** from a button click — the browser handles the rest.**
-

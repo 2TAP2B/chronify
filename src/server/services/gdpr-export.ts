@@ -96,7 +96,17 @@ export type GdprExportData = {
 export async function exportUserData(actor: SessionUser): Promise<GdprExportData> {
   const userId = actor.id;
 
-  const [user, workingModels, timeEntries, vacationRequests, vacationEntitlements, sickNotes, overtimeBalances, notifications, auditLogs] = await Promise.all([
+  const [
+    user,
+    workingModels,
+    timeEntries,
+    vacationRequests,
+    vacationEntitlements,
+    sickNotes,
+    overtimeBalances,
+    notifications,
+    auditLogs,
+  ] = await Promise.all([
     db.user.findUniqueOrThrow({ where: { id: userId } }),
     db.workingModel.findMany({ where: { userId }, orderBy: { validFrom: "asc" } }),
     db.timeEntry.findMany({ where: { userId }, orderBy: { date: "asc" } }),
@@ -121,7 +131,15 @@ export async function exportUserData(actor: SessionUser): Promise<GdprExportData
       where: { userId },
       orderBy: { createdAt: "desc" },
       take: 200,
-      select: { id: true, type: true, title: true, body: true, channel: true, readAt: true, createdAt: true },
+      select: {
+        id: true,
+        type: true,
+        title: true,
+        body: true,
+        channel: true,
+        readAt: true,
+        createdAt: true,
+      },
     }),
     db.auditLog.findMany({
       where: { OR: [{ actorId: userId }, { targetId: userId }] },

@@ -1,12 +1,6 @@
 import { getTranslations, setRequestLocale, getLocale } from "next-intl/server";
 import { redirect } from "next/navigation";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -56,31 +50,31 @@ export default async function BusinessClosuresPage({ params }: Props) {
           ) : (
             <div className="overflow-x-auto">
               <Table className="min-w-[450px] whitespace-nowrap">
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t("name")}</TableHead>
-                  <TableHead>{t("from")}</TableHead>
-                  <TableHead>{t("to")}</TableHead>
-                  <TableHead className="text-right">{t("actions")}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {closures.map((c) => (
-                  <TableRow key={c.id}>
-                    <TableCell className="font-medium">{c.name}</TableCell>
-                    <TableCell className="font-mono">
-                      {formatInZone(c.from, "Europe/Berlin", "dd.MM.yyyy", appLocale)}
-                    </TableCell>
-                    <TableCell className="font-mono">
-                      {formatInZone(c.to, "Europe/Berlin", "dd.MM.yyyy", appLocale)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <ClosureDelete closureId={c.id} closureName={c.name} />
-                    </TableCell>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t("name")}</TableHead>
+                    <TableHead>{t("from")}</TableHead>
+                    <TableHead>{t("to")}</TableHead>
+                    <TableHead className="text-right">{t("actions")}</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {closures.map((c) => (
+                    <TableRow key={c.id}>
+                      <TableCell className="font-medium">{c.name}</TableCell>
+                      <TableCell className="font-mono">
+                        {formatInZone(c.from, "Europe/Berlin", "dd.MM.yyyy", appLocale)}
+                      </TableCell>
+                      <TableCell className="font-mono">
+                        {formatInZone(c.to, "Europe/Berlin", "dd.MM.yyyy", appLocale)}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <ClosureDelete closureId={c.id} closureName={c.name} />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
           )}
         </CardContent>

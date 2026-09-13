@@ -26,14 +26,22 @@ export type DayKey = (typeof DAY_KEYS)[number];
 export function targetMinutesForDate(date: Date, model: WorkingModelMinutes): number {
   const weekday = date.getUTCDay();
   switch (weekday) {
-    case 0: return model.sundayMinutes;
-    case 1: return model.mondayMinutes;
-    case 2: return model.tuesdayMinutes;
-    case 3: return model.wednesdayMinutes;
-    case 4: return model.thursdayMinutes;
-    case 5: return model.fridayMinutes;
-    case 6: return model.saturdayMinutes;
-    default: return 0;
+    case 0:
+      return model.sundayMinutes;
+    case 1:
+      return model.mondayMinutes;
+    case 2:
+      return model.tuesdayMinutes;
+    case 3:
+      return model.wednesdayMinutes;
+    case 4:
+      return model.thursdayMinutes;
+    case 5:
+      return model.fridayMinutes;
+    case 6:
+      return model.saturdayMinutes;
+    default:
+      return 0;
   }
 }
 
@@ -89,11 +97,7 @@ export function formatSignedDuration(ms: number): string {
   return `${sign}${pad(h)}:${pad(m)}`;
 }
 
-export function carryoverCutoffDate(
-  year: number,
-  month: number,
-  day: number
-): Date {
+export function carryoverCutoffDate(year: number, month: number, day: number): Date {
   return new Date(Date.UTC(year, month - 1, day));
 }
 
@@ -116,10 +120,10 @@ export function computeOvertimeForYear(opts: {
   carriedOverMinutes: number;
   consumedOvertimeMinutes?: number;
 }): OvertimeComputation {
-  const byMonth: { month: number; deltaMs: number }[] = Array.from(
-    { length: 12 },
-    (_, i) => ({ month: i + 1, deltaMs: 0 })
-  );
+  const byMonth: { month: number; deltaMs: number }[] = Array.from({ length: 12 }, (_, i) => ({
+    month: i + 1,
+    deltaMs: 0,
+  }));
   let totalDeltaMs = 0;
   for (const d of opts.days) {
     const m = d.date.getUTCMonth() + 1;

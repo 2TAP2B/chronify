@@ -32,7 +32,10 @@ export async function POST(request: Request) {
     const body = await request.json().catch(() => null);
     const input = createWorkingModelSchema.safeParse(body);
     if (!input.success) {
-      return NextResponse.json({ error: "Invalid input", issues: input.error.issues }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid input", issues: input.error.issues },
+        { status: 400 }
+      );
     }
     const model = await createModel({ actor: user, input: input.data });
     return NextResponse.json({ model }, { status: 201 });

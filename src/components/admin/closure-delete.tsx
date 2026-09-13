@@ -6,13 +6,26 @@ import { Button } from "@/components/ui/button";
 import { useConfirm } from "@/components/ui/confirm-dialog";
 import { Trash2 } from "lucide-react";
 
-export function ClosureDelete({ closureId, closureName }: { closureId: string; closureName: string }) {
+export function ClosureDelete({
+  closureId,
+  closureName,
+}: {
+  closureId: string;
+  closureName: string;
+}) {
   const t = useTranslations("adminClosures");
   const confirm = useConfirm();
   const [pending, startTransition] = useTransition();
 
   async function onDelete() {
-    if (!await confirm({ title: t("confirmDelete"), variant: "destructive", confirmLabel: t("delete") })) return;
+    if (
+      !(await confirm({
+        title: t("confirmDelete"),
+        variant: "destructive",
+        confirmLabel: t("delete"),
+      }))
+    )
+      return;
     startTransition(async () => {
       await fetch(`/api/business-closures/${closureId}`, { method: "DELETE" });
       window.location.reload();
@@ -20,7 +33,13 @@ export function ClosureDelete({ closureId, closureName }: { closureId: string; c
   }
 
   return (
-    <Button size="sm" variant="ghost" onClick={onDelete} disabled={pending} aria-label={t("delete")}>
+    <Button
+      size="sm"
+      variant="ghost"
+      onClick={onDelete}
+      disabled={pending}
+      aria-label={t("delete")}
+    >
       <Trash2 className="h-3.5 w-3.5" />
     </Button>
   );

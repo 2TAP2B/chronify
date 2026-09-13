@@ -27,18 +27,27 @@ const DAYS = [
   { key: "sundayMinutes" as const, label: "So" },
 ];
 
-export function TemplateDialog({ mode, template }: { mode: "create" | "edit"; template?: WorkingModelTemplate }) {
+export function TemplateDialog({
+  mode,
+  template,
+}: {
+  mode: "create" | "edit";
+  template?: WorkingModelTemplate;
+}) {
   const t = useTranslations("adminWorkingModels");
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [name, setName] = useState(template?.name ?? "");
   const [dayHours, setDayHours] = useState<Record<string, string>>(
-    DAYS.reduce((acc, d) => {
-      const mins = template?.[d.key] ?? 0;
-      acc[d.key] = (mins / 60).toString();
-      return acc;
-    }, {} as Record<string, string>)
+    DAYS.reduce(
+      (acc, d) => {
+        const mins = template?.[d.key] ?? 0;
+        acc[d.key] = (mins / 60).toString();
+        return acc;
+      },
+      {} as Record<string, string>
+    )
   );
   const [weeklyTargetHours, setWeeklyTargetHours] = useState(
     ((template?.weeklyTargetMinutes ?? 0) / 60).toString()
@@ -68,7 +77,10 @@ export function TemplateDialog({ mode, template }: { mode: "create" | "edit"; te
       isDefault,
     };
     try {
-      const url = mode === "create" ? "/api/admin/working-model-templates" : `/api/admin/working-model-templates/${template!.id}`;
+      const url =
+        mode === "create"
+          ? "/api/admin/working-model-templates"
+          : `/api/admin/working-model-templates/${template!.id}`;
       const method = mode === "create" ? "POST" : "PATCH";
       const res = await fetch(url, {
         method,
@@ -94,7 +106,11 @@ export function TemplateDialog({ mode, template }: { mode: "create" | "edit"; te
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button size="sm" variant={mode === "create" ? "default" : "ghost"}>
-          {mode === "create" ? <Plus className="mr-1 h-4 w-4" /> : <Pencil className="h-3.5 w-3.5" />}
+          {mode === "create" ? (
+            <Plus className="mr-1 h-4 w-4" />
+          ) : (
+            <Pencil className="h-3.5 w-3.5" />
+          )}
           {mode === "create" ? t("newTemplate") : t("edit")}
         </Button>
       </DialogTrigger>
@@ -111,7 +127,9 @@ export function TemplateDialog({ mode, template }: { mode: "create" | "edit"; te
           <div className="grid grid-cols-7 gap-2">
             {DAYS.map((d) => (
               <div key={d.key} className="space-y-1">
-                <Label htmlFor={d.key} className="text-xs">{d.label} (h)</Label>
+                <Label htmlFor={d.key} className="text-xs">
+                  {d.label} (h)
+                </Label>
                 <Input
                   id={d.key}
                   type="number"
@@ -128,25 +146,60 @@ export function TemplateDialog({ mode, template }: { mode: "create" | "edit"; te
           <div className="grid grid-cols-3 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="weekly-target">{t("weeklyTarget")} (h)</Label>
-              <Input id="weekly-target" type="number" min={0} max={168} step={0.25} value={weeklyTargetHours} onChange={(e) => setWeeklyTargetHours(e.target.value)} />
+              <Input
+                id="weekly-target"
+                type="number"
+                min={0}
+                max={168}
+                step={0.25}
+                value={weeklyTargetHours}
+                onChange={(e) => setWeeklyTargetHours(e.target.value)}
+              />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="ab6">Auto-Pause 6h (Min.)</Label>
-              <Input id="ab6" type="number" min={0} max={480} value={ab6} onChange={(e) => setAb6(Number(e.target.value))} />
+              <Input
+                id="ab6"
+                type="number"
+                min={0}
+                max={480}
+                value={ab6}
+                onChange={(e) => setAb6(Number(e.target.value))}
+              />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="ab9">Auto-Pause 9h (Min.)</Label>
-              <Input id="ab9" type="number" min={0} max={480} value={ab9} onChange={(e) => setAb9(Number(e.target.value))} />
+              <Input
+                id="ab9"
+                type="number"
+                min={0}
+                max={480}
+                value={ab9}
+                onChange={(e) => setAb9(Number(e.target.value))}
+              />
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Checkbox id="is-default" checked={isDefault} onCheckedChange={(v) => setIsDefault(v === true)} />
+            <Checkbox
+              id="is-default"
+              checked={isDefault}
+              onCheckedChange={(v) => setIsDefault(v === true)}
+            />
             <Label htmlFor="is-default">{t("setDefault")}</Label>
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="secondary" onClick={() => setOpen(false)} disabled={loading}>{t("cancel")}</Button>
-            <Button type="submit" disabled={loading}>{t("save")}</Button>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setOpen(false)}
+              disabled={loading}
+            >
+              {t("cancel")}
+            </Button>
+            <Button type="submit" disabled={loading}>
+              {t("save")}
+            </Button>
           </div>
         </form>
       </DialogContent>

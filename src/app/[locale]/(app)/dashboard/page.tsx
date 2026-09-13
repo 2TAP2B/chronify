@@ -4,21 +4,13 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getOrgSettings } from "@/server/context";
 import { computeYearOvertime } from "@/server/services/overtime";
-import {
-  toCalendarDate,
-  startOfWeekUtc,
-  addDaysUtc,
-  formatInZone,
-} from "@/lib/datetime";
+import { toCalendarDate, startOfWeekUtc, addDaysUtc, formatInZone } from "@/lib/datetime";
 import { msToHours } from "@/lib/timer-utils";
 import { TimerWidget } from "@/components/timer/timer-widget";
 import { MobileTimerHero } from "@/components/timer/mobile-timer-hero";
 import { SectionCards, type SectionCardsData } from "@/components/section-cards";
 import { LiveSectionCards } from "@/components/live-section-cards";
-import {
-  ChartAreaInteractive,
-  type ChartPoint,
-} from "@/components/chart-area-interactive";
+import { ChartAreaInteractive, type ChartPoint } from "@/components/chart-area-interactive";
 import { DataTable, type TimeEntryRow } from "@/components/data-table";
 
 type Props = {
@@ -82,9 +74,7 @@ export default async function DashboardPage({ params }: Props) {
       }).catch(() => null),
     ]);
 
-  const sumWorkedMs = (
-    entries: typeof todayEntries
-  ) =>
+  const sumWorkedMs = (entries: typeof todayEntries) =>
     entries.reduce((sum, e) => {
       if (e.type !== "WORK" || !e.startAt || !e.endAt) return sum;
       const gross = e.endAt.getTime() - e.startAt.getTime();
@@ -112,11 +102,8 @@ export default async function DashboardPage({ params }: Props) {
     "fridayMinutes",
     "saturdayMinutes",
   ] as const;
-  const todayDow = new Date(
-    toCalendarDate(now, timeZone)
-  ).getDay();
-  const todayTargetMs =
-    (workingModel?.[dayNames[todayDow]] ?? 0) * 60_000;
+  const todayDow = new Date(toCalendarDate(now, timeZone)).getDay();
+  const todayTargetMs = (workingModel?.[dayNames[todayDow]] ?? 0) * 60_000;
 
   const weekTargetMs = workingModel
     ? (workingModel.mondayMinutes +
@@ -129,9 +116,7 @@ export default async function DashboardPage({ params }: Props) {
       60_000
     : 0;
 
-  const overtimeHours = overtimeResult
-    ? overtimeResult.computation.balanceMs / 3_600_000
-    : 0;
+  const overtimeHours = overtimeResult ? overtimeResult.computation.balanceMs / 3_600_000 : 0;
 
   const vacationEntitlement = await db.vacationEntitlement.findUnique({
     where: { userId_year: { userId: user.id, year } },
@@ -147,8 +132,7 @@ export default async function DashboardPage({ params }: Props) {
     weekHours: msToHours(weekMs),
     weekTargetHours: msToHours(weekTargetMs),
     overtimeHours,
-    overtimeTrend:
-      overtimeHours > 0 ? "up" : overtimeHours < 0 ? "down" : "neutral",
+    overtimeTrend: overtimeHours > 0 ? "up" : overtimeHours < 0 ? "down" : "neutral",
     vacationRemaining,
     vacationTotal,
   };
@@ -158,9 +142,7 @@ export default async function DashboardPage({ params }: Props) {
   for (let i = days90; i >= 0; i--) {
     const dayStart = addDaysUtc(todayStart, -i);
     const dayEnd = addDaysUtc(dayStart, 1);
-    const dayEntries = chartEntries.filter(
-      (e) => e.date >= dayStart && e.date < dayEnd
-    );
+    const dayEntries = chartEntries.filter((e) => e.date >= dayStart && e.date < dayEnd);
     const workedMs = sumWorkedMs(dayEntries);
     const dow = new Date(dayStart).getDay();
     const targetMs = (workingModel?.[dayNames[dow]] ?? 0) * 60_000;
@@ -174,23 +156,14 @@ export default async function DashboardPage({ params }: Props) {
   const tableRows: TimeEntryRow[] = recentEntries.map((e) => {
     const durationMs =
       e.type === "WORK" && e.startAt && e.endAt
-        ? Math.max(
-            0,
-            e.endAt.getTime() -
-              e.startAt.getTime() -
-              e.breakMinutes * 60_000
-          )
+        ? Math.max(0, e.endAt.getTime() - e.startAt.getTime() - e.breakMinutes * 60_000)
         : 0;
     return {
       id: e.id,
       date: formatInZone(e.date, timeZone, "dd.MM.yyyy", locale as "de" | "en"),
       type: e.type,
-      start: e.startAt
-        ? formatInZone(e.startAt, timeZone, "HH:mm", locale as "de" | "en")
-        : null,
-      end: e.endAt
-        ? formatInZone(e.endAt, timeZone, "HH:mm", locale as "de" | "en")
-        : null,
+      start: e.startAt ? formatInZone(e.startAt, timeZone, "HH:mm", locale as "de" | "en") : null,
+      end: e.endAt ? formatInZone(e.endAt, timeZone, "HH:mm", locale as "de" | "en") : null,
       breakMinutes: e.breakMinutes,
       durationHours: msToHours(durationMs),
       note: e.note,
@@ -201,9 +174,7 @@ export default async function DashboardPage({ params }: Props) {
     <div className="space-y-6">
       <div className="hidden lg:block">
         <h1 className="text-3xl font-bold tracking-tight">{t("title")}</h1>
-        <p className="text-muted-foreground">
-          {t("welcome", { name: user.name })}
-        </p>
+        <p className="text-muted-foreground">{t("welcome", { name: user.name })}</p>
       </div>
 
       <MobileTimerHero
@@ -213,18 +184,18 @@ export default async function DashboardPage({ params }: Props) {
         locale={locale}
       />
 
-       <LiveSectionCards
-           data={cardsData}
-          labels={{
-            todayWorked: t("todayWorked"),
-            weekWorked: t("weekWorked"),
-            overtimeBalance: t("overtimeBalance"),
-            vacationRemaining: t("vacationRemaining"),
-            dailyTarget: t("dailyTarget"),
-            weekTarget: t("weeklyTarget"),
-            days: t("days"),
-          }}
-        />
+      <LiveSectionCards
+        data={cardsData}
+        labels={{
+          todayWorked: t("todayWorked"),
+          weekWorked: t("weekWorked"),
+          overtimeBalance: t("overtimeBalance"),
+          vacationRemaining: t("vacationRemaining"),
+          dailyTarget: t("dailyTarget"),
+          weekTarget: t("weeklyTarget"),
+          days: t("days"),
+        }}
+      />
 
       <div className="hidden lg:block">
         <TimerWidget />

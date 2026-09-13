@@ -45,7 +45,11 @@ export async function POST(request: Request) {
     }
     const url = new URL(request.url);
     const targetUserId = url.searchParams.get("userId") ?? undefined;
-    const note = await createSickNote({ actor: user, targetUserId, input: input.data as SickNoteCreateInput });
+    const note = await createSickNote({
+      actor: user,
+      targetUserId,
+      input: input.data as SickNoteCreateInput,
+    });
     return NextResponse.json({ note }, { status: 201 });
   } catch (e) {
     if (e instanceof Response) return e;

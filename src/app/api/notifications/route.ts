@@ -37,7 +37,7 @@ export async function DELETE() {
 export async function POST(req: Request) {
   try {
     const user = await requireUser();
-    const body = await req.json() as {
+    const body = (await req.json()) as {
       type: NotificationType;
       title: string;
       body?: string;

@@ -1,3 +1,4 @@
+import "@/lib/load-env";
 import { db } from "../src/lib/db";
 import { readFile, writeFile, unlink } from "node:fs/promises";
 import { existsSync } from "node:fs";

@@ -89,7 +89,9 @@ export function PwaManager() {
               <p className="text-sm font-medium">{t("installTitle")}</p>
               <p className="text-xs text-muted-foreground">{t("installDescription")}</p>
               <div className="mt-2 flex gap-2">
-                <Button size="sm" onClick={handleInstall}>{t("install")}</Button>
+                <Button size="sm" onClick={handleInstall}>
+                  {t("install")}
+                </Button>
                 <Button size="sm" variant="ghost" onClick={() => setInstallPrompt(null)}>
                   <X className="h-4 w-4" />
                 </Button>
@@ -105,7 +107,11 @@ export function PwaManager() {
           <span className="flex items-center gap-2">
             <WifiOff className="h-4 w-4" />
             {t("offline")}
-            {queueSize > 0 && <span className="ml-2 rounded bg-destructive-foreground/20 px-1.5 py-0.5 text-xs">{queueSize} {t("queued")}</span>}
+            {queueSize > 0 && (
+              <span className="ml-2 rounded bg-destructive-foreground/20 px-1.5 py-0.5 text-xs">
+                {queueSize} {t("queued")}
+              </span>
+            )}
           </span>
         </div>
       )}

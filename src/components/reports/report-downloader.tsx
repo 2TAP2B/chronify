@@ -81,10 +81,14 @@ export function ReportDownloader({
           <div className="space-y-1.5">
             <Label htmlFor="user">{t("user")}</Label>
             <Select value={userId} onValueChange={setUserId}>
-              <SelectTrigger id="user"><SelectValue /></SelectTrigger>
+              <SelectTrigger id="user">
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 {users.map((u) => (
-                  <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
+                  <SelectItem key={u.id} value={u.id}>
+                    {u.name}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -93,15 +97,27 @@ export function ReportDownloader({
       </div>
       <div className="flex flex-wrap gap-2">
         <Button variant="outline" onClick={() => download("csv")} disabled={loading !== null}>
-          {loading === "csv" ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <FileText className="mr-1 h-4 w-4" />}
+          {loading === "csv" ? (
+            <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+          ) : (
+            <FileText className="mr-1 h-4 w-4" />
+          )}
           {t("downloadCsv")}
         </Button>
         <Button variant="outline" onClick={() => download("excel")} disabled={loading !== null}>
-          {loading === "excel" ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <FileSpreadsheet className="mr-1 h-4 w-4" />}
+          {loading === "excel" ? (
+            <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+          ) : (
+            <FileSpreadsheet className="mr-1 h-4 w-4" />
+          )}
           {t("downloadExcel")}
         </Button>
         <Button variant="outline" onClick={() => download("pdf")} disabled={loading !== null}>
-          {loading === "pdf" ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <FileType className="mr-1 h-4 w-4" />}
+          {loading === "pdf" ? (
+            <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+          ) : (
+            <FileType className="mr-1 h-4 w-4" />
+          )}
           {t("downloadPdf")}
         </Button>
       </div>

@@ -30,7 +30,10 @@ export async function runYearSetup(opts: {
 }> {
   requireAdmin(opts.actor);
   const year = opts.year;
-  const users = await db.user.findMany({ where: { active: true }, select: { id: true, timezone: true } });
+  const users = await db.user.findMany({
+    where: { active: true },
+    select: { id: true, timezone: true },
+  });
 
   let entitlementsCreated = 0;
   let balancesCreated = 0;

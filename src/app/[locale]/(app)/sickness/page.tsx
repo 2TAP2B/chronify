@@ -1,13 +1,7 @@
 import { getTranslations, setRequestLocale, getLocale } from "next-intl/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -61,8 +55,12 @@ export default async function SicknessPage({ params, searchParams }: Props) {
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>{t("title")} {year}</CardDescription>
-            <CardTitle className="text-2xl">{totalSickDays} {t("days")}</CardTitle>
+            <CardDescription>
+              {t("title")} {year}
+            </CardDescription>
+            <CardTitle className="text-2xl">
+              {totalSickDays} {t("days")}
+            </CardTitle>
           </CardHeader>
         </Card>
       </div>
@@ -107,7 +105,9 @@ export default async function SicknessPage({ params, searchParams }: Props) {
                     </TableCell>
                     <TableCell>{n.days}</TableCell>
                     <TableCell className="font-mono">
-                      {n.aubUntil ? formatInZone(n.aubUntil, "Europe/Berlin", "dd.MM.yyyy", appLocale) : "—"}
+                      {n.aubUntil
+                        ? formatInZone(n.aubUntil, "Europe/Berlin", "dd.MM.yyyy", appLocale)
+                        : "—"}
                     </TableCell>
                     <TableCell>
                       {n.certificateUrl ? (

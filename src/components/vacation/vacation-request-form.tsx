@@ -103,13 +103,15 @@ export function VacationRequestForm({ overtimeHours = 0 }: Props) {
             </Button>
           </div>
           <DatePicker
+            id="from"
             value={from ? new Date(from + "T00:00:00") : undefined}
             onChange={(d) => d && handleFromChange(format(d, "yyyy-MM-dd"))}
           />
-         </div>
-         <div className="space-y-1.5">
-           <Label htmlFor="to">{t("to")}</Label>
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="to">{t("to")}</Label>
           <DatePicker
+            id="to"
             value={to ? new Date(to + "T00:00:00") : undefined}
             onChange={(d) => d && setTo(format(d, "yyyy-MM-dd"))}
           />
@@ -117,11 +119,7 @@ export function VacationRequestForm({ overtimeHours = 0 }: Props) {
       </div>
       <div className="space-y-1.5">
         <Label htmlFor="note">{t("note")}</Label>
-        <Input
-          id="note"
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-        />
+        <Input id="note" value={note} onChange={(e) => setNote(e.target.value)} />
       </div>
       <div className="flex items-start gap-2">
         <Checkbox

@@ -2,13 +2,7 @@ import { getTranslations, setRequestLocale, getLocale } from "next-intl/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -66,7 +60,9 @@ export default async function AdminHolidaysPage({ params, searchParams }: Props)
 
       <Card>
         <CardHeader>
-          <CardTitle>{t("title")} {year} · {stateName(federalState)}</CardTitle>
+          <CardTitle>
+            {t("title")} {year} · {stateName(federalState)}
+          </CardTitle>
           <CardDescription>{holidays.length}</CardDescription>
         </CardHeader>
         <CardContent>
@@ -75,29 +71,31 @@ export default async function AdminHolidaysPage({ params, searchParams }: Props)
           ) : (
             <div className="overflow-x-auto">
               <Table className="min-w-[400px] whitespace-nowrap">
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t("date")}</TableHead>
-                  <TableHead>{t("name")}</TableHead>
-                  <TableHead>{t("type")}</TableHead>
-                  <TableHead>{t("source")}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {holidays.map((h) => (
-                  <TableRow key={h.id}>
-                    <TableCell className="font-mono">
-                      {formatInZone(h.date, "Europe/Berlin", "dd.MM.yyyy", appLocale)}
-                    </TableCell>
-                    <TableCell>{h.name}</TableCell>
-                    <TableCell>{h.type}</TableCell>
-                    <TableCell>
-                      <Badge variant={h.source === "MANUAL" ? "default" : "secondary"}>{h.source}</Badge>
-                    </TableCell>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t("date")}</TableHead>
+                    <TableHead>{t("name")}</TableHead>
+                    <TableHead>{t("type")}</TableHead>
+                    <TableHead>{t("source")}</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {holidays.map((h) => (
+                    <TableRow key={h.id}>
+                      <TableCell className="font-mono">
+                        {formatInZone(h.date, "Europe/Berlin", "dd.MM.yyyy", appLocale)}
+                      </TableCell>
+                      <TableCell>{h.name}</TableCell>
+                      <TableCell>{h.type}</TableCell>
+                      <TableCell>
+                        <Badge variant={h.source === "MANUAL" ? "default" : "secondary"}>
+                          {h.source}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
           )}
         </CardContent>

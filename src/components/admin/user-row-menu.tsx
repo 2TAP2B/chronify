@@ -13,7 +13,16 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { useConfirm } from "@/components/ui/confirm-dialog";
-import { MoreVertical, Pencil, Trash2, UserX, UserCheck, Clock, CalendarDays, Timer } from "lucide-react";
+import {
+  MoreVertical,
+  Pencil,
+  Trash2,
+  UserX,
+  UserCheck,
+  Clock,
+  CalendarDays,
+  Timer,
+} from "lucide-react";
 import { UserDialog } from "@/components/admin/user-dialog";
 import { TemplatePickerDialog } from "@/components/admin/template-picker-dialog";
 import { EntitlementDialog } from "@/components/admin/entitlement-dialog";
@@ -45,7 +54,15 @@ export function UserRowMenu({ user, isSelf }: { user: User; isSelf: boolean }) {
   const [showOvertime, setShowOvertime] = useState(false);
 
   async function toggleActive() {
-    if (user.active && !await confirm({ title: t("confirmDeactivate"), variant: "destructive", confirmLabel: t("deactivate") })) return;
+    if (
+      user.active &&
+      !(await confirm({
+        title: t("confirmDeactivate"),
+        variant: "destructive",
+        confirmLabel: t("deactivate"),
+      }))
+    )
+      return;
     startTransition(async () => {
       const res = await fetch(`/api/admin/users/${user.id}`, {
         method: "POST",
@@ -57,14 +74,25 @@ export function UserRowMenu({ user, isSelf }: { user: User; isSelf: boolean }) {
       } else {
         const b = await res.json().catch(() => ({}));
         if ((b as { code?: string }).code === "SELF_DEACTIVATE") {
-          await confirm({ title: "Fehler", description: t("cannotDeactivateSelf"), confirmLabel: "OK" });
+          await confirm({
+            title: "Fehler",
+            description: t("cannotDeactivateSelf"),
+            confirmLabel: "OK",
+          });
         }
       }
     });
   }
 
   async function deleteUser() {
-    if (!await confirm({ title: t("confirmDelete"), variant: "destructive", confirmLabel: t("delete") })) return;
+    if (
+      !(await confirm({
+        title: t("confirmDelete"),
+        variant: "destructive",
+        confirmLabel: t("delete"),
+      }))
+    )
+      return;
     startTransition(async () => {
       const res = await fetch(`/api/admin/users/${user.id}`, { method: "DELETE" });
       if (res.ok) {
@@ -74,7 +102,11 @@ export function UserRowMenu({ user, isSelf }: { user: User; isSelf: boolean }) {
         if ((b as { code?: string }).code === "HAS_DEPENDENCIES") {
           await confirm({ title: "Fehler", description: t("hasDependencies"), confirmLabel: "OK" });
         } else {
-          await confirm({ title: "Fehler", description: (b as { error?: string }).error ?? "error", confirmLabel: "OK" });
+          await confirm({
+            title: "Fehler",
+            description: (b as { error?: string }).error ?? "error",
+            confirmLabel: "OK",
+          });
         }
       }
     });
@@ -140,22 +172,25 @@ export function UserRowMenu({ user, isSelf }: { user: User; isSelf: boolean }) {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {showEdit && (
-        <UserDialog
-          mode="edit"
-          user={user}
-          open
-          onOpenChange={setShowEdit}
-        />
-      )}
+      {showEdit && <UserDialog mode="edit" user={user} open onOpenChange={setShowEdit} />}
       {showTemplate && (
         <TemplatePickerDialog userId={user.id} open={showTemplate} onOpenChange={setShowTemplate} />
       )}
       {showEntitlement && (
-        <EntitlementDialog userId={user.id} userName={user.name} open={showEntitlement} onOpenChange={setShowEntitlement} />
+        <EntitlementDialog
+          userId={user.id}
+          userName={user.name}
+          open={showEntitlement}
+          onOpenChange={setShowEntitlement}
+        />
       )}
       {showOvertime && (
-        <OvertimeAdjustDialog userId={user.id} userName={user.name} open={showOvertime} onOpenChange={setShowOvertime} />
+        <OvertimeAdjustDialog
+          userId={user.id}
+          userName={user.name}
+          open={showOvertime}
+          onOpenChange={setShowOvertime}
+        />
       )}
     </>
   );

@@ -1,5 +1,9 @@
 import { db } from "@/lib/db";
-import { federalStateToNagerCode, nagerDateToPublicHoliday, type NagerHoliday } from "@/lib/holidays/nager";
+import {
+  federalStateToNagerCode,
+  nagerDateToPublicHoliday,
+  type NagerHoliday,
+} from "@/lib/holidays/nager";
 import type { FederalState } from "@prisma/client";
 
 export type HolidaySyncResult = {
@@ -55,7 +59,11 @@ export async function syncHolidaysForState(
   }
 
   const manualOverrides = await db.publicHoliday.count({
-    where: { federalState, date: { gte: new Date(Date.UTC(year, 0, 1)), lt: new Date(Date.UTC(year + 1, 0, 1)) }, source: "MANUAL" },
+    where: {
+      federalState,
+      date: { gte: new Date(Date.UTC(year, 0, 1)), lt: new Date(Date.UTC(year + 1, 0, 1)) },
+      source: "MANUAL",
+    },
   });
 
   return {
@@ -82,11 +90,7 @@ export async function syncAllUserStates(year: number): Promise<HolidaySyncResult
   return results;
 }
 
-export async function listHolidays(opts: {
-  federalState: FederalState;
-  from?: Date;
-  to?: Date;
-}) {
+export async function listHolidays(opts: { federalState: FederalState; from?: Date; to?: Date }) {
   const where: Record<string, unknown> = { federalState: opts.federalState };
   if (opts.from || opts.to) {
     where.date = {};

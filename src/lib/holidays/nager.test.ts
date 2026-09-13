@@ -76,31 +76,19 @@ describe("nagerDateToPublicHoliday", () => {
 describe("shouldApplyForState", () => {
   it("manual entries apply only to their declared federalState", () => {
     expect(
-      shouldApplyForState(
-        { counties: [], federalState: "DE_NW", source: "MANUAL" },
-        "DE_NW"
-      )
+      shouldApplyForState({ counties: [], federalState: "DE_NW", source: "MANUAL" }, "DE_NW")
     ).toBe(true);
     expect(
-      shouldApplyForState(
-        { counties: [], federalState: "DE_NW", source: "MANUAL" },
-        "DE_BY"
-      )
+      shouldApplyForState({ counties: [], federalState: "DE_NW", source: "MANUAL" }, "DE_BY")
     ).toBe(false);
   });
 
   it("global NAGER holidays apply to the row's federalState", () => {
     expect(
-      shouldApplyForState(
-        { counties: [], federalState: "DE_NW", source: "NAGER" },
-        "DE_NW"
-      )
+      shouldApplyForState({ counties: [], federalState: "DE_NW", source: "NAGER" }, "DE_NW")
     ).toBe(true);
     expect(
-      shouldApplyForState(
-        { counties: [], federalState: "DE_NW", source: "NAGER" },
-        "DE_BY"
-      )
+      shouldApplyForState({ counties: [], federalState: "DE_NW", source: "NAGER" }, "DE_BY")
     ).toBe(false);
   });
 
@@ -118,10 +106,7 @@ describe("shouldApplyForState", () => {
       )
     ).toBe(false);
     expect(
-      shouldApplyForState(
-        { counties: ["DE-NW"], federalState: "DE_NW", source: "NAGER" },
-        "DE_BY"
-      )
+      shouldApplyForState({ counties: ["DE-NW"], federalState: "DE_NW", source: "NAGER" }, "DE_BY")
     ).toBe(false);
   });
 });

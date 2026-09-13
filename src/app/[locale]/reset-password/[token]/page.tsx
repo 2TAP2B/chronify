@@ -26,14 +26,9 @@ export default async function ResetPasswordPage({ params }: Props) {
           <div className="flex flex-col items-center gap-4 rounded-lg border bg-card p-8 text-center shadow-sm">
             <AlertCircle className="h-12 w-12 text-destructive" />
             <p className="text-sm text-muted-foreground">
-              {locale === "de"
-                ? "Link ungültig oder abgelaufen."
-                : "Link invalid or expired."}
+              {locale === "de" ? "Link ungültig oder abgelaufen." : "Link invalid or expired."}
             </p>
-            <a
-              href={`/${locale}/forgot-password`}
-              className="text-sm text-primary hover:underline"
-            >
+            <a href={`/${locale}/forgot-password`} className="text-sm text-primary hover:underline">
               {locale === "de" ? "Neuen Link anfordern" : "Request new link"}
             </a>
           </div>

@@ -1,16 +1,10 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { Bar, BarChart, CartesianGrid, XAxis } from "recharts"
+import * as React from "react";
+import { Bar, BarChart, CartesianGrid, XAxis } from "recharts";
 
-import { useIsMobile } from "@/hooks/use-mobile"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   ChartConfig,
   ChartContainer,
@@ -18,24 +12,21 @@ import {
   ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
-} from "@/components/ui/chart"
+} from "@/components/ui/chart";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import {
-  ToggleGroup,
-  ToggleGroupItem,
-} from "@/components/ui/toggle-group"
+} from "@/components/ui/select";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 export type ChartPoint = {
-  date: string
-  hours: number
-  target: number
-}
+  date: string;
+  hours: number;
+  target: number;
+};
 
 const chartConfig = {
   hours: {
@@ -52,59 +43,57 @@ const chartConfig = {
       dark: "hsl(160 55% 50%)",
     },
   },
-} satisfies ChartConfig
+} satisfies ChartConfig;
 
 export function ChartAreaInteractive({
   data,
   labels,
 }: {
-  data: ChartPoint[]
+  data: ChartPoint[];
   labels: {
-    title: string
-    description: string
-    last3Months: string
-    last30Days: string
-    last7Days: string
-    worked: string
-    target: string
-  }
+    title: string;
+    description: string;
+    last3Months: string;
+    last30Days: string;
+    last7Days: string;
+    worked: string;
+    target: string;
+  };
 }) {
-  const isMobile = useIsMobile()
-  const [timeRange, setTimeRange] = React.useState("7d")
+  const isMobile = useIsMobile();
+  const [timeRange, setTimeRange] = React.useState("7d");
 
   React.useEffect(() => {
     if (isMobile) {
-      setTimeRange("7d")
+      setTimeRange("7d");
     }
-  }, [isMobile])
+  }, [isMobile]);
 
   const filteredData = React.useMemo(() => {
-    if (data.length === 0) return []
-    const referenceDate = new Date(data[data.length - 1].date)
-    let daysToSubtract = 90
+    if (data.length === 0) return [];
+    const referenceDate = new Date(data[data.length - 1].date);
+    let daysToSubtract = 90;
     if (timeRange === "30d") {
-      daysToSubtract = 30
+      daysToSubtract = 30;
     } else if (timeRange === "7d") {
-      daysToSubtract = 7
+      daysToSubtract = 7;
     }
-    const startDate = new Date(referenceDate)
-    startDate.setDate(startDate.getDate() - daysToSubtract)
-    return data.filter((item) => new Date(item.date) >= startDate)
-  }, [data, timeRange])
+    const startDate = new Date(referenceDate);
+    startDate.setDate(startDate.getDate() - daysToSubtract);
+    return data.filter((item) => new Date(item.date) >= startDate);
+  }, [data, timeRange]);
 
   const chartConfigLabeled = {
     hours: { ...chartConfig.hours, label: labels.worked },
     target: { ...chartConfig.target, label: labels.target },
-  } satisfies ChartConfig
+  } satisfies ChartConfig;
 
   return (
     <Card className="@container/card">
       <CardHeader className="relative">
         <CardTitle>{labels.title}</CardTitle>
         <CardDescription>
-          <span className="@[540px]/card:block hidden">
-            {labels.description}
-          </span>
+          <span className="@[540px]/card:block hidden">{labels.description}</span>
           <span className="@[540px]/card:hidden">{labels.last30Days}</span>
         </CardDescription>
         <div className="absolute right-4 top-4">
@@ -126,10 +115,7 @@ export function ChartAreaInteractive({
             </ToggleGroupItem>
           </ToggleGroup>
           <Select value={timeRange} onValueChange={setTimeRange}>
-            <SelectTrigger
-              className="@[767px]/card:hidden flex w-40"
-              aria-label="Select a value"
-            >
+            <SelectTrigger className="@[767px]/card:hidden flex w-40" aria-label="Select a value">
               <SelectValue placeholder={labels.last30Days} />
             </SelectTrigger>
             <SelectContent className="rounded-xl">
@@ -147,10 +133,7 @@ export function ChartAreaInteractive({
         </div>
       </CardHeader>
       <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
-        <ChartContainer
-          config={chartConfigLabeled}
-          className="aspect-auto h-[250px] w-full"
-        >
+        <ChartContainer config={chartConfigLabeled} className="aspect-auto h-[250px] w-full">
           <BarChart accessibilityLayer data={filteredData}>
             <CartesianGrid vertical={false} />
             <XAxis
@@ -160,11 +143,11 @@ export function ChartAreaInteractive({
               tickMargin={8}
               minTickGap={32}
               tickFormatter={(value) => {
-                const date = new Date(value)
+                const date = new Date(value);
                 return date.toLocaleDateString("de-DE", {
                   month: "short",
                   day: "numeric",
-                })
+                });
               }}
             />
             <ChartTooltip
@@ -175,7 +158,7 @@ export function ChartAreaInteractive({
                     return new Date(value).toLocaleDateString("de-DE", {
                       month: "short",
                       day: "numeric",
-                    })
+                    });
                   }}
                   indicator="dashed"
                 />
@@ -188,5 +171,5 @@ export function ChartAreaInteractive({
         </ChartContainer>
       </CardContent>
     </Card>
-  )
+  );
 }

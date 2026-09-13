@@ -23,10 +23,7 @@ type Branding = {
   loginQuoteAuthor: string | null;
 };
 
-export function LoginForm({
-  className,
-  ...props
-}: React.ComponentProps<"div">) {
+export function LoginForm({ className, ...props }: React.ComponentProps<"div">) {
   const t = useTranslations("auth");
   const tCommon = useTranslations("common");
   const locale = useLocale();
@@ -89,9 +86,7 @@ export function LoginForm({
                   )}
                 </div>
                 <h1 className="text-2xl font-bold">{t("loginTitle")}</h1>
-                <p className="text-balance text-muted-foreground">
-                  {t("loginSubtitle")}
-                </p>
+                <p className="text-balance text-muted-foreground">{t("loginSubtitle")}</p>
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="email">{t("emailOrUsername")}</Label>
@@ -131,11 +126,7 @@ export function LoginForm({
                 </div>
               )}
 
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={loading}
-              >
+              <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? "…" : t("loginButton")}
               </Button>
 
@@ -180,9 +171,7 @@ export function LoginForm({
               <blockquote className="text-center text-lg font-medium leading-relaxed">
                 {displayQuote}
               </blockquote>
-              <p className="mt-4 text-sm text-primary-foreground/80">
-                {displayAuthor}
-              </p>
+              <p className="mt-4 text-sm text-primary-foreground/80">{displayAuthor}</p>
             </div>
           </div>
         </CardContent>
@@ -190,8 +179,12 @@ export function LoginForm({
       <div className="flex flex-col items-center gap-1 text-center text-xs text-muted-foreground">
         <span>{branding?.appName ?? tCommon("appName")}</span>
         <div className="flex gap-3">
-          <a href={`/${locale}/privacy`} className="hover:text-foreground underline">{tCommon("privacy")}</a>
-          <a href={`/${locale}/imprint`} className="hover:text-foreground underline">{tCommon("imprint")}</a>
+          <a href={`/${locale}/privacy`} className="hover:text-foreground underline">
+            {tCommon("privacy")}
+          </a>
+          <a href={`/${locale}/imprint`} className="hover:text-foreground underline">
+            {tCommon("imprint")}
+          </a>
         </div>
       </div>
     </div>

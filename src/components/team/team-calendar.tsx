@@ -52,7 +52,9 @@ export function TeamCalendar({
                   }`}
                   title={d.holidayName ?? d.closureName ?? ""}
                 >
-                  <div className="text-[10px] text-muted-foreground">{WEEKDAY_LABELS[weekdayIdx]}</div>
+                  <div className="text-[10px] text-muted-foreground">
+                    {WEEKDAY_LABELS[weekdayIdx]}
+                  </div>
                   <div>{dayNum}</div>
                 </th>
               );
@@ -76,7 +78,10 @@ export function TeamCalendar({
                 if (entry) {
                   cellClass += ` ${TYPE_COLORS[entry.type] ?? ""}`;
                   content = (
-                    <span className="inline-flex h-5 w-5 items-center justify-center rounded text-[10px] font-bold" title={entry.note ?? entry.type}>
+                    <span
+                      className="inline-flex h-5 w-5 items-center justify-center rounded text-[10px] font-bold"
+                      title={entry.note ?? entry.type}
+                    >
                       {TYPE_LABELS[entry.type] ?? "?"}
                     </span>
                   );

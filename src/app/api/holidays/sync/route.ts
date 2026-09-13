@@ -10,7 +10,10 @@ export async function GET(request: Request) {
     const state = (url.searchParams.get("state") ?? undefined) as FederalState | undefined;
     const from = url.searchParams.get("from");
     const to = url.searchParams.get("to");
-    const federalState = state ?? user.role === "ADMIN" ? (state ?? "DE_NW") : (user as { federalState?: FederalState }).federalState ?? "DE_NW";
+    const federalState =
+      (state ?? user.role === "ADMIN")
+        ? (state ?? "DE_NW")
+        : ((user as { federalState?: FederalState }).federalState ?? "DE_NW");
     const holidays = await listHolidays({
       federalState,
       from: from ? new Date(from) : undefined,

@@ -1,3 +1,4 @@
+import "@/lib/load-env";
 import { db } from "../src/lib/db";
 import { getOrgSettings } from "../src/server/context";
 import { runRetentionCleanup } from "../src/server/services/gdpr-cleanup";

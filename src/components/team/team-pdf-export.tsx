@@ -34,7 +34,11 @@ export function TeamPdfExport({ year, month }: { year: number; month: number }) 
 
   return (
     <Button variant="outline" size="sm" onClick={download} disabled={loading}>
-      {loading ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <FileText className="mr-1 h-4 w-4" />}
+      {loading ? (
+        <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+      ) : (
+        <FileText className="mr-1 h-4 w-4" />
+      )}
       PDF
     </Button>
   );

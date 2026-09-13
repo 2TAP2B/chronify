@@ -3,11 +3,7 @@
 import { useEffect, useRef } from "react";
 import { create } from "zustand";
 import { formatDuration } from "@/lib/timer-utils";
-import {
-  computeElapsedMs,
-  computeBreakMs,
-  type TimerState,
-} from "@/lib/timer-utils";
+import { computeElapsedMs, computeBreakMs, type TimerState } from "@/lib/timer-utils";
 import { checkMaxDailyHours, checkRestPeriod, type ArbzgWarning } from "@/lib/arbzg";
 
 export type TimerStatus = {
@@ -144,17 +140,8 @@ export const useTimerStore = create<TimerStore>((set, get) => ({
 }));
 
 export function useTimer() {
-  const {
-    status,
-    loaded,
-    loading,
-    error,
-    tick,
-    refresh,
-    start,
-    stop,
-    toggleBreak,
-  } = useTimerStore();
+  const { status, loaded, loading, error, tick, refresh, start, stop, toggleBreak } =
+    useTimerStore();
 
   const live = computeLive(status);
 
@@ -234,12 +221,8 @@ function useArbzgNotifications(opts: {
 
   useEffect(() => {
     const checks: Array<ArbzgWarning | null> = [
-      opts.active || opts.totalWorkedMs > 0
-        ? checkMaxDailyHours(opts.totalWorkedMs)
-        : null,
-      !opts.active && opts.lastWorkEndAt
-        ? checkRestPeriod(opts.lastWorkEndAt)
-        : null,
+      opts.active || opts.totalWorkedMs > 0 ? checkMaxDailyHours(opts.totalWorkedMs) : null,
+      !opts.active && opts.lastWorkEndAt ? checkRestPeriod(opts.lastWorkEndAt) : null,
     ];
 
     for (const w of checks) {
@@ -248,9 +231,8 @@ function useArbzgNotifications(opts: {
       if (notifiedRef.current.has(warningKey)) continue;
       notifiedRef.current.add(warningKey);
 
-      const locale = typeof navigator !== "undefined" && navigator.language.startsWith("en")
-        ? "en"
-        : "de";
+      const locale =
+        typeof navigator !== "undefined" && navigator.language.startsWith("en") ? "en" : "de";
 
       const title = ARBZG_TITLES[warningKey]?.[locale] ?? warningKey;
       const body = ARBZG_BODIES[warningKey]?.[locale] ?? "";

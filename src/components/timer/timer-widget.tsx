@@ -42,15 +42,12 @@ export function TimerWidget() {
               {timer.totalWorkedDisplay}
             </div>
             <div className="text-xs text-muted-foreground">
-              {t("breakTime")}:{" "}
-              <span className="font-mono tabular-nums">{timer.displayBreak}</span>
+              {t("breakTime")}: <span className="font-mono tabular-nums">{timer.displayBreak}</span>
             </div>
           </div>
         </div>
 
-        {timer.error && (
-          <p className="text-sm text-destructive">{timer.error}</p>
-        )}
+        {timer.error && <p className="text-sm text-destructive">{timer.error}</p>}
 
         <div className="flex gap-2">
           {!active ? (

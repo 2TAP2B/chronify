@@ -21,7 +21,15 @@ export function UserToggleActive({
 
   async function toggle() {
     const action = active ? "deactivate" : "activate";
-    if (active && !await confirm({ title: t("confirmDeactivate"), variant: "destructive", confirmLabel: t("deactivate") })) return;
+    if (
+      active &&
+      !(await confirm({
+        title: t("confirmDeactivate"),
+        variant: "destructive",
+        confirmLabel: t("deactivate"),
+      }))
+    )
+      return;
     startTransition(async () => {
       const res = await fetch(`/api/admin/users/${userId}`, {
         method: "POST",
@@ -31,7 +39,14 @@ export function UserToggleActive({
       if (!res.ok) {
         const b = await res.json().catch(() => ({}));
         const code = (b as { code?: string }).code;
-        await confirm({ title: "Fehler", description: code === "SELF_DEACTIVATE" ? t("cannotDeactivateSelf") : (b as { error?: string }).error ?? "error", confirmLabel: "OK" });
+        await confirm({
+          title: "Fehler",
+          description:
+            code === "SELF_DEACTIVATE"
+              ? t("cannotDeactivateSelf")
+              : ((b as { error?: string }).error ?? "error"),
+          confirmLabel: "OK",
+        });
         return;
       }
       window.location.reload();
@@ -39,12 +54,7 @@ export function UserToggleActive({
   }
 
   return (
-    <Button
-      size="sm"
-      variant="ghost"
-      disabled={isSelf && active}
-      onClick={toggle}
-    >
+    <Button size="sm" variant="ghost" disabled={isSelf && active} onClick={toggle}>
       {active ? <UserX className="h-3.5 w-3.5" /> : <UserCheck className="h-3.5 w-3.5" />}
     </Button>
   );

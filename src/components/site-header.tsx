@@ -1,17 +1,17 @@
-"use client"
+"use client";
 
-import { Fragment } from "react"
-import { usePathname } from "next/navigation"
-import { useLocale, useTranslations } from "next-intl"
-import Link from "next/link"
-import { useTheme } from "next-themes"
-import { Moon, Play, Square, Sun } from "lucide-react"
+import { Fragment } from "react";
+import { usePathname } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
+import Link from "next/link";
+import { useTheme } from "next-themes";
+import { Moon, Play, Square, Sun } from "lucide-react";
 
-import { Separator } from "@/components/ui/separator"
-import { SidebarTrigger } from "@/components/ui/sidebar"
-import { NotificationBell } from "@/components/notifications/notification-bell"
-import { useTimerInit, useTimer } from "@/stores/timer-store"
-import { Button } from "@/components/ui/button"
+import { Separator } from "@/components/ui/separator";
+import { SidebarTrigger } from "@/components/ui/sidebar";
+import { NotificationBell } from "@/components/notifications/notification-bell";
+import { useTimerInit, useTimer } from "@/stores/timer-store";
+import { Button } from "@/components/ui/button";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -19,7 +19,7 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb"
+} from "@/components/ui/breadcrumb";
 
 const navLabelMap: Record<string, string> = {
   dashboard: "dashboard",
@@ -41,45 +41,39 @@ const navLabelMap: Record<string, string> = {
   profile: "profile",
   import: "import",
   "audit-log": "auditLog",
-}
+};
 
 export function SiteHeader() {
-  const pathname = usePathname()
-  const locale = useLocale()
-  const tNav = useTranslations("nav")
-  const tCommon = useTranslations("common")
-  const { theme, setTheme } = useTheme()
-  const tTimer = useTranslations("timer")
-  useTimerInit()
-  const timer = useTimer()
+  const pathname = usePathname();
+  const locale = useLocale();
+  const tNav = useTranslations("nav");
+  const tCommon = useTranslations("common");
+  const { theme, setTheme } = useTheme();
+  const tTimer = useTranslations("timer");
+  useTimerInit();
+  const timer = useTimer();
 
-  const segments = pathname
-    .replace(`/${locale}`, "")
-    .split("/")
-    .filter(Boolean)
+  const segments = pathname.replace(`/${locale}`, "").split("/").filter(Boolean);
 
   const crumbs = segments.map((seg, i) => {
-    const href = `/${locale}/${segments.slice(0, i + 1).join("/")}`
-    const labelKey = navLabelMap[seg] ?? seg
-    let label: string
+    const href = `/${locale}/${segments.slice(0, i + 1).join("/")}`;
+    const labelKey = navLabelMap[seg] ?? seg;
+    let label: string;
     if (labelKey === "admin") {
-      label = tNav("admin")
+      label = tNav("admin");
     } else if (segments[0] === "admin") {
-      label = tNav(labelKey as never) ?? seg
+      label = tNav(labelKey as never) ?? seg;
     } else {
-      label = tNav(labelKey as never) ?? tCommon(labelKey as never) ?? seg
+      label = tNav(labelKey as never) ?? tCommon(labelKey as never) ?? seg;
     }
-    return { href, label, isLast: i === segments.length - 1 }
-  })
+    return { href, label, isLast: i === segments.length - 1 };
+  });
 
   return (
     <header className="group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 sticky top-0 z-10 bg-background flex h-12 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear">
       <div className="flex w-full items-center gap-1 px-4 lg:gap-2 lg:px-6">
         <SidebarTrigger className="-ml-1" />
-        <Separator
-          orientation="vertical"
-          className="mx-2 data-[orientation=vertical]:h-4"
-        />
+        <Separator orientation="vertical" className="mx-2 data-[orientation=vertical]:h-4" />
         <Breadcrumb>
           <BreadcrumbList>
             {segments.length > 0 && segments[0] !== "dashboard" && (
@@ -132,5 +126,5 @@ export function SiteHeader() {
         </div>
       </div>
     </header>
-  )
+  );
 }

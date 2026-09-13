@@ -5,7 +5,13 @@ import { ThemeProvider } from "next-themes";
 import { useEffect, useState, type ReactNode } from "react";
 import { ConfirmProvider } from "@/components/ui/confirm-dialog";
 
-export type ColorScheme = "default" | "mauve" | "catppuccin-frappe" | "catppuccin-macchiato" | "catppuccin-mocha" | "dracula";
+export type ColorScheme =
+  | "default"
+  | "mauve"
+  | "catppuccin-frappe"
+  | "catppuccin-macchiato"
+  | "catppuccin-mocha"
+  | "dracula";
 
 const STORAGE_KEY = "puku-color-scheme";
 

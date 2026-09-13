@@ -60,7 +60,9 @@ export function QuickFillDialog({
   const [result, setResult] = useState<string | null>(null);
 
   const emptyDays = days.filter(
-    (d) => d.entries.length === 0 && (!weekdaysOnly || (getWeekday(d.date) >= 1 && getWeekday(d.date) <= 5))
+    (d) =>
+      d.entries.length === 0 &&
+      (!weekdaysOnly || (getWeekday(d.date) >= 1 && getWeekday(d.date) <= 5))
   );
 
   async function onApply() {
@@ -116,22 +118,16 @@ export function QuickFillDialog({
           <div className="grid grid-cols-3 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="qf-start">{t("start")}</Label>
-              <TimeInput
-                placeholder="08:00"
-                value={startAt}
-                onChange={setStartAt}
-              />
+              <TimeInput placeholder="08:00" value={startAt} onChange={setStartAt} />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="qf-end">{t("end")}</Label>
-              <TimeInput
-                placeholder="16:00"
-                value={endAt}
-                onChange={setEndAt}
-              />
+              <TimeInput placeholder="16:00" value={endAt} onChange={setEndAt} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="qf-break">{t("break")} ({t("minutes")})</Label>
+              <Label htmlFor="qf-break">
+                {t("break")} ({t("minutes")})
+              </Label>
               <Input
                 id="qf-break"
                 type="number"

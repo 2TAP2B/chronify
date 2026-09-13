@@ -42,8 +42,10 @@ export default async function ImportPage({ params }: Props) {
         </ol>
         <div className="mt-4 rounded-md bg-muted p-3">
           <p className="text-xs font-mono">
-            Datum,Von,Bis<br />
-            2026-07-01,08:00,16:00<br />
+            Datum,Von,Bis
+            <br />
+            2026-07-01,08:00,16:00
+            <br />
             2026-07-02,07:30,15:30
           </p>
         </div>

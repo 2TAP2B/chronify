@@ -26,13 +26,24 @@ export function OidcLinkManager({
   }
 
   async function unlink() {
-    if (!await confirm({ title: t("oidcUnlinkConfirm"), variant: "destructive", confirmLabel: t("oidcUnlinkButton") })) return;
+    if (
+      !(await confirm({
+        title: t("oidcUnlinkConfirm"),
+        variant: "destructive",
+        confirmLabel: t("oidcUnlinkButton"),
+      }))
+    )
+      return;
     setLoading(true);
     try {
       const res = await fetch("/api/auth/oidc/unlink", { method: "DELETE" });
       if (!res.ok) {
         const b = await res.json().catch(() => ({}));
-        await confirm({ title: "Fehler", description: (b as { error?: string }).error ?? "error", confirmLabel: "OK" });
+        await confirm({
+          title: "Fehler",
+          description: (b as { error?: string }).error ?? "error",
+          confirmLabel: "OK",
+        });
         return;
       }
       window.location.reload();
@@ -56,10 +67,16 @@ export function OidcLinkManager({
         {linked ? (
           <>
             <div className="flex items-center gap-2">
-              <Badge variant="default">{providerName} {t("oidcLinked")}</Badge>
+              <Badge variant="default">
+                {providerName} {t("oidcLinked")}
+              </Badge>
             </div>
             <Button variant="outline" size="sm" onClick={unlink} disabled={loading}>
-              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Unlink className="mr-1.5 h-4 w-4" />}
+              {loading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Unlink className="mr-1.5 h-4 w-4" />
+              )}
               {t("oidcUnlinkButton")}
             </Button>
           </>
@@ -67,7 +84,11 @@ export function OidcLinkManager({
           <>
             <span className="text-sm text-muted-foreground">{t("oidcNotLinked")}</span>
             <Button variant="outline" size="sm" onClick={link} disabled={loading}>
-              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Link2 className="mr-1.5 h-4 w-4" />}
+              {loading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Link2 className="mr-1.5 h-4 w-4" />
+              )}
               {t("oidcLinkButton")}
             </Button>
           </>

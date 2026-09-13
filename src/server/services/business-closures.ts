@@ -43,10 +43,19 @@ function businessDaysInRange(from: Date, to: Date, federalState: string): Date[]
 
 export async function listClosures(actor: SessionUser) {
   requireAdmin(actor);
-  return db.businessClosure.findMany({ orderBy: { from: "desc" }, include: { _count: { select: { choices: true } } } });
+  return db.businessClosure.findMany({
+    orderBy: { from: "desc" },
+    include: { _count: { select: { choices: true } } },
+  });
 }
 
-export async function createClosure({ actor, input }: { actor: SessionUser; input: CreateClosureInput }) {
+export async function createClosure({
+  actor,
+  input,
+}: {
+  actor: SessionUser;
+  input: CreateClosureInput;
+}) {
   requireAdmin(actor);
   if (input.from > input.to) throw new ClosureError("from must be before to", "INVALID_RANGE");
 
@@ -54,7 +63,8 @@ export async function createClosure({ actor, input }: { actor: SessionUser; inpu
   const federalState = settings.defaultFederalState;
 
   const businessDays = businessDaysInRange(input.from, input.to, federalState);
-  if (businessDays.length === 0) throw new ClosureError("No business days in range", "NO_BUSINESS_DAYS");
+  if (businessDays.length === 0)
+    throw new ClosureError("No business days in range", "NO_BUSINESS_DAYS");
 
   const closure = await db.businessClosure.create({
     data: {
@@ -64,7 +74,10 @@ export async function createClosure({ actor, input }: { actor: SessionUser; inpu
     },
   });
 
-  const activeUsers = await db.user.findMany({ where: { active: true }, select: { id: true, name: true } });
+  const activeUsers = await db.user.findMany({
+    where: { active: true },
+    select: { id: true, name: true },
+  });
 
   for (const day of businessDays) {
     await db.timeEntry.createMany({
@@ -93,9 +106,11 @@ export async function createClosure({ actor, input }: { actor: SessionUser; inpu
       },
     });
 
-    await db.closureChoice.create({
-      data: { closureId: closure.id, userId: u.id, choice: "VACATION" },
-    }).catch(() => {});
+    await db.closureChoice
+      .create({
+        data: { closureId: closure.id, userId: u.id, choice: "VACATION" },
+      })
+      .catch(() => {});
 
     await notifyUser({
       userId: u.id,
@@ -113,13 +128,25 @@ export async function createClosure({ actor, input }: { actor: SessionUser; inpu
     action: "business_closure.create",
     entity: "BusinessClosure",
     entityId: closure.id,
-    payload: { name: input.name, from: input.from.toISOString(), to: input.to.toISOString(), businessDays: businessDays.length, usersAffected: activeUsers.length },
+    payload: {
+      name: input.name,
+      from: input.from.toISOString(),
+      to: input.to.toISOString(),
+      businessDays: businessDays.length,
+      usersAffected: activeUsers.length,
+    },
   });
 
   return closure;
 }
 
-export async function deleteClosure({ actor, closureId }: { actor: SessionUser; closureId: string }) {
+export async function deleteClosure({
+  actor,
+  closureId,
+}: {
+  actor: SessionUser;
+  closureId: string;
+}) {
   requireAdmin(actor);
   const closure = await db.businessClosure.findUnique({ where: { id: closureId } });
   if (!closure) throw new ClosureError("Not found", "NOT_FOUND", 404);
@@ -137,18 +164,20 @@ export async function deleteClosure({ actor, closureId }: { actor: SessionUser; 
 
   const activeUsers = await db.user.findMany({ where: { active: true }, select: { id: true } });
   for (const u of activeUsers) {
-    await db.vacationEntitlement.upsert({
-      where: { userId_year: { userId: u.id, year: closure.from.getUTCFullYear() } },
-      create: {
-        userId: u.id,
-        year: closure.from.getUTCFullYear(),
-        totalDays: 30,
-        consumedDays: -businessDays.length,
-      },
-      update: {
-        consumedDays: { decrement: businessDays.length },
-      },
-    }).catch(() => {});
+    await db.vacationEntitlement
+      .upsert({
+        where: { userId_year: { userId: u.id, year: closure.from.getUTCFullYear() } },
+        create: {
+          userId: u.id,
+          year: closure.from.getUTCFullYear(),
+          totalDays: 30,
+          consumedDays: -businessDays.length,
+        },
+        update: {
+          consumedDays: { decrement: businessDays.length },
+        },
+      })
+      .catch(() => {});
   }
 
   await db.businessClosure.delete({ where: { id: closureId } });
@@ -171,7 +200,15 @@ export async function listUserChoices(actor: SessionUser) {
   return choices;
 }
 
-export async function updateChoice({ actor, closureId, choice }: { actor: SessionUser; closureId: string; choice: "VACATION" | "OVERTIME" }) {
+export async function updateChoice({
+  actor,
+  closureId,
+  choice,
+}: {
+  actor: SessionUser;
+  closureId: string;
+  choice: "VACATION" | "OVERTIME";
+}) {
   const existing = await db.closureChoice.findUnique({
     where: { closureId_userId: { closureId, userId: actor.id } },
     include: { closure: true },
@@ -193,26 +230,40 @@ export async function updateChoice({ actor, closureId, choice }: { actor: Sessio
       },
     });
 
-    await db.vacationEntitlement.upsert({
-      where: { userId_year: { userId: actor.id, year: closure.from.getUTCFullYear() } },
-      create: {
-        userId: actor.id,
-        year: closure.from.getUTCFullYear(),
-        totalDays: settings.defaultVacationDays,
-        consumedDays: -businessDays.length,
-      },
-      update: {
-        consumedDays: { decrement: businessDays.length },
-      },
-    }).catch(() => {});
+    await db.vacationEntitlement
+      .upsert({
+        where: { userId_year: { userId: actor.id, year: closure.from.getUTCFullYear() } },
+        create: {
+          userId: actor.id,
+          year: closure.from.getUTCFullYear(),
+          totalDays: settings.defaultVacationDays,
+          consumedDays: -businessDays.length,
+        },
+        update: {
+          consumedDays: { decrement: businessDays.length },
+        },
+      })
+      .catch(() => {});
 
     const workingModel = await db.workingModel.findFirst({
-      where: { userId: actor.id, validFrom: { lte: new Date() }, OR: [{ validTo: null }, { validTo: { gte: new Date() } }] },
+      where: {
+        userId: actor.id,
+        validFrom: { lte: new Date() },
+        OR: [{ validTo: null }, { validTo: { gte: new Date() } }],
+      },
       orderBy: { validFrom: "desc" },
     });
 
     const dayMinutes = workingModel
-      ? [workingModel.mondayMinutes, workingModel.tuesdayMinutes, workingModel.wednesdayMinutes, workingModel.thursdayMinutes, workingModel.fridayMinutes, workingModel.saturdayMinutes, workingModel.sundayMinutes]
+      ? [
+          workingModel.mondayMinutes,
+          workingModel.tuesdayMinutes,
+          workingModel.wednesdayMinutes,
+          workingModel.thursdayMinutes,
+          workingModel.fridayMinutes,
+          workingModel.saturdayMinutes,
+          workingModel.sundayMinutes,
+        ]
       : [0, 0, 0, 0, 0, 0, 0];
 
     let totalOvertimeMinutes = 0;
@@ -260,12 +311,24 @@ export async function updateChoice({ actor, closureId, choice }: { actor: Sessio
     });
 
     const workingModel = await db.workingModel.findFirst({
-      where: { userId: actor.id, validFrom: { lte: new Date() }, OR: [{ validTo: null }, { validTo: { gte: new Date() } }] },
+      where: {
+        userId: actor.id,
+        validFrom: { lte: new Date() },
+        OR: [{ validTo: null }, { validTo: { gte: new Date() } }],
+      },
       orderBy: { validFrom: "desc" },
     });
 
     const dayMinutes = workingModel
-      ? [workingModel.mondayMinutes, workingModel.tuesdayMinutes, workingModel.wednesdayMinutes, workingModel.thursdayMinutes, workingModel.fridayMinutes, workingModel.saturdayMinutes, workingModel.sundayMinutes]
+      ? [
+          workingModel.mondayMinutes,
+          workingModel.tuesdayMinutes,
+          workingModel.wednesdayMinutes,
+          workingModel.thursdayMinutes,
+          workingModel.fridayMinutes,
+          workingModel.saturdayMinutes,
+          workingModel.sundayMinutes,
+        ]
       : [0, 0, 0, 0, 0, 0, 0];
 
     let totalOvertimeMinutes = 0;

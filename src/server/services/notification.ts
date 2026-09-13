@@ -2,10 +2,7 @@ import "server-only";
 import { db } from "@/lib/db";
 import { sendPushToUser } from "./push";
 import { sendMail } from "./mail";
-import {
-  vacationApprovedEmail,
-  vacationRejectedEmail,
-} from "@/lib/email-templates";
+import { vacationApprovedEmail, vacationRejectedEmail } from "@/lib/email-templates";
 
 type CreateNotificationInput = {
   userId: string;

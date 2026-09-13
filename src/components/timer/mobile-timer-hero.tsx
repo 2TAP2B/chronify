@@ -13,12 +13,7 @@ type Props = {
   locale: string;
 };
 
-export function MobileTimerHero({
-  userName,
-  todayWorkedMs,
-  todayTargetHours,
-  locale,
-}: Props) {
+export function MobileTimerHero({ userName, todayWorkedMs, todayTargetHours, locale }: Props) {
   useTimerInit();
   const t = useTranslations("dashboard");
   const tTimer = useTranslations("timer");
@@ -53,31 +48,26 @@ export function MobileTimerHero({
   const timeStr = `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 
   const targetHours = todayTargetHours;
-  const progressPct = targetHours > 0 ? Math.min(100, Math.round((displayMs / 3_600_000 / targetHours) * 100)) : 0;
+  const progressPct =
+    targetHours > 0 ? Math.min(100, Math.round((displayMs / 3_600_000 / targetHours) * 100)) : 0;
 
   const firstName = userName.split(" ")[0] || userName;
 
   return (
     <div className="lg:hidden -mx-4 -mt-4 px-4 pt-4 pb-2 flex flex-col items-center justify-center gap-6 text-center">
       <div className="flex flex-col items-center gap-1">
-        <h1 className="text-3xl font-bold tracking-tight">
-          {t("hi", { name: firstName })}
-        </h1>
+        <h1 className="text-3xl font-bold tracking-tight">{t("hi", { name: firstName })}</h1>
         <p className="text-base text-muted-foreground">
           {t("todayIs", { date: dateFormat.format(now) })}
         </p>
-        <p className="font-mono text-xl tabular-nums text-foreground">
-          {timeFormat.format(now)}
-        </p>
+        <p className="font-mono text-xl tabular-nums text-foreground">{timeFormat.format(now)}</p>
       </div>
 
       <div className="flex flex-col items-center gap-2">
         <p className="text-xs uppercase tracking-wide text-muted-foreground">
           {t("workingTimeToday")}
         </p>
-        <div className="font-mono text-6xl font-bold tabular-nums tracking-tight">
-          {timeStr}
-        </div>
+        <div className="font-mono text-6xl font-bold tabular-nums tracking-tight">{timeStr}</div>
         {targetHours > 0 && (
           <p className="text-xs text-muted-foreground">
             {t("dailyTarget")}: {targetHours.toFixed(1)} h · {progressPct}%
@@ -120,9 +110,7 @@ export function MobileTimerHero({
             </Button>
           </div>
         )}
-        {timer.error && (
-          <p className="text-center text-sm text-destructive">{timer.error}</p>
-        )}
+        {timer.error && <p className="text-center text-sm text-destructive">{timer.error}</p>}
       </div>
     </div>
   );

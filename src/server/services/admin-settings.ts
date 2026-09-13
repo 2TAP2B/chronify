@@ -10,10 +10,27 @@ export function requireAdmin(actor: SessionUser) {
 }
 
 export const updateSettingsSchema = z.object({
-  defaultFederalState: z.enum([
-    "DE_BW", "DE_BY", "DE_BE", "DE_BB", "DE_HB", "DE_HE", "DE_HH", "DE_ME",
-    "DE_MV", "DE_NI", "DE_NW", "DE_RP", "DE_SL", "DE_SN", "DE_ST", "DE_SH", "DE_TH",
-  ]).optional(),
+  defaultFederalState: z
+    .enum([
+      "DE_BW",
+      "DE_BY",
+      "DE_BE",
+      "DE_BB",
+      "DE_HB",
+      "DE_HE",
+      "DE_HH",
+      "DE_ME",
+      "DE_MV",
+      "DE_NI",
+      "DE_NW",
+      "DE_RP",
+      "DE_SL",
+      "DE_SN",
+      "DE_ST",
+      "DE_SH",
+      "DE_TH",
+    ])
+    .optional(),
   overtimeCarryoverCutoffMonth: z.number().int().min(1).max(12).nullable().optional(),
   overtimeCarryoverCutoffDay: z.number().int().min(1).max(31).nullable().optional(),
   overtimeCarryoverCutoffEnabled: z.boolean().optional(),
@@ -34,10 +51,7 @@ export async function getSettings(actor: SessionUser) {
   return db.orgSettings.findUniqueOrThrow({ where: { id: "singleton" } });
 }
 
-export async function updateSettings(opts: {
-  actor: SessionUser;
-  input: UpdateSettingsInput;
-}) {
+export async function updateSettings(opts: { actor: SessionUser; input: UpdateSettingsInput }) {
   requireAdmin(opts.actor);
   const updated = await db.orgSettings.update({
     where: { id: "singleton" },

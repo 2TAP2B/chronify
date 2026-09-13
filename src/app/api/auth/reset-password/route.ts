@@ -12,20 +12,14 @@ export async function POST(req: Request) {
 
     const rl = rateLimit({ key: `reset:${ip}`, max: 10, windowMs: 60_000 });
     if (!rl.ok) {
-      return NextResponse.json(
-        { error: "Too many requests" },
-        { status: 429 }
-      );
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
     }
 
-    const body = await req.json() as { token?: string; password?: string };
+    const body = (await req.json()) as { token?: string; password?: string };
     const { token, password } = body;
 
     if (!token || !password || password.length < 6) {
-      return NextResponse.json(
-        { error: "Invalid input" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
 
     const resetToken = await db.verificationToken.findFirst({
@@ -33,18 +27,14 @@ export async function POST(req: Request) {
     });
 
     if (!resetToken) {
-      return NextResponse.json(
-        { error: "Invalid or expired token" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Invalid or expired token" }, { status: 400 });
     }
 
     if (resetToken.expires < new Date()) {
-      await db.verificationToken.delete({ where: { identifier_token: { identifier: resetToken.identifier, token: resetToken.token } } });
-      return NextResponse.json(
-        { error: "Invalid or expired token" },
-        { status: 400 }
-      );
+      await db.verificationToken.delete({
+        where: { identifier_token: { identifier: resetToken.identifier, token: resetToken.token } },
+      });
+      return NextResponse.json({ error: "Invalid or expired token" }, { status: 400 });
     }
 
     const email = resetToken.identifier.replace(/^reset:/, "");
@@ -54,10 +44,7 @@ export async function POST(req: Request) {
     });
 
     if (!user) {
-      return NextResponse.json(
-        { error: "Invalid or expired token" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Invalid or expired token" }, { status: 400 });
     }
 
     const passwordHash = await bcrypt.hash(password, 12);
@@ -74,9 +61,6 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ ok: true });
   } catch (e) {
-    return NextResponse.json(
-      { error: "Internal error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal error" }, { status: 500 });
   }
 }

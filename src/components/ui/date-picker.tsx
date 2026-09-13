@@ -1,29 +1,27 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { format } from "date-fns"
-import { de } from "date-fns/locale"
-import { CalendarIcon } from "lucide-react"
+import * as React from "react";
+import { format } from "date-fns";
+import { de } from "date-fns/locale";
+import { CalendarIcon } from "lucide-react";
 
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { Calendar } from "@/components/ui/calendar"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 type Props = {
-  value?: Date
-  onChange?: (date: Date | undefined) => void
-  placeholder?: string
-  disabled?: boolean
-  className?: string
-  align?: "start" | "center" | "end"
-}
+  id?: string;
+  value?: Date;
+  onChange?: (date: Date | undefined) => void;
+  placeholder?: string;
+  disabled?: boolean;
+  className?: string;
+  align?: "start" | "center" | "end";
+};
 
 export function DatePicker({
+  id,
   value,
   onChange,
   placeholder = "Datum wählen",
@@ -31,12 +29,13 @@ export function DatePicker({
   className,
   align = "start",
 }: Props) {
-  const [open, setOpen] = React.useState(false)
+  const [open, setOpen] = React.useState(false);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
+          id={id}
           type="button"
           variant="outline"
           disabled={disabled}
@@ -56,8 +55,8 @@ export function DatePicker({
           selected={value}
           defaultMonth={value}
           onSelect={(d) => {
-            onChange?.(d)
-            setOpen(false)
+            onChange?.(d);
+            setOpen(false);
           }}
           showWeekNumber
           locale={de}
@@ -65,5 +64,5 @@ export function DatePicker({
         />
       </PopoverContent>
     </Popover>
-  )
+  );
 }

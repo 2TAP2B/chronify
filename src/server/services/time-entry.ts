@@ -212,10 +212,7 @@ async function assertNoOverlap(
     startAt: { not: null },
     endAt: { not: null },
     date: { gte: dayStart, lt: dayEnd },
-    AND: [
-      { startAt: { lt: endAt } },
-      { endAt: { gt: startAt } },
-    ],
+    AND: [{ startAt: { lt: endAt } }, { endAt: { gt: startAt } }],
   };
   if (excludeEntryId) {
     where.id = { not: excludeEntryId };
@@ -223,11 +220,7 @@ async function assertNoOverlap(
 
   const overlapping = await db.timeEntry.findFirst({ where: where as never });
   if (overlapping) {
-    throw new TimeEntryError(
-      "Time entry overlaps with an existing entry",
-      "OVERLAP",
-      409
-    );
+    throw new TimeEntryError("Time entry overlaps with an existing entry", "OVERLAP", 409);
   }
 }
 

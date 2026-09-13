@@ -1,11 +1,5 @@
 import { getTranslations, setRequestLocale, getLocale } from "next-intl/server";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatInZone } from "@/lib/datetime";
 import { ClosureChoiceCard } from "@/components/closures/closure-choice-card";
 import { listUserChoices } from "@/server/services/business-closures";

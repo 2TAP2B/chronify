@@ -2,13 +2,7 @@ import { getTranslations, setRequestLocale, getLocale } from "next-intl/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -66,12 +60,16 @@ export default async function VacationApprovalsPage({ params }: Props) {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
-        <p className="text-sm text-muted-foreground">{t("status")}: {requests.length} {t("statuses.PENDING")}</p>
+        <p className="text-sm text-muted-foreground">
+          {t("status")}: {requests.length} {t("statuses.PENDING")}
+        </p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>{t("statuses.PENDING")} ({requests.length})</CardTitle>
+          <CardTitle>
+            {t("statuses.PENDING")} ({requests.length})
+          </CardTitle>
           <CardDescription>{t("request")}</CardDescription>
         </CardHeader>
         <CardContent>
@@ -80,48 +78,48 @@ export default async function VacationApprovalsPage({ params }: Props) {
           ) : (
             <div className="overflow-x-auto">
               <Table className="min-w-[700px] whitespace-nowrap">
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Mitarbeiter</TableHead>
-                  <TableHead>{t("from")}</TableHead>
-                  <TableHead>{t("to")}</TableHead>
-                  <TableHead>{t("days")}</TableHead>
-                  <TableHead>{t("note")}</TableHead>
-                  <TableHead></TableHead>
-                  <TableHead className="text-right">{t("status")}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {requests.map((r) => (
-                  <TableRow key={r.id}>
-                    <TableCell>
-                      <div className="font-medium">{r.user.name}</div>
-                      <div className="text-xs text-muted-foreground">{r.user.email}</div>
-                    </TableCell>
-                    <TableCell className="font-mono">
-                      {formatInZone(r.from, "Europe/Berlin", "dd.MM.yyyy", appLocale)}
-                    </TableCell>
-                    <TableCell className="font-mono">
-                      {formatInZone(r.to, "Europe/Berlin", "dd.MM.yyyy", appLocale)}
-                    </TableCell>
-                    <TableCell>{r.days}</TableCell>
-                    <TableCell className="max-w-[200px] truncate">
-                      {r.note ?? <span className="text-muted-foreground">—</span>}
-                    </TableCell>
-                    <TableCell>
-                      {r.useOvertime && (
-                        <Badge variant="secondary" className="text-xs">
-                          {t("overtimeBadge")}
-                        </Badge>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <VacationApprovalActions requestId={r.id} />
-                    </TableCell>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Mitarbeiter</TableHead>
+                    <TableHead>{t("from")}</TableHead>
+                    <TableHead>{t("to")}</TableHead>
+                    <TableHead>{t("days")}</TableHead>
+                    <TableHead>{t("note")}</TableHead>
+                    <TableHead></TableHead>
+                    <TableHead className="text-right">{t("status")}</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {requests.map((r) => (
+                    <TableRow key={r.id}>
+                      <TableCell>
+                        <div className="font-medium">{r.user.name}</div>
+                        <div className="text-xs text-muted-foreground">{r.user.email}</div>
+                      </TableCell>
+                      <TableCell className="font-mono">
+                        {formatInZone(r.from, "Europe/Berlin", "dd.MM.yyyy", appLocale)}
+                      </TableCell>
+                      <TableCell className="font-mono">
+                        {formatInZone(r.to, "Europe/Berlin", "dd.MM.yyyy", appLocale)}
+                      </TableCell>
+                      <TableCell>{r.days}</TableCell>
+                      <TableCell className="max-w-[200px] truncate">
+                        {r.note ?? <span className="text-muted-foreground">—</span>}
+                      </TableCell>
+                      <TableCell>
+                        {r.useOvertime && (
+                          <Badge variant="secondary" className="text-xs">
+                            {t("overtimeBadge")}
+                          </Badge>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <VacationApprovalActions requestId={r.id} />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
           )}
         </CardContent>
@@ -130,50 +128,52 @@ export default async function VacationApprovalsPage({ params }: Props) {
       {approved.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>{t("statuses.APPROVED")} ({approved.length})</CardTitle>
+            <CardTitle>
+              {t("statuses.APPROVED")} ({approved.length})
+            </CardTitle>
             <CardDescription>{t("confirmCancel")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
               <Table className="min-w-[700px] whitespace-nowrap">
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Mitarbeiter</TableHead>
-                  <TableHead>{t("from")}</TableHead>
-                  <TableHead>{t("to")}</TableHead>
-                  <TableHead>{t("days")}</TableHead>
-                  <TableHead></TableHead>
-                  <TableHead></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {approved.map((r) => (
-                  <TableRow key={r.id}>
-                    <TableCell>
-                      <div className="font-medium">{r.user.name}</div>
-                      <div className="text-xs text-muted-foreground">{r.user.email}</div>
-                    </TableCell>
-                    <TableCell className="font-mono">
-                      {formatInZone(r.from, "Europe/Berlin", "dd.MM.yyyy", appLocale)}
-                    </TableCell>
-                    <TableCell className="font-mono">
-                      {formatInZone(r.to, "Europe/Berlin", "dd.MM.yyyy", appLocale)}
-                    </TableCell>
-                    <TableCell>{r.days}</TableCell>
-                    <TableCell>
-                      {r.useOvertime && (
-                        <Badge variant="secondary" className="text-xs">
-                          {t("overtimeBadge")}
-                        </Badge>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <VacationCancelAction requestId={r.id} />
-                    </TableCell>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Mitarbeiter</TableHead>
+                    <TableHead>{t("from")}</TableHead>
+                    <TableHead>{t("to")}</TableHead>
+                    <TableHead>{t("days")}</TableHead>
+                    <TableHead></TableHead>
+                    <TableHead></TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {approved.map((r) => (
+                    <TableRow key={r.id}>
+                      <TableCell>
+                        <div className="font-medium">{r.user.name}</div>
+                        <div className="text-xs text-muted-foreground">{r.user.email}</div>
+                      </TableCell>
+                      <TableCell className="font-mono">
+                        {formatInZone(r.from, "Europe/Berlin", "dd.MM.yyyy", appLocale)}
+                      </TableCell>
+                      <TableCell className="font-mono">
+                        {formatInZone(r.to, "Europe/Berlin", "dd.MM.yyyy", appLocale)}
+                      </TableCell>
+                      <TableCell>{r.days}</TableCell>
+                      <TableCell>
+                        {r.useOvertime && (
+                          <Badge variant="secondary" className="text-xs">
+                            {t("overtimeBadge")}
+                          </Badge>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <VacationCancelAction requestId={r.id} />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
           </CardContent>
         </Card>
@@ -187,35 +187,37 @@ export default async function VacationApprovalsPage({ params }: Props) {
           <CardContent>
             <div className="overflow-x-auto">
               <Table className="min-w-[500px] whitespace-nowrap">
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Mitarbeiter</TableHead>
-                  <TableHead>{t("from")}</TableHead>
-                  <TableHead>{t("to")}</TableHead>
-                  <TableHead>{t("days")}</TableHead>
-                  <TableHead>{t("status")}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {recent.map((r) => (
-                  <TableRow key={r.id}>
-                    <TableCell>{r.user.name}</TableCell>
-                    <TableCell className="font-mono">
-                      {formatInZone(r.from, "Europe/Berlin", "dd.MM.yyyy", appLocale)}
-                    </TableCell>
-                    <TableCell className="font-mono">
-                      {formatInZone(r.to, "Europe/Berlin", "dd.MM.yyyy", appLocale)}
-                    </TableCell>
-                    <TableCell>{r.days}</TableCell>
-                    <TableCell>
-                      <span className={`inline-flex rounded-md px-2 py-0.5 text-xs font-medium ${STATUS_COLORS[r.status]}`}>
-                        {t(`statuses.${r.status}` as never)}
-                      </span>
-                    </TableCell>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Mitarbeiter</TableHead>
+                    <TableHead>{t("from")}</TableHead>
+                    <TableHead>{t("to")}</TableHead>
+                    <TableHead>{t("days")}</TableHead>
+                    <TableHead>{t("status")}</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {recent.map((r) => (
+                    <TableRow key={r.id}>
+                      <TableCell>{r.user.name}</TableCell>
+                      <TableCell className="font-mono">
+                        {formatInZone(r.from, "Europe/Berlin", "dd.MM.yyyy", appLocale)}
+                      </TableCell>
+                      <TableCell className="font-mono">
+                        {formatInZone(r.to, "Europe/Berlin", "dd.MM.yyyy", appLocale)}
+                      </TableCell>
+                      <TableCell>{r.days}</TableCell>
+                      <TableCell>
+                        <span
+                          className={`inline-flex rounded-md px-2 py-0.5 text-xs font-medium ${STATUS_COLORS[r.status]}`}
+                        >
+                          {t(`statuses.${r.status}` as never)}
+                        </span>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
           </CardContent>
         </Card>

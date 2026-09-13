@@ -38,9 +38,9 @@ describe("checkCsrfOrigin", () => {
   });
 
   it("allows when origin is in allowedOrigins list", () => {
-    expect(
-      checkCsrfOrigin("https://app.example.com", ["https://app.example.com"], null)
-    ).toEqual({ ok: true });
+    expect(checkCsrfOrigin("https://app.example.com", ["https://app.example.com"], null)).toEqual({
+      ok: true,
+    });
   });
 
   it("rejects origin mismatch", () => {

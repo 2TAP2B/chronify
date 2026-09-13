@@ -1,18 +1,12 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import {
-  BellIcon,
-  BellOffIcon,
-  LogOutIcon,
-  MoreVerticalIcon,
-  UserCircleIcon,
-} from "lucide-react"
-import { signOut } from "next-auth/react"
-import { useLocale, useTranslations } from "next-intl"
-import Link from "next/link"
+import { useEffect, useState } from "react";
+import { BellIcon, BellOffIcon, LogOutIcon, MoreVerticalIcon, UserCircleIcon } from "lucide-react";
+import { signOut } from "next-auth/react";
+import { useLocale, useTranslations } from "next-intl";
+import Link from "next/link";
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,69 +15,69 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
 import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from "@/components/ui/sidebar"
+} from "@/components/ui/sidebar";
 
 export function NavUser({
   user,
 }: {
   user: {
-    name: string
-    email: string
-  }
+    name: string;
+    email: string;
+  };
 }) {
-  const { isMobile } = useSidebar()
-  const locale = useLocale()
-  const tNav = useTranslations("nav")
-  const tPush = useTranslations("push")
+  const { isMobile } = useSidebar();
+  const locale = useLocale();
+  const tNav = useTranslations("nav");
+  const tPush = useTranslations("push");
 
-  const [pushSupported, setPushSupported] = useState(false)
-  const [pushSubscribed, setPushSubscribed] = useState(false)
-  const [pushLoading, setPushLoading] = useState(false)
+  const [pushSupported, setPushSupported] = useState(false);
+  const [pushSubscribed, setPushSubscribed] = useState(false);
+  const [pushLoading, setPushLoading] = useState(false);
 
   const initials = user.name
     .split(" ")
     .map((n) => n[0])
     .slice(0, 2)
     .join("")
-    .toUpperCase()
+    .toUpperCase();
 
   useEffect(() => {
-    setPushSupported("serviceWorker" in navigator && "PushManager" in window)
+    setPushSupported("serviceWorker" in navigator && "PushManager" in window);
     fetch("/api/push/subscription")
       .then((r) => r.json())
       .then((d) => setPushSubscribed(d.subscribed === true))
-      .catch(() => {})
-  }, [])
+      .catch(() => {});
+  }, []);
 
   async function togglePush() {
-    setPushLoading(true)
+    setPushLoading(true);
     try {
       if (pushSubscribed) {
-        await fetch("/api/push/subscription", { method: "DELETE" })
-        setPushSubscribed(false)
+        await fetch("/api/push/subscription", { method: "DELETE" });
+        setPushSubscribed(false);
       } else {
-        const reg = await navigator.serviceWorker.ready
+        const reg = await navigator.serviceWorker.ready;
         const sub = await reg.pushManager.subscribe({
           userVisibleOnly: true,
           applicationServerKey: process.env.NEXT_PUBLIC_PUSH_VAPID_PUBLIC_KEY,
-        })
+        });
         await fetch("/api/push/subscription", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(sub),
-        })
-        setPushSubscribed(true)
+        });
+        setPushSubscribed(true);
       }
     } catch (err) {
-      console.error("Push subscription failed:", err)
+      console.error("Push subscription failed:", err);
     } finally {
-      setPushLoading(false)
+      setPushLoading(false);
     }
   }
 
@@ -101,9 +95,7 @@ export function NavUser({
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-medium">{user.name}</span>
-                <span className="truncate text-xs text-muted-foreground">
-                  {user.email}
-                </span>
+                <span className="truncate text-xs text-muted-foreground">{user.email}</span>
               </div>
               <MoreVerticalIcon className="ml-auto size-4" />
             </SidebarMenuButton>
@@ -121,9 +113,7 @@ export function NavUser({
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium">{user.name}</span>
-                  <span className="truncate text-xs text-muted-foreground">
-                    {user.email}
-                  </span>
+                  <span className="truncate text-xs text-muted-foreground">{user.email}</span>
                 </div>
               </div>
             </DropdownMenuLabel>
@@ -136,10 +126,7 @@ export function NavUser({
                 </Link>
               </DropdownMenuItem>
               {pushSupported && (
-                <DropdownMenuItem
-                  onClick={togglePush}
-                  disabled={pushLoading}
-                >
+                <DropdownMenuItem onClick={togglePush} disabled={pushLoading}>
                   {pushSubscribed ? (
                     <>
                       <BellOffIcon />
@@ -166,5 +153,5 @@ export function NavUser({
         </DropdownMenu>
       </SidebarMenuItem>
     </SidebarMenu>
-  )
+  );
 }

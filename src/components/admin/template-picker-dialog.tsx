@@ -83,7 +83,9 @@ export function TemplatePickerDialog({
               <div key={tpl.id} className="flex items-center gap-3 rounded-md border p-3">
                 <RadioGroupItem value={tpl.id} id={tpl.id} />
                 <div className="flex-1">
-                  <Label htmlFor={tpl.id} className="font-medium">{tpl.name}</Label>
+                  <Label htmlFor={tpl.id} className="font-medium">
+                    {tpl.name}
+                  </Label>
                   <p className="text-xs text-muted-foreground">
                     {t("weeklyTarget")}: {(tpl.weeklyTargetMinutes / 60).toFixed(1)} h
                   </p>
@@ -94,8 +96,12 @@ export function TemplatePickerDialog({
         )}
         {error && <p className="text-sm text-destructive">{error}</p>}
         <div className="flex justify-end gap-2">
-          <Button variant="secondary" onClick={() => onOpenChange(false)} disabled={loading}>{t("cancel")}</Button>
-          <Button onClick={onAssign} disabled={loading || !selected}>{t("assign")}</Button>
+          <Button variant="secondary" onClick={() => onOpenChange(false)} disabled={loading}>
+            {t("cancel")}
+          </Button>
+          <Button onClick={onAssign} disabled={loading || !selected}>
+            {t("assign")}
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

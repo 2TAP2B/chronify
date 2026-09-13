@@ -7,17 +7,17 @@ import {
   WorkingModelError,
 } from "@/server/services/admin-working-models";
 
-export async function PATCH(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const user = await requireUser();
     const { id } = await params;
     const body = await request.json().catch(() => null);
     const input = updateWorkingModelSchema.safeParse(body);
     if (!input.success) {
-      return NextResponse.json({ error: "Invalid input", issues: input.error.issues }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid input", issues: input.error.issues },
+        { status: 400 }
+      );
     }
     const model = await updateModel({ actor: user, modelId: id, input: input.data });
     return NextResponse.json({ model });
@@ -30,10 +30,7 @@ export async function PATCH(
   }
 }
 
-export async function DELETE(
-  _request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const user = await requireUser();
     const { id } = await params;

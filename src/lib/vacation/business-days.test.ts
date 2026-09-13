@@ -176,18 +176,24 @@ describe("businessDaysInRange", () => {
 
 describe("overlapsExisting", () => {
   it("detects overlap", () => {
-    const existing = [{ from: new Date("2026-07-06"), to: new Date("2026-07-10"), status: "APPROVED" }];
+    const existing = [
+      { from: new Date("2026-07-06"), to: new Date("2026-07-10"), status: "APPROVED" },
+    ];
     expect(overlapsExisting(new Date("2026-07-08"), new Date("2026-07-12"), existing)).toBe(true);
     expect(overlapsExisting(new Date("2026-07-04"), new Date("2026-07-06"), existing)).toBe(true);
   });
 
   it("no overlap when ranges touch but don't intersect", () => {
-    const existing = [{ from: new Date("2026-07-06"), to: new Date("2026-07-10"), status: "APPROVED" }];
+    const existing = [
+      { from: new Date("2026-07-06"), to: new Date("2026-07-10"), status: "APPROVED" },
+    ];
     expect(overlapsExisting(new Date("2026-07-11"), new Date("2026-07-13"), existing)).toBe(false);
   });
 
   it("ignores rejected/cancelled requests", () => {
-    const existing = [{ from: new Date("2026-07-06"), to: new Date("2026-07-10"), status: "REJECTED" }];
+    const existing = [
+      { from: new Date("2026-07-06"), to: new Date("2026-07-10"), status: "REJECTED" },
+    ];
     expect(overlapsExisting(new Date("2026-07-08"), new Date("2026-07-12"), existing)).toBe(false);
   });
 });

@@ -70,23 +70,65 @@ export async function gatherReportData(opts: {
   };
 }
 
-export function toCsv(data: { rows: ReportRow[]; userName: string; range: { from: string; to: string } }): string {
-  const fields = ["date", "userName", "type", "startAt", "endAt", "breakMinutes", "workedHours", "note", "source"];
+export function toCsv(data: {
+  rows: ReportRow[];
+  userName: string;
+  range: { from: string; to: string };
+}): string {
+  const fields = [
+    "date",
+    "userName",
+    "type",
+    "startAt",
+    "endAt",
+    "breakMinutes",
+    "workedHours",
+    "note",
+    "source",
+  ];
   return Papa.unparse({
     fields,
     data: data.rows.map((r) => [
-      r.date, r.userName, r.type, r.startAt ?? "", r.endAt ?? "",
-      r.breakMinutes, r.workedHours, r.note ?? "", r.source,
+      r.date,
+      r.userName,
+      r.type,
+      r.startAt ?? "",
+      r.endAt ?? "",
+      r.breakMinutes,
+      r.workedHours,
+      r.note ?? "",
+      r.source,
     ]),
   });
 }
 
-export function toExcel(data: { rows: ReportRow[]; userName: string; range: { from: string; to: string } }): Buffer {
+export function toExcel(data: {
+  rows: ReportRow[];
+  userName: string;
+  range: { from: string; to: string };
+}): Buffer {
   const wsData: (string | number)[][] = [
-    ["Datum", "Mitarbeiter", "Typ", "Start", "Ende", "Pause (min)", "Gearbeitet (h)", "Notiz", "Quelle"],
+    [
+      "Datum",
+      "Mitarbeiter",
+      "Typ",
+      "Start",
+      "Ende",
+      "Pause (min)",
+      "Gearbeitet (h)",
+      "Notiz",
+      "Quelle",
+    ],
     ...data.rows.map((r) => [
-      r.date, r.userName, r.type, r.startAt ?? "", r.endAt ?? "",
-      r.breakMinutes, r.workedHours, r.note ?? "", r.source,
+      r.date,
+      r.userName,
+      r.type,
+      r.startAt ?? "",
+      r.endAt ?? "",
+      r.breakMinutes,
+      r.workedHours,
+      r.note ?? "",
+      r.source,
     ]),
   ];
   const totalHours = data.rows.reduce((s, r) => s + r.workedHours, 0);
@@ -94,8 +136,15 @@ export function toExcel(data: { rows: ReportRow[]; userName: string; range: { fr
 
   const ws = XLSX.utils.aoa_to_sheet(wsData);
   ws["!cols"] = [
-    { wch: 12 }, { wch: 20 }, { wch: 14 }, { wch: 8 }, { wch: 8 },
-    { wch: 12 }, { wch: 14 }, { wch: 30 }, { wch: 10 },
+    { wch: 12 },
+    { wch: 20 },
+    { wch: 14 },
+    { wch: 8 },
+    { wch: 8 },
+    { wch: 12 },
+    { wch: 14 },
+    { wch: 30 },
+    { wch: 10 },
   ];
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Stundenzettel");
@@ -135,35 +184,100 @@ export async function toPdf(data: {
       { size: "A4", style: pdfStyles.page },
       React.createElement(Text, { style: pdfStyles.title }, "Stundenzettel"),
       React.createElement(Text, { style: pdfStyles.meta }, `Mitarbeiter: ${data.userName}`),
-      React.createElement(Text, { style: pdfStyles.meta }, `Zeitraum: ${data.range.from} – ${data.range.to}`),
-      React.createElement(View, { style: { marginTop: 12 } },
+      React.createElement(
+        Text,
+        { style: pdfStyles.meta },
+        `Zeitraum: ${data.range.from} – ${data.range.to}`
+      ),
+      React.createElement(
+        View,
+        { style: { marginTop: 12 } },
         // Header
-        React.createElement(View, { style: pdfStyles.tableHeader },
+        React.createElement(
+          View,
+          { style: pdfStyles.tableHeader },
           ["Datum", "Typ", "Start", "Ende", "Pause", "Std.", "Notiz"].map((h, i) =>
-            React.createElement(Text, { key: i, style: [pdfStyles.cellHeader, [
-              pdfStyles.cellDate, pdfStyles.cellType, pdfStyles.cellTime, pdfStyles.cellTime,
-              pdfStyles.cellBreak, pdfStyles.cellHours, pdfStyles.cellNote,
-            ][i]] }, h)
+            React.createElement(
+              Text,
+              {
+                key: i,
+                style: [
+                  pdfStyles.cellHeader,
+                  [
+                    pdfStyles.cellDate,
+                    pdfStyles.cellType,
+                    pdfStyles.cellTime,
+                    pdfStyles.cellTime,
+                    pdfStyles.cellBreak,
+                    pdfStyles.cellHours,
+                    pdfStyles.cellNote,
+                  ][i],
+                ],
+              },
+              h
+            )
           )
         ),
         // Data rows
         ...data.rows.map((r, i) =>
-          React.createElement(View, { key: i, style: pdfStyles.tableRow, wrap: false },
-            [r.date, r.type, r.startAt ?? "—", r.endAt ?? "—", String(r.breakMinutes), r.workedHours.toFixed(2), r.note ?? "—"].map((cell, j) =>
-              React.createElement(Text, { key: j, style: [pdfStyles.cell, [
-                pdfStyles.cellDate, pdfStyles.cellType, pdfStyles.cellTime, pdfStyles.cellTime,
-                pdfStyles.cellBreak, pdfStyles.cellHours, pdfStyles.cellNote,
-              ][j]] }, String(cell))
+          React.createElement(
+            View,
+            { key: i, style: pdfStyles.tableRow, wrap: false },
+            [
+              r.date,
+              r.type,
+              r.startAt ?? "—",
+              r.endAt ?? "—",
+              String(r.breakMinutes),
+              r.workedHours.toFixed(2),
+              r.note ?? "—",
+            ].map((cell, j) =>
+              React.createElement(
+                Text,
+                {
+                  key: j,
+                  style: [
+                    pdfStyles.cell,
+                    [
+                      pdfStyles.cellDate,
+                      pdfStyles.cellType,
+                      pdfStyles.cellTime,
+                      pdfStyles.cellTime,
+                      pdfStyles.cellBreak,
+                      pdfStyles.cellHours,
+                      pdfStyles.cellNote,
+                    ][j],
+                  ],
+                },
+                String(cell)
+              )
             )
           )
         ),
         // Total row
-        React.createElement(View, { style: pdfStyles.tableRowTotal },
+        React.createElement(
+          View,
+          { style: pdfStyles.tableRowTotal },
           ["Gesamt", "", "", "", "", totalHours.toFixed(2), ""].map((cell, j) =>
-            React.createElement(Text, { key: j, style: [pdfStyles.cell, [
-              pdfStyles.cellDate, pdfStyles.cellType, pdfStyles.cellTime, pdfStyles.cellTime,
-              pdfStyles.cellBreak, pdfStyles.cellHours, pdfStyles.cellNote,
-            ][j]] }, cell)
+            React.createElement(
+              Text,
+              {
+                key: j,
+                style: [
+                  pdfStyles.cell,
+                  [
+                    pdfStyles.cellDate,
+                    pdfStyles.cellType,
+                    pdfStyles.cellTime,
+                    pdfStyles.cellTime,
+                    pdfStyles.cellBreak,
+                    pdfStyles.cellHours,
+                    pdfStyles.cellNote,
+                  ][j],
+                ],
+              },
+              cell
+            )
           )
         )
       )

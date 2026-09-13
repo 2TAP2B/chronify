@@ -2,13 +2,7 @@ import { getTranslations, setRequestLocale, getLocale } from "next-intl/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { computeYearOvertime } from "@/server/services/overtime";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -80,25 +74,33 @@ export default async function VacationPage({ params, searchParams }: Props) {
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>{t("totalDays")}</CardDescription>
-            <CardTitle className="text-2xl">{totalDays} {t("days")}</CardTitle>
+            <CardTitle className="text-2xl">
+              {totalDays} {t("days")}
+            </CardTitle>
           </CardHeader>
         </Card>
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>{t("carriedOver")}</CardDescription>
-            <CardTitle className="text-2xl">{carriedOverDays} {t("days")}</CardTitle>
+            <CardTitle className="text-2xl">
+              {carriedOverDays} {t("days")}
+            </CardTitle>
           </CardHeader>
         </Card>
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>{t("consumed")}</CardDescription>
-            <CardTitle className="text-2xl">{consumedDays} {t("days")}</CardTitle>
+            <CardTitle className="text-2xl">
+              {consumedDays} {t("days")}
+            </CardTitle>
           </CardHeader>
         </Card>
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>{t("available")}</CardDescription>
-            <CardTitle className="text-2xl text-emerald-600">{availableDays} {t("days")}</CardTitle>
+            <CardTitle className="text-2xl text-emerald-600">
+              {availableDays} {t("days")}
+            </CardTitle>
           </CardHeader>
         </Card>
       </div>
@@ -144,7 +146,9 @@ export default async function VacationPage({ params, searchParams }: Props) {
                     </TableCell>
                     <TableCell>{r.days}</TableCell>
                     <TableCell>
-                      <span className={`inline-flex rounded-md px-2 py-0.5 text-xs font-medium ${STATUS_COLORS[r.status]}`}>
+                      <span
+                        className={`inline-flex rounded-md px-2 py-0.5 text-xs font-medium ${STATUS_COLORS[r.status]}`}
+                      >
                         {t(`statuses.${r.status}` as never)}
                       </span>
                       {r.useOvertime && (
@@ -168,7 +172,6 @@ export default async function VacationPage({ params, searchParams }: Props) {
           )}
         </CardContent>
       </Card>
-
     </div>
   );
 }

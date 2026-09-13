@@ -70,12 +70,8 @@ export function ResetPasswordForm({
           <CardContent className="p-6 md:p-8">
             <div className="flex flex-col items-center gap-4 text-center">
               <CheckCircle2 className="h-12 w-12 text-green-600" />
-              <p className="text-sm text-muted-foreground">
-                {t("resetPasswordSuccess")}
-              </p>
-              <Button onClick={() => router.push("/login")}>
-                {t("backToLogin")}
-              </Button>
+              <p className="text-sm text-muted-foreground">{t("resetPasswordSuccess")}</p>
+              <Button onClick={() => router.push("/login")}>{t("backToLogin")}</Button>
             </div>
           </CardContent>
         </Card>
@@ -93,9 +89,7 @@ export function ResetPasswordForm({
                 <Logo className="h-12 w-12" />
               </div>
               <h1 className="text-2xl font-bold">{t("resetPasswordTitle")}</h1>
-              <p className="text-balance text-muted-foreground">
-                {t("resetPasswordDescription")}
-              </p>
+              <p className="text-balance text-muted-foreground">{t("resetPasswordDescription")}</p>
             </div>
             <form onSubmit={onSubmit} className="grid gap-4">
               <div className="grid gap-2">

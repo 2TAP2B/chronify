@@ -76,11 +76,11 @@ export function EntitlementDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{t("adjustEntitlement")} – {userName}</DialogTitle>
+          <DialogTitle>
+            {t("adjustEntitlement")} – {userName}
+          </DialogTitle>
           <DialogDescription>
-            {currentDays !== null
-              ? t("currentDays", { days: currentDays })
-              : t("usingDefault")}
+            {currentDays !== null ? t("currentDays", { days: currentDays }) : t("usingDefault")}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-2">
@@ -98,8 +98,12 @@ export function EntitlementDialog({
         </div>
         {error && <p className="text-sm text-destructive">{error}</p>}
         <div className="flex justify-end gap-2">
-          <Button variant="secondary" onClick={() => onOpenChange(false)} disabled={loading}>{t("cancel")}</Button>
-          <Button onClick={onSave} disabled={loading}>{t("save")}</Button>
+          <Button variant="secondary" onClick={() => onOpenChange(false)} disabled={loading}>
+            {t("cancel")}
+          </Button>
+          <Button onClick={onSave} disabled={loading}>
+            {t("save")}
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

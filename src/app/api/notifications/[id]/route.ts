@@ -2,10 +2,7 @@ import { NextResponse } from "next/server";
 import { requireUser } from "@/server/context";
 import { db } from "@/lib/db";
 
-export async function PATCH(
-  _req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PATCH(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const user = await requireUser();
     const { id } = await params;

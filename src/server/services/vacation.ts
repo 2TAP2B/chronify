@@ -126,11 +126,7 @@ export async function createVacationRequest(opts: {
       timeZone: ctx.timeZone,
     });
     if (computation.balanceMs <= 0) {
-      throw new VacationError(
-        "No overtime balance available",
-        "INSUFFICIENT_OVERTIME",
-        403
-      );
+      throw new VacationError("No overtime balance available", "INSUFFICIENT_OVERTIME", 403);
     }
   } else if (businessDays.length > available) {
     throw new VacationError(
@@ -251,9 +247,7 @@ export async function approveVacationRequest(opts: {
     });
     function modelForDate(d: Date) {
       return (
-        workingModels.find(
-          (m) => m.validFrom <= d && (m.validTo == null || m.validTo >= d)
-        ) ?? null
+        workingModels.find((m) => m.validFrom <= d && (m.validTo == null || m.validTo >= d)) ?? null
       );
     }
     const consumedMinutes = businessDays.reduce((sum, d) => {
@@ -294,7 +288,8 @@ export async function approveVacationRequest(opts: {
         create: {
           userId: req.userId,
           year: req.year,
-          totalDays: (await db.orgSettings.findUniqueOrThrow({ where: { id: "singleton" } })).defaultVacationDays,
+          totalDays: (await db.orgSettings.findUniqueOrThrow({ where: { id: "singleton" } }))
+            .defaultVacationDays,
           consumedDays: businessDays.length,
         },
         update: {
@@ -441,9 +436,8 @@ export async function cancelVacationRequest(opts: {
       });
       function modelForDate(d: Date) {
         return (
-          workingModels.find(
-            (m) => m.validFrom <= d && (m.validTo == null || m.validTo >= d)
-          ) ?? null
+          workingModels.find((m) => m.validFrom <= d && (m.validTo == null || m.validTo >= d)) ??
+          null
         );
       }
       const consumedMinutes = bd.reduce((sum, d) => {

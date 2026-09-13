@@ -21,18 +21,48 @@ const localizer = dateFnsLocalizer({
 });
 
 const EVENT_STYLES: Record<CalendarEventType, { bg: string; text: string; border: string }> = {
-  WORK: { bg: "bg-blue-100 dark:bg-blue-950", text: "text-blue-800 dark:text-blue-200", border: "border-blue-300 dark:border-blue-800" },
-  VACATION: { bg: "bg-emerald-100 dark:bg-emerald-950", text: "text-emerald-800 dark:text-emerald-200", border: "border-emerald-300 dark:border-emerald-800" },
-  VACATION_PENDING: { bg: "bg-amber-100 dark:bg-amber-950", text: "text-amber-800 dark:text-amber-200", border: "border-amber-300 dark:border-amber-800" },
-  SICK: { bg: "bg-red-100 dark:bg-red-950", text: "text-red-800 dark:text-red-200", border: "border-red-300 dark:border-red-800" },
-  PUBLIC_HOLIDAY: { bg: "bg-purple-100 dark:bg-purple-950", text: "text-purple-800 dark:text-purple-200", border: "border-purple-300 dark:border-purple-800" },
-  CLOSURE: { bg: "bg-orange-100 dark:bg-orange-950", text: "text-orange-800 dark:text-orange-200", border: "border-orange-300 dark:border-orange-800" },
+  WORK: {
+    bg: "bg-blue-100 dark:bg-blue-950",
+    text: "text-blue-800 dark:text-blue-200",
+    border: "border-blue-300 dark:border-blue-800",
+  },
+  VACATION: {
+    bg: "bg-emerald-100 dark:bg-emerald-950",
+    text: "text-emerald-800 dark:text-emerald-200",
+    border: "border-emerald-300 dark:border-emerald-800",
+  },
+  VACATION_PENDING: {
+    bg: "bg-amber-100 dark:bg-amber-950",
+    text: "text-amber-800 dark:text-amber-200",
+    border: "border-amber-300 dark:border-amber-800",
+  },
+  SICK: {
+    bg: "bg-red-100 dark:bg-red-950",
+    text: "text-red-800 dark:text-red-200",
+    border: "border-red-300 dark:border-red-800",
+  },
+  PUBLIC_HOLIDAY: {
+    bg: "bg-purple-100 dark:bg-purple-950",
+    text: "text-purple-800 dark:text-purple-200",
+    border: "border-purple-300 dark:border-purple-800",
+  },
+  CLOSURE: {
+    bg: "bg-orange-100 dark:bg-orange-950",
+    text: "text-orange-800 dark:text-orange-200",
+    border: "border-orange-300 dark:border-orange-800",
+  },
 };
 
 function eventStyleGetter(event: CalendarEvent) {
   const style = EVENT_STYLES[event.type];
   return {
-    className: cn(style.bg, style.text, "border-l-4", style.border, "rounded px-1 py-0.5 text-xs font-medium"),
+    className: cn(
+      style.bg,
+      style.text,
+      "border-l-4",
+      style.border,
+      "rounded px-1 py-0.5 text-xs font-medium"
+    ),
   };
 }
 
@@ -86,9 +116,7 @@ export function PersonalCalendar({
 
   const selectedEvents = useMemo(() => {
     if (!selectedDate) return [];
-    return events.filter(
-      (e) => e.start.toDateString() === selectedDate.toDateString()
-    );
+    return events.filter((e) => e.start.toDateString() === selectedDate.toDateString());
   }, [events, selectedDate]);
 
   return (
@@ -97,7 +125,13 @@ export function PersonalCalendar({
         <span className="font-medium text-muted-foreground">{t("legend")}:</span>
         {LEGEND_ITEMS.map((item) => (
           <span key={item.type} className="flex items-center gap-1.5">
-            <span className={cn("h-3 w-3 rounded border", EVENT_STYLES[item.type].bg, EVENT_STYLES[item.type].border)} />
+            <span
+              className={cn(
+                "h-3 w-3 rounded border",
+                EVENT_STYLES[item.type].bg,
+                EVENT_STYLES[item.type].border
+              )}
+            />
             {t(item.key)}
           </span>
         ))}

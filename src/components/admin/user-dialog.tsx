@@ -81,8 +81,16 @@ export function UserDialog({
     setError(null);
     try {
       const body: Record<string, unknown> = {
-        email, name, firstName: firstName || undefined, lastName: lastName || undefined,
-        role, locale, federalState, timezone, breakMode, active,
+        email,
+        name,
+        firstName: firstName || undefined,
+        lastName: lastName || undefined,
+        role,
+        locale,
+        federalState,
+        timezone,
+        breakMode,
+        active,
         hireDate: hireDate ? hireDate.toISOString() : null,
         nfcCardId: nfcCardId.trim() || null,
       };
@@ -114,7 +122,11 @@ export function UserDialog({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button size="sm" variant={mode === "create" ? "default" : "ghost"}>
-          {mode === "create" ? <Plus className="mr-1 h-4 w-4" /> : <Pencil className="h-3.5 w-3.5" />}
+          {mode === "create" ? (
+            <Plus className="mr-1 h-4 w-4" />
+          ) : (
+            <Pencil className="h-3.5 w-3.5" />
+          )}
           {mode === "create" ? t("newUser") : t("edit")}
         </Button>
       </DialogTrigger>
@@ -127,11 +139,25 @@ export function UserDialog({
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="email">{t("email")}</Label>
-              <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="password">{t("password")} {mode === "edit" && "(leer = nicht ändern)"}</Label>
-              <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required={mode === "create"} />
+              <Label htmlFor="password">
+                {t("password")} {mode === "edit" && "(leer = nicht ändern)"}
+              </Label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required={mode === "create"}
+              />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="name">{t("name")}</Label>
@@ -139,7 +165,11 @@ export function UserDialog({
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="firstName">{t("firstName")}</Label>
-              <Input id="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+              <Input
+                id="firstName"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+              />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="lastName">{t("lastName")}</Label>
@@ -148,7 +178,9 @@ export function UserDialog({
             <div className="space-y-1.5">
               <Label htmlFor="role">{t("role")}</Label>
               <Select value={role} onValueChange={setRole}>
-                <SelectTrigger id="role"><SelectValue /></SelectTrigger>
+                <SelectTrigger id="role">
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="EMPLOYEE">EMPLOYEE</SelectItem>
                   <SelectItem value="ADMIN">ADMIN</SelectItem>
@@ -158,7 +190,9 @@ export function UserDialog({
             <div className="space-y-1.5">
               <Label htmlFor="locale">{t("locale")}</Label>
               <Select value={locale} onValueChange={setLocale}>
-                <SelectTrigger id="locale"><SelectValue /></SelectTrigger>
+                <SelectTrigger id="locale">
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="de">de</SelectItem>
                   <SelectItem value="en">en</SelectItem>
@@ -168,9 +202,15 @@ export function UserDialog({
             <div className="space-y-1.5">
               <Label htmlFor="federalState">{t("federalState")}</Label>
               <Select value={federalState} onValueChange={setFederalState}>
-                <SelectTrigger id="federalState"><SelectValue /></SelectTrigger>
+                <SelectTrigger id="federalState">
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
-                  {STATE_CODES.map((s) => <SelectItem key={s} value={s}>{STATE_NAMES[s]}</SelectItem>)}
+                  {STATE_CODES.map((s) => (
+                    <SelectItem key={s} value={s}>
+                      {STATE_NAMES[s]}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -181,7 +221,9 @@ export function UserDialog({
             <div className="space-y-1.5">
               <Label htmlFor="breakMode">{t("breakMode")}</Label>
               <Select value={breakMode} onValueChange={setBreakMode}>
-                <SelectTrigger id="breakMode"><SelectValue /></SelectTrigger>
+                <SelectTrigger id="breakMode">
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="AUTO">AUTO</SelectItem>
                   <SelectItem value="MANUAL">MANUAL</SelectItem>
@@ -190,11 +232,7 @@ export function UserDialog({
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="hireDate">{t("hireDate")}</Label>
-              <DatePicker
-                value={hireDate}
-                onChange={setHireDate}
-                placeholder="—"
-              />
+              <DatePicker value={hireDate} onChange={setHireDate} placeholder="—" />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="nfcCardId">{t("nfcCardId")}</Label>
@@ -210,7 +248,9 @@ export function UserDialog({
               <div className="space-y-1.5">
                 <Label htmlFor="active">{t("active")}</Label>
                 <Select value={String(active)} onValueChange={(v) => setActive(v === "true")}>
-                  <SelectTrigger id="active"><SelectValue /></SelectTrigger>
+                  <SelectTrigger id="active">
+                    <SelectValue />
+                  </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="true">{t("active")}</SelectItem>
                     <SelectItem value="false">{t("inactive")}</SelectItem>
@@ -221,8 +261,17 @@ export function UserDialog({
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
           <DialogFooter>
-            <Button type="button" variant="secondary" onClick={() => setOpen(false)} disabled={loading}>{t("cancel")}</Button>
-            <Button type="submit" disabled={loading}>{t("save")}</Button>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setOpen(false)}
+              disabled={loading}
+            >
+              {t("cancel")}
+            </Button>
+            <Button type="submit" disabled={loading}>
+              {t("save")}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

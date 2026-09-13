@@ -2,12 +2,7 @@ import { getTranslations, setRequestLocale, getLocale } from "next-intl/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getOrgSettings } from "@/server/context";
-import {
-  toCalendarDate,
-  startOfWeekUtc,
-  addDaysUtc,
-  formatInZone,
-} from "@/lib/datetime";
+import { toCalendarDate, startOfWeekUtc, addDaysUtc, formatInZone } from "@/lib/datetime";
 import { isEntryLocked } from "@/lib/timer-utils";
 import { TimesheetGrid } from "@/components/timesheet/timesheet-grid";
 import { UserSelector } from "@/components/timesheet/user-selector";
@@ -25,7 +20,7 @@ function getISOWeek(date: Date): number {
   const dayNum = d.getUTCDay() || 7;
   d.setUTCDate(d.getUTCDate() + 4 - dayNum);
   const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-  return Math.ceil((((d.getTime() - yearStart.getTime()) / 86_400_000) + 1) / 7);
+  return Math.ceil(((d.getTime() - yearStart.getTime()) / 86_400_000 + 1) / 7);
 }
 
 export default async function TimesheetPage({ params, searchParams }: Props) {
@@ -115,10 +110,7 @@ export default async function TimesheetPage({ params, searchParams }: Props) {
             <ChevronLeft className="h-4 w-4 sm:hidden" />
             <span className="hidden sm:inline">← {t("previousWeek")}</span>
           </a>
-          <TimesheetDatePicker
-            value={weekStart}
-            userId={userIdParam}
-          />
+          <TimesheetDatePicker value={weekStart} userId={userIdParam} />
           <a
             href={`?date=${todayIso}${userIdParam ? `&userId=${userIdParam}` : ""}`}
             className="flex h-9 shrink-0 items-center rounded-md border px-3 text-sm hover:bg-accent"
@@ -135,13 +127,9 @@ export default async function TimesheetPage({ params, searchParams }: Props) {
         </div>
       </div>
 
-      {isAdmin && (
-        <UserSelector currentUserId={session.user.id} users={users} />
-      )}
+      {isAdmin && <UserSelector currentUserId={session.user.id} users={users} />}
       <p className="text-sm text-muted-foreground">{weekLabel}</p>
-      <p className="text-xs text-muted-foreground">
-        {t("lockedHint", { days: lockWindowDays })}
-      </p>
+      <p className="text-xs text-muted-foreground">{t("lockedHint", { days: lockWindowDays })}</p>
       <TimesheetGrid
         days={days}
         timeZone={timeZone}

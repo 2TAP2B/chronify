@@ -12,9 +12,9 @@ const ALLOWED_MIME: Record<string, string> = {
 };
 
 const MAGIC_BYTES: Array<{ bytes: number[]; mime: string }> = [
-  { bytes: [0x25, 0x50, 0x44, 0x46], mime: "application/pdf" },     // %PDF
-  { bytes: [0x89, 0x50, 0x4e, 0x47], mime: "image/png" },           // PNG
-  { bytes: [0xff, 0xd8, 0xff], mime: "image/jpeg" },                // JPEG
+  { bytes: [0x25, 0x50, 0x44, 0x46], mime: "application/pdf" }, // %PDF
+  { bytes: [0x89, 0x50, 0x4e, 0x47], mime: "image/png" }, // PNG
+  { bytes: [0xff, 0xd8, 0xff], mime: "image/jpeg" }, // JPEG
 ];
 
 function detectMime(buffer: Buffer): string | null {
@@ -26,10 +26,7 @@ function detectMime(buffer: Buffer): string | null {
   return null;
 }
 
-export async function POST(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const user = await requireUser();
     const { id } = await params;
@@ -48,7 +45,10 @@ export async function POST(
 
     const detectedMime = detectMime(buffer);
     if (!detectedMime) {
-      return NextResponse.json({ error: "Invalid file type — only PDF, PNG, JPEG allowed" }, { status: 415 });
+      return NextResponse.json(
+        { error: "Invalid file type — only PDF, PNG, JPEG allowed" },
+        { status: 415 }
+      );
     }
 
     const declaredExt = ALLOWED_MIME[detectedMime];
@@ -73,10 +73,7 @@ export async function POST(
   }
 }
 
-export async function GET(
-  _request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const user = await requireUser();
     const { id } = await params;

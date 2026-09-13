@@ -4,13 +4,7 @@ import { db } from "@/lib/db";
 import { GdprRetentionSettings } from "@/components/admin/gdpr-retention-settings";
 import { GdprCleanupPanel } from "@/components/admin/gdpr-cleanup-panel";
 import { GdprUserAnonymize } from "@/components/admin/gdpr-user-anonymize";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 type Props = {
   params: Promise<{ locale: string }>;

@@ -85,7 +85,9 @@ export function GdprCleanupPanel() {
           {items.map((item) => (
             <div key={item.key} className="flex items-center justify-between rounded-lg border p-3">
               <span className="text-sm">{t(item.key)}</span>
-              <span className={`text-lg font-bold ${item.value > 0 ? "text-amber-600" : "text-muted-foreground"}`}>
+              <span
+                className={`text-lg font-bold ${item.value > 0 ? "text-amber-600" : "text-muted-foreground"}`}
+              >
                 {item.value}
               </span>
             </div>
@@ -101,7 +103,20 @@ export function GdprCleanupPanel() {
 
         <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
           <DialogTrigger asChild>
-            <Button variant="destructive" size="sm" disabled={running || !stats || stats.timeEntries + stats.sickNotes + stats.auditLogs + stats.notifications + stats.inactiveUsers === 0}>
+            <Button
+              variant="destructive"
+              size="sm"
+              disabled={
+                running ||
+                !stats ||
+                stats.timeEntries +
+                  stats.sickNotes +
+                  stats.auditLogs +
+                  stats.notifications +
+                  stats.inactiveUsers ===
+                  0
+              }
+            >
               <Trash2 className="h-4 w-4" />
               {t("runCleanup")}
             </Button>

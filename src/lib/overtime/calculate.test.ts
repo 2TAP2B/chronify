@@ -91,8 +91,20 @@ describe("summarizeDay", () => {
 
 describe("sumDeltaMs", () => {
   it("sums deltas across days", () => {
-    const d1 = { date: new Date(), workedMs: 9 * H, breakMinutes: 30, targetMinutes: 480, deltaMs: 60 * M };
-    const d2 = { date: new Date(), workedMs: 7 * H, breakMinutes: 0, targetMinutes: 480, deltaMs: -60 * M };
+    const d1 = {
+      date: new Date(),
+      workedMs: 9 * H,
+      breakMinutes: 30,
+      targetMinutes: 480,
+      deltaMs: 60 * M,
+    };
+    const d2 = {
+      date: new Date(),
+      workedMs: 7 * H,
+      breakMinutes: 0,
+      targetMinutes: 480,
+      deltaMs: -60 * M,
+    };
     expect(sumDeltaMs([d1, d2])).toBe(0);
   });
 });

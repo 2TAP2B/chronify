@@ -11,10 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/layout/logo";
 import { cn } from "@/lib/utils";
 
-export function ForgotPasswordForm({
-  className,
-  ...props
-}: React.ComponentProps<"div">) {
+export function ForgotPasswordForm({ className, ...props }: React.ComponentProps<"div">) {
   const t = useTranslations("auth");
   const locale = useLocale();
   const router = useRouter();
@@ -38,7 +35,7 @@ export function ForgotPasswordForm({
       });
 
       if (!res.ok) {
-        const body = await res.json() as { error?: string };
+        const body = (await res.json()) as { error?: string };
         if (body.error?.includes("many")) {
           setError(body.error);
         }
@@ -61,21 +58,14 @@ export function ForgotPasswordForm({
                 <Logo className="h-12 w-12" />
               </div>
               <h1 className="text-2xl font-bold">{t("forgotPasswordTitle")}</h1>
-              <p className="text-balance text-muted-foreground">
-                {t("forgotPasswordDescription")}
-              </p>
+              <p className="text-balance text-muted-foreground">{t("forgotPasswordDescription")}</p>
             </div>
 
             {sent ? (
               <div className="flex flex-col items-center gap-4 py-4 text-center">
                 <Mail className="h-12 w-12 text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">
-                  {t("forgotPasswordSent")}
-                </p>
-                <Button
-                  variant="outline"
-                  onClick={() => router.push("/login")}
-                >
+                <p className="text-sm text-muted-foreground">{t("forgotPasswordSent")}</p>
+                <Button variant="outline" onClick={() => router.push("/login")}>
                   {t("backToLogin")}
                 </Button>
               </div>

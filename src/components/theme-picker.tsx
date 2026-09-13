@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { useTheme } from "next-themes";
 import { useTranslations } from "next-intl";
@@ -95,7 +95,9 @@ export function ThemePicker() {
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
       {THEMES.map((opt) => {
-        const active = theme === opt.mode && (localStorage.getItem(STORAGE_KEY) ?? "default") === opt.colorScheme;
+        const active =
+          theme === opt.mode &&
+          (localStorage.getItem(STORAGE_KEY) ?? "default") === opt.colorScheme;
         return (
           <button
             key={opt.id}
@@ -103,9 +105,7 @@ export function ThemePicker() {
             onClick={() => apply(opt)}
             className={cn(
               "flex flex-col items-center gap-2 rounded-lg border p-3 transition-colors",
-              active
-                ? "border-primary ring-2 ring-primary/30"
-                : "hover:bg-accent"
+              active ? "border-primary ring-2 ring-primary/30" : "hover:bg-accent"
             )}
           >
             <div className="flex items-center gap-1.5">

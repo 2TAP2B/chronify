@@ -2,10 +2,7 @@ import { db } from "@/lib/db";
 import { audit, getUserContext, type SessionUser } from "@/server/context";
 import { sendMail } from "@/server/services/mail";
 import { sickNoteReminderEmail } from "@/lib/email-templates";
-import {
-  businessDaysInRange,
-  makeHolidayResolver,
-} from "@/lib/vacation/business-days";
+import { businessDaysInRange, makeHolidayResolver } from "@/lib/vacation/business-days";
 import { toCalendarDate } from "@/lib/datetime";
 import { writeFile, mkdir, readFile, unlink } from "node:fs/promises";
 import { existsSync } from "node:fs";
@@ -55,7 +52,9 @@ export async function listSickNotes(opts: {
   return { notes, targetUserId: userId };
 }
 
-export async function listAllSickNotes(actor: SessionUser): Promise<Array<SickNote & { userName: string; userEmail: string }>> {
+export async function listAllSickNotes(
+  actor: SessionUser
+): Promise<Array<SickNote & { userName: string; userEmail: string }>> {
   if (actor.role !== "ADMIN") {
     throw new SicknessError("Forbidden", "FORBIDDEN", 403);
   }
@@ -162,8 +161,8 @@ export async function updateSickNote(opts: {
 
   // Recompute days if from/to changed
   if (opts.input.from !== undefined || opts.input.to !== undefined) {
-    const from = (opts.input.from ?? existing.from);
-    const to = (opts.input.to ?? existing.to);
+    const from = opts.input.from ?? existing.from;
+    const to = opts.input.to ?? existing.to;
     const ctx = await getUserContext(existing.userId);
     const holidays = await db.publicHoliday.findMany({
       where: { federalState: ctx.user.federalState, date: { gte: from, lte: to } },
@@ -232,7 +231,11 @@ export async function deleteSickNote(opts: {
   if (existing.certificateUrl) {
     const filePath = existing.certificateUrl.replace(/^file:/, "");
     if (existsSync(filePath)) {
-      try { await unlink(filePath); } catch { /* ignore */ }
+      try {
+        await unlink(filePath);
+      } catch {
+        /* ignore */
+      }
     }
   }
 
@@ -270,7 +273,11 @@ export async function attachCertificate(opts: {
   if (existing.certificateUrl) {
     const oldPath = existing.certificateUrl.replace(/^file:/, "");
     if (existsSync(oldPath)) {
-      try { await unlink(oldPath); } catch { /* ignore */ }
+      try {
+        await unlink(oldPath);
+      } catch {
+        /* ignore */
+      }
     }
   }
 
@@ -306,18 +313,39 @@ export async function readCertificate(opts: {
   const decrypted = decryptFile(buffer);
 
   let contentType = "application/octet-stream";
-  if (decrypted.length >= 4 && decrypted[0] === 0x25 && decrypted[1] === 0x50 && decrypted[2] === 0x44 && decrypted[3] === 0x46) {
+  if (
+    decrypted.length >= 4 &&
+    decrypted[0] === 0x25 &&
+    decrypted[1] === 0x50 &&
+    decrypted[2] === 0x44 &&
+    decrypted[3] === 0x46
+  ) {
     contentType = "application/pdf";
-  } else if (decrypted.length >= 4 && decrypted[0] === 0x89 && decrypted[1] === 0x50 && decrypted[2] === 0x4e && decrypted[3] === 0x47) {
+  } else if (
+    decrypted.length >= 4 &&
+    decrypted[0] === 0x89 &&
+    decrypted[1] === 0x50 &&
+    decrypted[2] === 0x4e &&
+    decrypted[3] === 0x47
+  ) {
     contentType = "image/png";
-  } else if (decrypted.length >= 3 && decrypted[0] === 0xff && decrypted[1] === 0xd8 && decrypted[2] === 0xff) {
+  } else if (
+    decrypted.length >= 3 &&
+    decrypted[0] === 0xff &&
+    decrypted[1] === 0xd8 &&
+    decrypted[2] === 0xff
+  ) {
     contentType = "image/jpeg";
   }
 
-  const ext = contentType === "application/pdf" ? ".pdf" :
-    contentType === "image/png" ? ".png" :
-    contentType === "image/jpeg" ? ".jpeg" :
-    extname(filePath).toLowerCase();
+  const ext =
+    contentType === "application/pdf"
+      ? ".pdf"
+      : contentType === "image/png"
+        ? ".png"
+        : contentType === "image/jpeg"
+          ? ".jpeg"
+          : extname(filePath).toLowerCase();
   const filename = `au-certificate${ext}`;
   return { buffer: decrypted, filename, contentType };
 }

@@ -3,13 +3,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Users,
   Clock,
@@ -51,10 +45,30 @@ export default async function AdminDashboardPage({ params }: Props) {
 
   const cards = [
     { href: "/admin/users", icon: Users, label: tNav("users"), desc: t("manageUsers") },
-    { href: "/admin/working-models", icon: Clock, label: tNav("workingModels"), desc: t("manageModels") },
-    { href: "/admin/holidays", icon: CalendarDays, label: tNav("holidays"), desc: t("manageHolidays") },
-    { href: "/admin/business-closures", icon: CalendarOff, label: tNav("businessClosures"), desc: t("manageClosures") },
-    { href: "/admin/vacation-approvals", icon: CalendarCheck, label: tNav("vacationApprovals"), desc: t("manageVacation") },
+    {
+      href: "/admin/working-models",
+      icon: Clock,
+      label: tNav("workingModels"),
+      desc: t("manageModels"),
+    },
+    {
+      href: "/admin/holidays",
+      icon: CalendarDays,
+      label: tNav("holidays"),
+      desc: t("manageHolidays"),
+    },
+    {
+      href: "/admin/business-closures",
+      icon: CalendarOff,
+      label: tNav("businessClosures"),
+      desc: t("manageClosures"),
+    },
+    {
+      href: "/admin/vacation-approvals",
+      icon: CalendarCheck,
+      label: tNav("vacationApprovals"),
+      desc: t("manageVacation"),
+    },
     { href: "/admin/sickness", icon: Stethoscope, label: tNav("sickness"), desc: t("manageSick") },
     { href: "/admin/settings", icon: Settings, label: tNav("settings"), desc: t("manageSettings") },
     { href: "/admin/import", icon: Upload, label: tNav("import"), desc: t("manageImport") },
@@ -75,7 +89,9 @@ export default async function AdminDashboardPage({ params }: Props) {
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>{t("pendingVacation")}</CardDescription>
-            <CardTitle className="text-3xl font-bold tabular-nums text-amber-600">{pendingVacation}</CardTitle>
+            <CardTitle className="text-3xl font-bold tabular-nums text-amber-600">
+              {pendingVacation}
+            </CardTitle>
           </CardHeader>
         </Card>
         <Card>
@@ -120,13 +136,21 @@ export default async function AdminDashboardPage({ params }: Props) {
           <CardContent>
             <div className="space-y-2">
               {recentAudit.map((log) => (
-                <div key={log.id} className="flex items-center justify-between border-b pb-2 text-sm last:border-0">
+                <div
+                  key={log.id}
+                  className="flex items-center justify-between border-b pb-2 text-sm last:border-0"
+                >
                   <div>
                     <span className="font-medium">{log.actor?.name ?? "—"}</span>
                     <span className="ml-2 text-muted-foreground">{log.action}</span>
                   </div>
                   <span className="text-xs text-muted-foreground">
-                    {new Date(log.at).toLocaleString("de-DE", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                    {new Date(log.at).toLocaleString("de-DE", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
                   </span>
                 </div>
               ))}

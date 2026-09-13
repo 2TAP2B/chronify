@@ -12,7 +12,10 @@ export async function POST(request: Request) {
 
     const rows = importRowSchema.array().safeParse(body.rows);
     if (!rows.success) {
-      return NextResponse.json({ error: "Invalid rows", issues: rows.error.issues }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid rows", issues: rows.error.issues },
+        { status: 400 }
+      );
     }
 
     const result = await importTimeEntries({

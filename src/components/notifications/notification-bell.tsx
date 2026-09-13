@@ -100,12 +100,7 @@ export function NotificationBell() {
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="size-8 relative"
-          aria-label={t("title")}
-        >
+        <Button variant="ghost" size="icon" className="size-8 relative" aria-label={t("title")}>
           <Bell className="size-4" />
           {unreadCount > 0 && (
             <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground">
@@ -114,10 +109,7 @@ export function NotificationBell() {
           )}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent
-        align="end"
-        className="w-80 max-h-[70vh] overflow-hidden p-0"
-      >
+      <DropdownMenuContent align="end" className="w-80 max-h-[70vh] overflow-hidden p-0">
         <div className="flex items-center justify-between border-b px-3 py-2">
           <span className="text-sm font-semibold">{t("title")}</span>
           <div className="flex items-center gap-2">
@@ -167,9 +159,7 @@ export function NotificationBell() {
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium leading-tight">{n.title}</p>
                     {n.body && (
-                      <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2">
-                        {n.body}
-                      </p>
+                      <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2">{n.body}</p>
                     )}
                     <p className="mt-1 text-[10px] text-muted-foreground">
                       {formatDistanceToNow(new Date(n.createdAt), locale as "de" | "en")}

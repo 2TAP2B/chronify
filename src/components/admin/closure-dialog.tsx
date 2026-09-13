@@ -73,7 +73,12 @@ export function ClosureDialog({ mode }: { mode: "create" }) {
         <form onSubmit={onSubmit} className="space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor="closure-name">{t("name")}</Label>
-            <Input id="closure-name" value={name} onChange={(e) => setName(e.target.value)} required />
+            <Input
+              id="closure-name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
@@ -93,8 +98,17 @@ export function ClosureDialog({ mode }: { mode: "create" }) {
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="secondary" onClick={() => setOpen(false)} disabled={loading}>{t("cancel")}</Button>
-            <Button type="submit" disabled={loading}>{t("save")}</Button>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setOpen(false)}
+              disabled={loading}
+            >
+              {t("cancel")}
+            </Button>
+            <Button type="submit" disabled={loading}>
+              {t("save")}
+            </Button>
           </div>
         </form>
       </DialogContent>

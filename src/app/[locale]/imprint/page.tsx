@@ -1,11 +1,6 @@
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { db } from "@/lib/db";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const dynamic = "force-dynamic";
 

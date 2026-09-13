@@ -101,7 +101,9 @@ export function OvertimeAdjustDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{t("adjustOvertime")} – {userName}</DialogTitle>
+          <DialogTitle>
+            {t("adjustOvertime")} – {userName}
+          </DialogTitle>
           <DialogDescription>{t("overtimeHint")}</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
@@ -132,9 +134,13 @@ export function OvertimeAdjustDialog({
           {computed != null && (
             <div className="rounded-md border bg-muted/30 px-3 py-2 text-sm">
               <span className="text-muted-foreground">{t("computedThisYear")}: </span>
-              <span className="font-mono font-semibold tabular-nums">{minutesToHours(computed)}</span>
+              <span className="font-mono font-semibold tabular-nums">
+                {minutesToHours(computed)}
+              </span>
               <span className="text-muted-foreground"> · {t("netBalance")}: </span>
-              <span className={`font-mono font-bold tabular-nums ${netMinutes >= 0 ? "text-emerald-600" : "text-destructive"}`}>
+              <span
+                className={`font-mono font-bold tabular-nums ${netMinutes >= 0 ? "text-emerald-600" : "text-destructive"}`}
+              >
                 {minutesToHours(netMinutes)}
               </span>
             </div>
@@ -143,8 +149,12 @@ export function OvertimeAdjustDialog({
         </div>
         {error && <p className="text-sm text-destructive">{error}</p>}
         <div className="flex justify-end gap-2">
-          <Button variant="secondary" onClick={() => onOpenChange(false)} disabled={loading}>{t("cancel")}</Button>
-          <Button onClick={onSave} disabled={loading}>{t("save")}</Button>
+          <Button variant="secondary" onClick={() => onOpenChange(false)} disabled={loading}>
+            {t("cancel")}
+          </Button>
+          <Button onClick={onSave} disabled={loading}>
+            {t("save")}
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

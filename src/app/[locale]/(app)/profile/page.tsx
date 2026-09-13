@@ -2,13 +2,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ThemePicker } from "@/components/theme-picker";
 import { OidcLinkManager } from "@/components/auth/oidc-link-manager";
 import { GdprExportButton } from "@/components/profile/gdpr-export-button";
@@ -35,9 +29,7 @@ export default async function ProfilePage({ params }: Props) {
     <div className="space-y-6">
       <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
 
-      {oidcEnabled && (
-        <OidcLinkManager linked={!!oidcAccount} providerName="Pocket-ID" />
-      )}
+      {oidcEnabled && <OidcLinkManager linked={!!oidcAccount} providerName="Pocket-ID" />}
 
       <Card>
         <CardHeader>

@@ -1,10 +1,7 @@
 "use client";
 
 import { useTimer, useTimerInit } from "@/components/timer/use-timer";
-import {
-  SectionCards,
-  type SectionCardsData,
-} from "@/components/section-cards";
+import { SectionCards, type SectionCardsData } from "@/components/section-cards";
 
 type Props = {
   data: SectionCardsData;
@@ -23,13 +20,9 @@ export function LiveSectionCards({ data, labels }: Props) {
   useTimerInit();
   const timer = useTimer();
 
-  const liveSessionHours = timer.active
-    ? timer.displayElapsedMs / 3_600_000
-    : 0;
+  const liveSessionHours = timer.active ? timer.displayElapsedMs / 3_600_000 : 0;
 
-  const baseTodayHours = timer.loaded
-    ? timer.todayWorkedMs / 3_600_000
-    : data.todayHours;
+  const baseTodayHours = timer.loaded ? timer.todayWorkedMs / 3_600_000 : data.todayHours;
 
   const liveData: SectionCardsData = {
     ...data,

@@ -3,12 +3,7 @@ import { type SessionUser, getUserContext } from "@/server/context";
 import { toCalendarDate, formatInZone } from "@/lib/datetime";
 
 export type CalendarEventType =
-  | "WORK"
-  | "VACATION"
-  | "VACATION_PENDING"
-  | "SICK"
-  | "PUBLIC_HOLIDAY"
-  | "CLOSURE";
+  "WORK" | "VACATION" | "VACATION_PENDING" | "SICK" | "PUBLIC_HOLIDAY" | "CLOSURE";
 
 export type CalendarEvent = {
   id: string;

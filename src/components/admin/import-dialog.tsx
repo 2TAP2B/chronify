@@ -57,7 +57,11 @@ export function ImportDialog({ users }: { users: User[] }) {
     startAt: "",
     endAt: "",
   });
-  const [result, setResult] = useState<{ created: number; skipped: number; errors: { row: number; error: string }[] } | null>(null);
+  const [result, setResult] = useState<{
+    created: number;
+    skipped: number;
+    errors: { row: number; error: string }[];
+  } | null>(null);
   const [loading, setLoading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -85,9 +89,7 @@ export function ImportDialog({ users }: { users: User[] }) {
 
         const auto = { date: "", startAt: "", endAt: "" } as Record<FieldKey, string>;
         for (const key of FIELD_KEYS) {
-          const found = fields.find((f) =>
-            AUTO_DETECT[key].includes(f.toLowerCase().trim())
-          );
+          const found = fields.find((f) => AUTO_DETECT[key].includes(f.toLowerCase().trim()));
           if (found) auto[key] = found;
         }
         setMapping(auto);
@@ -100,15 +102,15 @@ export function ImportDialog({ users }: { users: User[] }) {
   }
 
   const mappedRows = rawRows.slice(0, 10).map((r) => ({
-    date: mapping.date ? r[mapping.date] ?? "" : "",
-    startAt: mapping.startAt ? r[mapping.startAt] ?? "" : "",
-    endAt: mapping.endAt ? r[mapping.endAt] ?? "" : "",
+    date: mapping.date ? (r[mapping.date] ?? "") : "",
+    startAt: mapping.startAt ? (r[mapping.startAt] ?? "") : "",
+    endAt: mapping.endAt ? (r[mapping.endAt] ?? "") : "",
   }));
 
   const allMappedRows = rawRows.map((r) => ({
-    date: mapping.date ? r[mapping.date] ?? "" : "",
-    startAt: mapping.startAt ? r[mapping.startAt] ?? "" : "",
-    endAt: mapping.endAt ? r[mapping.endAt] ?? "" : "",
+    date: mapping.date ? (r[mapping.date] ?? "") : "",
+    startAt: mapping.startAt ? (r[mapping.startAt] ?? "") : "",
+    endAt: mapping.endAt ? (r[mapping.endAt] ?? "") : "",
   }));
 
   const canMap = mapping.date && mapping.startAt && mapping.endAt;
@@ -136,7 +138,13 @@ export function ImportDialog({ users }: { users: User[] }) {
   }
 
   return (
-    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) reset(); }}>
+    <Dialog
+      open={open}
+      onOpenChange={(o) => {
+        setOpen(o);
+        if (!o) reset();
+      }}
+    >
       <DialogTrigger asChild>
         <Button size="sm">
           <Upload className="mr-1 h-4 w-4" />
@@ -154,10 +162,14 @@ export function ImportDialog({ users }: { users: User[] }) {
             <div className="space-y-1.5">
               <Label>{t("selectUser")}</Label>
               <Select value={targetUserId} onValueChange={setTargetUserId}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
                   {users.map((u) => (
-                    <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
+                    <SelectItem key={u.id} value={u.id}>
+                      {u.name}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -192,10 +204,14 @@ export function ImportDialog({ users }: { users: User[] }) {
                     value={mapping[key]}
                     onValueChange={(v) => setMapping((m) => ({ ...m, [key]: v }))}
                   >
-                    <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+                    <SelectTrigger>
+                      <SelectValue placeholder="—" />
+                    </SelectTrigger>
                     <SelectContent>
                       {headers.map((h) => (
-                        <SelectItem key={h} value={h}>{h}</SelectItem>
+                        <SelectItem key={h} value={h}>
+                          {h}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -229,11 +245,10 @@ export function ImportDialog({ users }: { users: User[] }) {
               </p>
             </div>
             <div className="flex justify-end gap-2">
-              <Button variant="secondary" onClick={() => setStep("upload")}>{t("back")}</Button>
-              <Button
-                disabled={!canMap || !targetUserId || loading}
-                onClick={doImport}
-              >
+              <Button variant="secondary" onClick={() => setStep("upload")}>
+                {t("back")}
+              </Button>
+              <Button disabled={!canMap || !targetUserId || loading} onClick={doImport}>
                 {loading ? "…" : t("confirm")}
               </Button>
             </div>

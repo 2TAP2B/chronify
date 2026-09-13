@@ -1,3 +1,4 @@
+import "@/lib/load-env";
 import { PrismaClient, Role, BreakMode, FederalState } from "@prisma/client";
 import bcrypt from "bcryptjs";
 

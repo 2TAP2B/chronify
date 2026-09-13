@@ -1,11 +1,6 @@
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { db } from "@/lib/db";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const dynamic = "force-dynamic";
 
@@ -30,7 +25,9 @@ export default async function PrivacyPage({ params }: Props) {
           <section>
             <h2 className="mb-1 font-semibold">{t("privacyController")}</h2>
             {settings.imprintName && <p>{settings.imprintName}</p>}
-            {settings.imprintAddress && <p className="whitespace-pre-line">{settings.imprintAddress}</p>}
+            {settings.imprintAddress && (
+              <p className="whitespace-pre-line">{settings.imprintAddress}</p>
+            )}
             {settings.imprintEmail && <p>E-Mail: {settings.imprintEmail}</p>}
             {settings.imprintPhone && <p>Telefon: {settings.imprintPhone}</p>}
           </section>

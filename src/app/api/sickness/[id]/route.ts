@@ -15,10 +15,7 @@ const updateSchema = z.object({
   note: z.string().trim().max(500).nullish(),
 });
 
-export async function PATCH(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const user = await requireUser();
     const { id } = await params;
@@ -30,7 +27,11 @@ export async function PATCH(
         { status: 400 }
       );
     }
-    const note = await updateSickNote({ actor: user, noteId: id, input: input.data as SickNoteUpdateInput });
+    const note = await updateSickNote({
+      actor: user,
+      noteId: id,
+      input: input.data as SickNoteUpdateInput,
+    });
     return NextResponse.json({ note });
   } catch (e) {
     if (e instanceof Response) return e;
@@ -41,10 +42,7 @@ export async function PATCH(
   }
 }
 
-export async function DELETE(
-  _request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const user = await requireUser();
     const { id } = await params;

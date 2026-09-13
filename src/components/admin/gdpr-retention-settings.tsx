@@ -108,23 +108,45 @@ export function GdprRetentionSettings({
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="in">{t("imprintName")}</Label>
-            <Input id="in" value={form.imprintName} onChange={(e) => setForm({ ...form, imprintName: e.target.value })} />
+            <Input
+              id="in"
+              value={form.imprintName}
+              onChange={(e) => setForm({ ...form, imprintName: e.target.value })}
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="ia">{t("imprintAddress")}</Label>
-            <Input id="ia" value={form.imprintAddress} onChange={(e) => setForm({ ...form, imprintAddress: e.target.value })} />
+            <Input
+              id="ia"
+              value={form.imprintAddress}
+              onChange={(e) => setForm({ ...form, imprintAddress: e.target.value })}
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="ie">{t("imprintEmail")}</Label>
-            <Input id="ie" type="email" value={form.imprintEmail} onChange={(e) => setForm({ ...form, imprintEmail: e.target.value })} />
+            <Input
+              id="ie"
+              type="email"
+              value={form.imprintEmail}
+              onChange={(e) => setForm({ ...form, imprintEmail: e.target.value })}
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="ip">{t("imprintPhone")}</Label>
-            <Input id="ip" value={form.imprintPhone} onChange={(e) => setForm({ ...form, imprintPhone: e.target.value })} />
+            <Input
+              id="ip"
+              value={form.imprintPhone}
+              onChange={(e) => setForm({ ...form, imprintPhone: e.target.value })}
+            />
           </div>
           <div className="space-y-2 sm:col-span-2">
             <Label htmlFor="pp">{t("privacyPolicyUrl")}</Label>
-            <Input id="pp" type="url" value={form.privacyPolicyUrl} onChange={(e) => setForm({ ...form, privacyPolicyUrl: e.target.value })} />
+            <Input
+              id="pp"
+              type="url"
+              value={form.privacyPolicyUrl}
+              onChange={(e) => setForm({ ...form, privacyPolicyUrl: e.target.value })}
+            />
           </div>
         </div>
       </div>

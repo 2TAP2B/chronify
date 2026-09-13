@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { businessDaysInRange, makeHolidayResolver, overlapsExisting } from "@/lib/vacation/business-days";
+import {
+  businessDaysInRange,
+  makeHolidayResolver,
+  overlapsExisting,
+} from "@/lib/vacation/business-days";
 import type { PublicHoliday, FederalState } from "@prisma/client";
 
 const NW: FederalState = "DE_NW";

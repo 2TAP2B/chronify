@@ -10,17 +10,17 @@ import {
   AdminError,
 } from "@/server/services/admin-users";
 
-export async function PATCH(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const user = await requireUser();
     const { id } = await params;
     const body = await request.json().catch(() => null);
     const input = updateUserSchema.safeParse(body);
     if (!input.success) {
-      return NextResponse.json({ error: "Invalid input", issues: input.error.issues }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid input", issues: input.error.issues },
+        { status: 400 }
+      );
     }
     const updated = await updateUser({ actor: user, userId: id, input: input.data });
     return NextResponse.json({ user: updated });
@@ -33,17 +33,18 @@ export async function PATCH(
   }
 }
 
-export async function POST(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const user = await requireUser();
     const { id } = await params;
     const body = await request.json().catch(() => ({}));
     const action = body?.action;
     if (action === "activate" || action === "deactivate") {
-      const result = await toggleUserActive({ actor: user, userId: id, active: action === "activate" });
+      const result = await toggleUserActive({
+        actor: user,
+        userId: id,
+        active: action === "activate",
+      });
       return NextResponse.json(result);
     }
     if (action === "adjust-entitlement") {
@@ -60,7 +61,11 @@ export async function POST(
         carriedOverMinutes: number;
         consumedOvertimeMinutes: number;
       };
-      if (!year || typeof carriedOverMinutes !== "number" || typeof consumedOvertimeMinutes !== "number") {
+      if (
+        !year ||
+        typeof carriedOverMinutes !== "number" ||
+        typeof consumedOvertimeMinutes !== "number"
+      ) {
         return NextResponse.json(
           { error: "year, carriedOverMinutes and consumedOvertimeMinutes required" },
           { status: 400 }
@@ -85,10 +90,7 @@ export async function POST(
   }
 }
 
-export async function DELETE(
-  _request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const user = await requireUser();
     const { id } = await params;

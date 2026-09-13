@@ -98,7 +98,9 @@ export async function getTeamCalendar(opts: {
     for (const u of users) {
       // Holiday for this user's state
       const holiday = holidays.find(
-        (h) => h.federalState === u.federalState && toCalendarDate(h.date, "UTC").getTime() === date.getTime()
+        (h) =>
+          h.federalState === u.federalState &&
+          toCalendarDate(h.date, "UTC").getTime() === date.getTime()
       );
       if (holiday) {
         entries.push({
@@ -129,7 +131,10 @@ export async function getTeamCalendar(opts: {
 
       // Vacation
       const vac = vacations.find(
-        (v) => v.userId === u.id && date.getTime() >= v.from.getTime() && date.getTime() <= v.to.getTime()
+        (v) =>
+          v.userId === u.id &&
+          date.getTime() >= v.from.getTime() &&
+          date.getTime() <= v.to.getTime()
       );
       if (vac) {
         entries.push({
@@ -144,7 +149,10 @@ export async function getTeamCalendar(opts: {
 
       // Sick
       const sick = sickNotes.find(
-        (s) => s.userId === u.id && date.getTime() >= s.from.getTime() && date.getTime() <= s.to.getTime()
+        (s) =>
+          s.userId === u.id &&
+          date.getTime() >= s.from.getTime() &&
+          date.getTime() <= s.to.getTime()
       );
       if (sick) {
         entries.push({

@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { useLocale, useTranslations } from "next-intl"
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
 import {
   Clock,
   UserCog,
@@ -15,7 +15,7 @@ import {
   Shield,
   Circle,
   type LucideIcon,
-} from "lucide-react"
+} from "lucide-react";
 
 import {
   SidebarGroup,
@@ -24,9 +24,9 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from "@/components/ui/sidebar"
-import { cn } from "@/lib/utils"
-import type { NavItem } from "@/components/nav-main"
+} from "@/components/ui/sidebar";
+import { cn } from "@/lib/utils";
+import type { NavItem } from "@/components/nav-main";
 
 const iconMap: Record<string, LucideIcon> = {
   "/admin": LayoutDashboard,
@@ -38,23 +38,22 @@ const iconMap: Record<string, LucideIcon> = {
   "/admin/sickness": HeartPulse,
   "/admin/settings": Settings,
   "/admin/gdpr": Shield,
-}
+};
 
 export function NavAdmin({ items }: { items: NavItem[] }) {
-  const pathname = usePathname()
-  const locale = useLocale()
-  const t = useTranslations("nav")
-  const { setOpenMobile } = useSidebar()
+  const pathname = usePathname();
+  const locale = useLocale();
+  const t = useTranslations("nav");
+  const { setOpenMobile } = useSidebar();
 
   return (
     <SidebarGroup className="group-data-[collapsible=icon]:hidden">
       <SidebarGroupLabel>{t("admin")}</SidebarGroupLabel>
       <SidebarMenu>
         {items.map((item) => {
-          const href = `/${locale}${item.href}`
-          const active =
-            pathname === href || pathname.startsWith(`${href}/`)
-          const Icon = iconMap[item.href] ?? Circle
+          const href = `/${locale}${item.href}`;
+          const active = pathname === href || pathname.startsWith(`${href}/`);
+          const Icon = iconMap[item.href] ?? Circle;
           return (
             <SidebarMenuItem key={href}>
               <SidebarMenuButton
@@ -73,9 +72,9 @@ export function NavAdmin({ items }: { items: NavItem[] }) {
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
-          )
+          );
         })}
       </SidebarMenu>
     </SidebarGroup>
-  )
+  );
 }

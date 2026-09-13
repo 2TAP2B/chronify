@@ -70,7 +70,9 @@ export function GdprUserAnonymize({ users }: { users: InactiveUser[] }) {
             <TableRow key={u.id}>
               <TableCell>{u.name ?? "—"}</TableCell>
               <TableCell>{u.email ?? "—"}</TableCell>
-              <TableCell>{u.hireDate ? new Date(u.hireDate).toLocaleDateString("de-DE") : "—"}</TableCell>
+              <TableCell>
+                {u.hireDate ? new Date(u.hireDate).toLocaleDateString("de-DE") : "—"}
+              </TableCell>
               <TableCell>
                 <Button
                   variant="ghost"
@@ -86,7 +88,12 @@ export function GdprUserAnonymize({ users }: { users: InactiveUser[] }) {
         </TableBody>
       </Table>
 
-      <Dialog open={target !== null} onOpenChange={(open) => { if (!open) setTarget(null); }}>
+      <Dialog
+        open={target !== null}
+        onOpenChange={(open) => {
+          if (!open) setTarget(null);
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">

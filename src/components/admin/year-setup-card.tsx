@@ -2,13 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
@@ -30,7 +24,11 @@ export function YearSetupCard() {
   const [status, setStatus] = useState<Status | null>(null);
   const [loading, setLoading] = useState(false);
   const [running, setRunning] = useState(false);
-  const [result, setResult] = useState<{ usersProcessed: number; entitlementsCreated: number; balancesCreated: number } | null>(null);
+  const [result, setResult] = useState<{
+    usersProcessed: number;
+    entitlementsCreated: number;
+    balancesCreated: number;
+  } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   async function loadStatus() {
@@ -54,7 +52,14 @@ export function YearSetupCard() {
   }, [year]);
 
   async function run() {
-    if (!await confirm({ title: t("confirmRun", { year }), variant: "destructive", confirmLabel: t("runSetup") })) return;
+    if (
+      !(await confirm({
+        title: t("confirmRun", { year }),
+        variant: "destructive",
+        confirmLabel: t("runSetup"),
+      }))
+    )
+      return;
     setRunning(true);
     setError(null);
     setResult(null);
@@ -125,15 +130,22 @@ export function YearSetupCard() {
                 <Badge variant="secondary">{t("setupIncomplete")}</Badge>
               )}
             </div>
-            <div>{t("activeUsers")}: {status.activeUsers}</div>
-            <div>Entitlements: {status.entitlements}/{status.activeUsers}</div>
-            <div>Balances: {status.balances}/{status.activeUsers}</div>
+            <div>
+              {t("activeUsers")}: {status.activeUsers}
+            </div>
+            <div>
+              Entitlements: {status.entitlements}/{status.activeUsers}
+            </div>
+            <div>
+              Balances: {status.balances}/{status.activeUsers}
+            </div>
           </div>
         )}
 
         {result && (
           <div className="rounded-md bg-emerald-50 p-3 text-sm text-emerald-700">
-            {t("usersProcessed")}: {result.usersProcessed} · {t("entitlementsCreated")}: {result.entitlementsCreated} · {t("balancesCreated")}: {result.balancesCreated}
+            {t("usersProcessed")}: {result.usersProcessed} · {t("entitlementsCreated")}:{" "}
+            {result.entitlementsCreated} · {t("balancesCreated")}: {result.balancesCreated}
           </div>
         )}
         {error && <p className="text-sm text-destructive">{error}</p>}

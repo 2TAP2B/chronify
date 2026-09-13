@@ -17,23 +17,28 @@ export async function getRetentionStats(): Promise<RetentionStats> {
   const now = new Date();
 
   const retentionCutoff = new Date(Date.UTC(now.getUTCFullYear() - settings.retentionYears, 0, 1));
-  const sickNoteCutoff = new Date(now.getTime() - settings.sickNoteRetentionMonths * 30 * 24 * 60 * 60 * 1000);
-  const auditCutoff = new Date(now.getTime() - settings.auditLogRetentionMonths * 30 * 24 * 60 * 60 * 1000);
+  const sickNoteCutoff = new Date(
+    now.getTime() - settings.sickNoteRetentionMonths * 30 * 24 * 60 * 60 * 1000
+  );
+  const auditCutoff = new Date(
+    now.getTime() - settings.auditLogRetentionMonths * 30 * 24 * 60 * 60 * 1000
+  );
   const notifCutoff = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
 
-  const [timeEntries, vacationRequests, sickNotes, auditLogs, notifications, inactiveUsers] = await Promise.all([
-    db.timeEntry.count({ where: { date: { lt: retentionCutoff } } }),
-    db.vacationRequest.count({ where: { createdAt: { lt: retentionCutoff } } }),
-    db.sickNote.count({ where: { createdAt: { lt: sickNoteCutoff } } }),
-    db.auditLog.count({ where: { at: { lt: auditCutoff } } }),
-    db.notification.count({ where: { createdAt: { lt: notifCutoff } } }),
-    db.user.count({
-      where: {
-        active: false,
-        createdAt: { lt: retentionCutoff },
-      },
-    }),
-  ]);
+  const [timeEntries, vacationRequests, sickNotes, auditLogs, notifications, inactiveUsers] =
+    await Promise.all([
+      db.timeEntry.count({ where: { date: { lt: retentionCutoff } } }),
+      db.vacationRequest.count({ where: { createdAt: { lt: retentionCutoff } } }),
+      db.sickNote.count({ where: { createdAt: { lt: sickNoteCutoff } } }),
+      db.auditLog.count({ where: { at: { lt: auditCutoff } } }),
+      db.notification.count({ where: { createdAt: { lt: notifCutoff } } }),
+      db.user.count({
+        where: {
+          active: false,
+          createdAt: { lt: retentionCutoff },
+        },
+      }),
+    ]);
 
   return { timeEntries, vacationRequests, sickNotes, auditLogs, notifications, inactiveUsers };
 }
@@ -47,8 +52,12 @@ export async function runRetentionCleanup(
   const dryRun = opts.dryRun ?? false;
 
   const retentionCutoff = new Date(Date.UTC(now.getUTCFullYear() - settings.retentionYears, 0, 1));
-  const sickNoteCutoff = new Date(now.getTime() - settings.sickNoteRetentionMonths * 30 * 24 * 60 * 60 * 1000);
-  const auditCutoff = new Date(now.getTime() - settings.auditLogRetentionMonths * 30 * 24 * 60 * 60 * 1000);
+  const sickNoteCutoff = new Date(
+    now.getTime() - settings.sickNoteRetentionMonths * 30 * 24 * 60 * 60 * 1000
+  );
+  const auditCutoff = new Date(
+    now.getTime() - settings.auditLogRetentionMonths * 30 * 24 * 60 * 60 * 1000
+  );
   const notifCutoff = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
 
   const stats: RetentionStats = {
@@ -82,7 +91,11 @@ export async function runRetentionCleanup(
     if (sn.certificateUrl) {
       const filePath = sn.certificateUrl.replace(/^file:/, "");
       if (existsSync(filePath)) {
-        try { await unlink(filePath); } catch { /* ignore */ }
+        try {
+          await unlink(filePath);
+        } catch {
+          /* ignore */
+        }
       }
     }
   }
@@ -154,7 +167,11 @@ export async function anonymizeUser(actor: SessionUser, userId: string): Promise
     if (sn.certificateUrl) {
       const filePath = sn.certificateUrl.replace(/^file:/, "");
       if (existsSync(filePath)) {
-        try { await unlink(filePath); } catch { /* ignore */ }
+        try {
+          await unlink(filePath);
+        } catch {
+          /* ignore */
+        }
       }
     }
   }

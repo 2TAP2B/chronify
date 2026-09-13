@@ -1,12 +1,6 @@
 import { getTranslations, setRequestLocale, getLocale } from "next-intl/server";
 import { auth } from "@/lib/auth";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -28,12 +22,32 @@ type Props = {
 };
 
 const MONTH_NAMES_DE = [
-  "Januar", "Februar", "März", "April", "Mai", "Juni",
-  "Juli", "August", "September", "Oktober", "November", "Dezember",
+  "Januar",
+  "Februar",
+  "März",
+  "April",
+  "Mai",
+  "Juni",
+  "Juli",
+  "August",
+  "September",
+  "Oktober",
+  "November",
+  "Dezember",
 ];
 const MONTH_NAMES_EN = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
 ];
 
 export default async function OvertimePage({ params, searchParams }: Props) {
@@ -53,7 +67,9 @@ export default async function OvertimePage({ params, searchParams }: Props) {
   });
 
   const monthNames = appLocale === "en" ? MONTH_NAMES_EN : MONTH_NAMES_DE;
-  const cutoffLabel = view.cutoff ? formatInZone(view.cutoff, view.timeZone, "dd.MM.yyyy", appLocale) : null;
+  const cutoffLabel = view.cutoff
+    ? formatInZone(view.cutoff, view.timeZone, "dd.MM.yyyy", appLocale)
+    : null;
   const balancePositive = view.computation.balanceMs >= 0;
 
   return (
@@ -131,9 +147,7 @@ export default async function OvertimePage({ params, searchParams }: Props) {
         </CardHeader>
         <CardContent>
           {view.days.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              {t("noData", { year: view.year })}
-            </p>
+            <p className="text-sm text-muted-foreground">{t("noData", { year: view.year })}</p>
           ) : (
             <Table>
               <TableHeader>
@@ -147,9 +161,7 @@ export default async function OvertimePage({ params, searchParams }: Props) {
                   const hasData = m.deltaMs !== 0;
                   return (
                     <TableRow key={m.month}>
-                      <TableCell className="font-medium">
-                        {monthNames[m.month - 1]}
-                      </TableCell>
+                      <TableCell className="font-medium">{monthNames[m.month - 1]}</TableCell>
                       <TableCell className="text-right font-mono tabular-nums">
                         {hasData ? formatSignedDuration(m.deltaMs) : "—"}
                       </TableCell>

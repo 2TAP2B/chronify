@@ -3,13 +3,7 @@ import { auth } from "@/lib/auth";
 import { getTeamCalendar, type TeamCalendarDay } from "@/server/services/team";
 import { TeamCalendar } from "@/components/team/team-calendar";
 import { TeamPdfExport } from "@/components/team/team-pdf-export";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
 type Props = {
@@ -18,12 +12,32 @@ type Props = {
 };
 
 const MONTH_NAMES_DE = [
-  "Januar", "Februar", "März", "April", "Mai", "Juni",
-  "Juli", "August", "September", "Oktober", "November", "Dezember",
+  "Januar",
+  "Februar",
+  "März",
+  "April",
+  "Mai",
+  "Juni",
+  "Juli",
+  "August",
+  "September",
+  "Oktober",
+  "November",
+  "Dezember",
 ];
 const MONTH_NAMES_EN = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
 ];
 
 export default async function TeamPage({ params, searchParams }: Props) {
@@ -57,9 +71,21 @@ export default async function TeamPage({ params, searchParams }: Props) {
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
         <div className="flex items-center gap-2">
-          <a href={`?year=${prevYear}&month=${prevMonth}`} className="rounded-md border px-3 py-1.5 text-sm hover:bg-accent">←</a>
-          <span className="font-semibold">{monthNames[month - 1]} {year}</span>
-          <a href={`?year=${nextYear}&month=${nextMonth}`} className="rounded-md border px-3 py-1.5 text-sm hover:bg-accent">→</a>
+          <a
+            href={`?year=${prevYear}&month=${prevMonth}`}
+            className="rounded-md border px-3 py-1.5 text-sm hover:bg-accent"
+          >
+            ←
+          </a>
+          <span className="font-semibold">
+            {monthNames[month - 1]} {year}
+          </span>
+          <a
+            href={`?year=${nextYear}&month=${nextMonth}`}
+            className="rounded-md border px-3 py-1.5 text-sm hover:bg-accent"
+          >
+            →
+          </a>
           <TeamPdfExport year={year} month={month} />
         </div>
       </div>
@@ -67,15 +93,27 @@ export default async function TeamPage({ params, searchParams }: Props) {
       <Card>
         <CardHeader>
           <CardTitle>{t("whoIsOff")}</CardTitle>
-          <CardDescription>{monthNames[month - 1]} {year} · {users.length} {t("users")}</CardDescription>
+          <CardDescription>
+            {monthNames[month - 1]} {year} · {users.length} {t("users")}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="mb-4 flex flex-wrap gap-3 text-xs">
-            <span className="flex items-center gap-1"><span className="h-3 w-3 rounded bg-blue-200" /> {t("vacation")}</span>
-            <span className="flex items-center gap-1"><span className="h-3 w-3 rounded bg-red-200" /> {t("sick")}</span>
-            <span className="flex items-center gap-1"><span className="h-3 w-3 rounded bg-emerald-200" /> {t("holiday")}</span>
-            <span className="flex items-center gap-1"><span className="h-3 w-3 rounded bg-amber-200" /> {t("closure")}</span>
-            <span className="flex items-center gap-1"><span className="h-3 w-3 rounded bg-muted" /> {t("weekend")}</span>
+            <span className="flex items-center gap-1">
+              <span className="h-3 w-3 rounded bg-blue-200" /> {t("vacation")}
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="h-3 w-3 rounded bg-red-200" /> {t("sick")}
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="h-3 w-3 rounded bg-emerald-200" /> {t("holiday")}
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="h-3 w-3 rounded bg-amber-200" /> {t("closure")}
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="h-3 w-3 rounded bg-muted" /> {t("weekend")}
+            </span>
           </div>
           <TeamCalendar days={days as TeamCalendarDay[]} users={users} />
         </CardContent>

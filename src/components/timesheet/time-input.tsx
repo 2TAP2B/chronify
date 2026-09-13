@@ -3,11 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { Clock } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
 const STEP_MIN = 15;
@@ -65,52 +61,67 @@ export function TimeInput({
     setDraft(value);
   }, [value]);
 
-  const commit = useCallback((v: string) => {
-    const completed = autoComplete(v);
-    if (completed) {
-      onChange(completed);
-      setDraft(completed);
-    } else {
-      setDraft(v);
-    }
-  }, [onChange]);
+  const commit = useCallback(
+    (v: string) => {
+      const completed = autoComplete(v);
+      if (completed) {
+        onChange(completed);
+        setDraft(completed);
+      } else {
+        setDraft(v);
+      }
+    },
+    [onChange]
+  );
 
   const handleBlur = useCallback(() => {
     commit(draft);
   }, [commit, draft]);
 
-  const handleChange = useCallback((raw: string) => {
-    const formatted = autoFormatTime(raw);
-    setDraft(formatted);
-    onChange(formatted);
-  }, [onChange]);
+  const handleChange = useCallback(
+    (raw: string) => {
+      const formatted = autoFormatTime(raw);
+      setDraft(formatted);
+      onChange(formatted);
+    },
+    [onChange]
+  );
 
-  const step = useCallback((delta: number) => {
-    const current = parseHHMM(draft) ?? parseHHMM(value) ?? 0;
-    let next = current + delta;
-    next = ((next % 1440) + 1440) % 1440;
-    next = Math.round(next / STEP_MIN) * STEP_MIN;
-    next = ((next % 1440) + 1440) % 1440;
-    const formatted = formatHHMM(next);
-    setDraft(formatted);
-    onChange(formatted);
-  }, [draft, value, onChange]);
+  const step = useCallback(
+    (delta: number) => {
+      const current = parseHHMM(draft) ?? parseHHMM(value) ?? 0;
+      let next = current + delta;
+      next = ((next % 1440) + 1440) % 1440;
+      next = Math.round(next / STEP_MIN) * STEP_MIN;
+      next = ((next % 1440) + 1440) % 1440;
+      const formatted = formatHHMM(next);
+      setDraft(formatted);
+      onChange(formatted);
+    },
+    [draft, value, onChange]
+  );
 
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === "ArrowUp") {
-      e.preventDefault();
-      step(STEP_MIN);
-    } else if (e.key === "ArrowDown") {
-      e.preventDefault();
-      step(-STEP_MIN);
-    }
-  }, [step]);
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        step(STEP_MIN);
+      } else if (e.key === "ArrowDown") {
+        e.preventDefault();
+        step(-STEP_MIN);
+      }
+    },
+    [step]
+  );
 
-  const handleClockSelect = useCallback((totalMin: number) => {
-    const formatted = formatHHMM(totalMin);
-    setDraft(formatted);
-    onChange(formatted);
-  }, [onChange]);
+  const handleClockSelect = useCallback(
+    (totalMin: number) => {
+      const formatted = formatHHMM(totalMin);
+      setDraft(formatted);
+      onChange(formatted);
+    },
+    [onChange]
+  );
 
   const currentMin = parseHHMM(draft) ?? 0;
   const currentHour = Math.floor(currentMin / 60);
@@ -164,9 +175,7 @@ function ClockPicker({
   onSelect: (totalMin: number) => void;
   onClose: () => void;
 }) {
-  const [tab, setTab] = useState<"hour" | "minute">(
-    minute % STEP_MIN !== 0 ? "minute" : "hour"
-  );
+  const [tab, setTab] = useState<"hour" | "minute">(minute % STEP_MIN !== 0 ? "minute" : "hour");
   const [selectedHour, setSelectedHour] = useState(hour);
 
   const hours = Array.from({ length: 24 }, (_, i) => i);
@@ -179,7 +188,9 @@ function ClockPicker({
           type="button"
           className={cn(
             "rounded px-2 py-1 text-xs font-medium",
-            tab === "hour" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-accent"
+            tab === "hour"
+              ? "bg-primary text-primary-foreground"
+              : "text-muted-foreground hover:bg-accent"
           )}
           onClick={() => setTab("hour")}
         >
@@ -190,7 +201,9 @@ function ClockPicker({
           type="button"
           className={cn(
             "rounded px-2 py-1 text-xs font-medium",
-            tab === "minute" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-accent"
+            tab === "minute"
+              ? "bg-primary text-primary-foreground"
+              : "text-muted-foreground hover:bg-accent"
           )}
           onClick={() => setTab("minute")}
         >
@@ -205,9 +218,7 @@ function ClockPicker({
               type="button"
               className={cn(
                 "h-8 w-8 rounded text-xs font-mono tabular-nums",
-                h === selectedHour
-                  ? "bg-primary text-primary-foreground"
-                  : "hover:bg-accent"
+                h === selectedHour ? "bg-primary text-primary-foreground" : "hover:bg-accent"
               )}
               onClick={() => {
                 setSelectedHour(h);
@@ -227,7 +238,7 @@ function ClockPicker({
               type="button"
               className={cn(
                 "h-8 w-12 rounded text-xs font-mono tabular-nums",
-                m === (minute - (minute % STEP_MIN))
+                m === minute - (minute % STEP_MIN)
                   ? "bg-primary text-primary-foreground"
                   : "hover:bg-accent"
               )}

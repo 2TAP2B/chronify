@@ -17,8 +17,7 @@ export function toTimerState(s: TimerSession): TimerState {
 }
 
 export function computeElapsedMs(state: TimerState, now: number): number {
-  const onBreakMs =
-    state.breakStartedAt != null ? Math.max(0, now - state.breakStartedAt) : 0;
+  const onBreakMs = state.breakStartedAt != null ? Math.max(0, now - state.breakStartedAt) : 0;
   const totalBreakMs = state.accumulatedBreakMs + onBreakMs;
   return Math.max(0, now - state.startedAt - totalBreakMs);
 }
@@ -28,8 +27,7 @@ export function computeWorkedMs(state: TimerState, now: number): number {
 }
 
 export function computeBreakMs(state: TimerState, now: number): number {
-  const onBreakMs =
-    state.breakStartedAt != null ? Math.max(0, now - state.breakStartedAt) : 0;
+  const onBreakMs = state.breakStartedAt != null ? Math.max(0, now - state.breakStartedAt) : 0;
   return state.accumulatedBreakMs + onBreakMs;
 }
 

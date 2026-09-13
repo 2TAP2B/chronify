@@ -48,7 +48,13 @@ export async function listTemplates(actor: SessionUser) {
   return db.workingModelTemplate.findMany({ orderBy: { name: "asc" } });
 }
 
-export async function createTemplate({ actor, input }: { actor: SessionUser; input: CreateTemplateInput }) {
+export async function createTemplate({
+  actor,
+  input,
+}: {
+  actor: SessionUser;
+  input: CreateTemplateInput;
+}) {
   requireAdmin(actor);
   const { isDefault, ...data } = input;
 
@@ -56,7 +62,10 @@ export async function createTemplate({ actor, input }: { actor: SessionUser; inp
   if (existing) throw new TemplateError("Name already exists", "NAME_TAKEN", 409);
 
   if (isDefault) {
-    await db.workingModelTemplate.updateMany({ where: { isDefault: true }, data: { isDefault: false } });
+    await db.workingModelTemplate.updateMany({
+      where: { isDefault: true },
+      data: { isDefault: false },
+    });
   }
 
   const created = await db.workingModelTemplate.create({ data: { ...data, isDefault } });
@@ -71,7 +80,15 @@ export async function createTemplate({ actor, input }: { actor: SessionUser; inp
   return created;
 }
 
-export async function updateTemplate({ actor, templateId, input }: { actor: SessionUser; templateId: string; input: UpdateTemplateInput }) {
+export async function updateTemplate({
+  actor,
+  templateId,
+  input,
+}: {
+  actor: SessionUser;
+  templateId: string;
+  input: UpdateTemplateInput;
+}) {
   requireAdmin(actor);
   const existing = await db.workingModelTemplate.findUnique({ where: { id: templateId } });
   if (!existing) throw new TemplateError("Not found", "NOT_FOUND", 404);
@@ -103,7 +120,13 @@ export async function updateTemplate({ actor, templateId, input }: { actor: Sess
   return updated;
 }
 
-export async function deleteTemplate({ actor, templateId }: { actor: SessionUser; templateId: string }) {
+export async function deleteTemplate({
+  actor,
+  templateId,
+}: {
+  actor: SessionUser;
+  templateId: string;
+}) {
   requireAdmin(actor);
   const existing = await db.workingModelTemplate.findUnique({ where: { id: templateId } });
   if (!existing) throw new TemplateError("Not found", "NOT_FOUND", 404);
@@ -118,7 +141,15 @@ export async function deleteTemplate({ actor, templateId }: { actor: SessionUser
   });
 }
 
-export async function assignTemplateToUser({ actor, templateId, userId }: { actor: SessionUser; templateId: string; userId: string }) {
+export async function assignTemplateToUser({
+  actor,
+  templateId,
+  userId,
+}: {
+  actor: SessionUser;
+  templateId: string;
+  userId: string;
+}) {
   requireAdmin(actor);
   const template = await db.workingModelTemplate.findUnique({ where: { id: templateId } });
   if (!template) throw new TemplateError("Template not found", "NOT_FOUND", 404);

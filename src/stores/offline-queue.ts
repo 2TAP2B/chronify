@@ -26,10 +26,7 @@ export const useOfflineQueue = create<OfflineQueueState>()(
       queue: [],
       enqueue: (mutation) =>
         set((state) => ({
-          queue: [
-            ...state.queue,
-            { ...mutation, id: crypto.randomUUID(), createdAt: Date.now() },
-          ],
+          queue: [...state.queue, { ...mutation, id: crypto.randomUUID(), createdAt: Date.now() }],
         })),
       dequeue: () => {
         const q = get().queue;

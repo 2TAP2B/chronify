@@ -1,35 +1,30 @@
-import {
-  Card,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export type SectionCardsData = {
-  todayHours: number
-  todayTargetHours: number
-  weekHours: number
-  weekTargetHours: number
-  overtimeHours: number
-  overtimeTrend: "up" | "down" | "neutral"
-  vacationRemaining: number
-  vacationTotal: number
-}
+  todayHours: number;
+  todayTargetHours: number;
+  weekHours: number;
+  weekTargetHours: number;
+  overtimeHours: number;
+  overtimeTrend: "up" | "down" | "neutral";
+  vacationRemaining: number;
+  vacationTotal: number;
+};
 
 export function SectionCards({
   data,
   labels,
 }: {
-  data: SectionCardsData
+  data: SectionCardsData;
   labels: {
-    todayWorked: string
-    weekWorked: string
-    overtimeBalance: string
-    vacationRemaining: string
-    dailyTarget: string
-    weekTarget: string
-    days: string
-  }
+    todayWorked: string;
+    weekWorked: string;
+    overtimeBalance: string;
+    vacationRemaining: string;
+    dailyTarget: string;
+    weekTarget: string;
+    days: string;
+  };
 }) {
   return (
     <div className="*:data-[slot=card]:shadow-xs @xl/main:grid-cols-2 @5xl/main:grid-cols-4 grid grid-cols-1 gap-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card">
@@ -79,5 +74,5 @@ export function SectionCards({
         </CardHeader>
       </Card>
     </div>
-  )
+  );
 }

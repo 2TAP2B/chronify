@@ -14,14 +14,9 @@ type EmailContent = {
   text: string;
 };
 
-const t = (locale: EmailLocale, de: string, en: string): string =>
-  locale === "de" ? de : en;
+const t = (locale: EmailLocale, de: string, en: string): string => (locale === "de" ? de : en);
 
-function baseLayout(opts: {
-  appName: string;
-  locale: EmailLocale;
-  content: string;
-}): string {
+function baseLayout(opts: { appName: string; locale: EmailLocale; content: string }): string {
   const { appName, locale, content } = opts;
   const greeting = t(locale, "E-Mail von", "Email from");
   return `<!DOCTYPE html>
@@ -220,11 +215,21 @@ export function sickNoteReminderEmail(opts: {
   const greeting = t(locale, "Hallo", "Hello");
   const intro = t(
     locale,
-    "Sie sind seit dem {date} krankgemeldet. Bitte laden Sie ggf. eine Arbeitsunfähigkeitsbescheinigung (AU) hoch, falls die Krankheit länger als 3 Tage dauert.".replace("{date}", sickFrom),
-    "You have been on sick leave since {date}. Please upload a sick certificate (AU) if your illness lasts longer than 3 days.".replace("{date}", sickFrom)
+    "Sie sind seit dem {date} krankgemeldet. Bitte laden Sie ggf. eine Arbeitsunfähigkeitsbescheinigung (AU) hoch, falls die Krankheit länger als 3 Tage dauert.".replace(
+      "{date}",
+      sickFrom
+    ),
+    "You have been on sick leave since {date}. Please upload a sick certificate (AU) if your illness lasts longer than 3 days.".replace(
+      "{date}",
+      sickFrom
+    )
   );
   const linkText = t(locale, "Krankmeldung ansehen", "View sick note");
-  const subject = t(locale, "Erinnerung: AU-Bescheinigung hochladen", "Reminder: Upload sick certificate");
+  const subject = t(
+    locale,
+    "Erinnerung: AU-Bescheinigung hochladen",
+    "Reminder: Upload sick certificate"
+  );
 
   const bodyHtml = `
     <p>${greeting} ${recipientName},</p>

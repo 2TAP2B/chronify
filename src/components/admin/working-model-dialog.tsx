@@ -19,7 +19,15 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { Pencil, Plus } from "lucide-react";
 import type { WorkingModel } from "@prisma/client";
 
-const DAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"] as const;
+const DAYS = [
+  "monday",
+  "tuesday",
+  "wednesday",
+  "thursday",
+  "friday",
+  "saturday",
+  "sunday",
+] as const;
 
 export function WorkingModelDialog({
   mode,
@@ -36,7 +44,9 @@ export function WorkingModelDialog({
   const [error, setError] = useState<string | null>(null);
 
   const [validFrom, setValidFrom] = useState(
-    model ? new Date(model.validFrom).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10)
+    model
+      ? new Date(model.validFrom).toISOString().slice(0, 10)
+      : new Date().toISOString().slice(0, 10)
   );
   const [validTo, setValidTo] = useState(
     model?.validTo ? new Date(model.validTo).toISOString().slice(0, 10) : ""
@@ -74,7 +84,8 @@ export function WorkingModelDialog({
         const hours = parseFloat(dayHours[d]) || 0;
         body[`${d}Minutes`] = Math.round(hours * 60);
       }
-      const url = mode === "edit" ? `/api/admin/working-models/${model!.id}` : "/api/admin/working-models";
+      const url =
+        mode === "edit" ? `/api/admin/working-models/${model!.id}` : "/api/admin/working-models";
       const method = mode === "edit" ? "PATCH" : "POST";
       const res = await fetch(url, {
         method,
@@ -99,7 +110,11 @@ export function WorkingModelDialog({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button size="sm" variant={mode === "create" ? "default" : "ghost"}>
-          {mode === "create" ? <Plus className="mr-1 h-4 w-4" /> : <Pencil className="h-3.5 w-3.5" />}
+          {mode === "create" ? (
+            <Plus className="mr-1 h-4 w-4" />
+          ) : (
+            <Pencil className="h-3.5 w-3.5" />
+          )}
           {mode === "create" ? t("add") : t("edit")}
         </Button>
       </DialogTrigger>
@@ -142,21 +157,50 @@ export function WorkingModelDialog({
             ))}
             <div className="space-y-1.5">
               <Label htmlFor="weeklyTarget">{t("weeklyTarget")} (h)</Label>
-              <Input id="weeklyTarget" type="number" min={0} max={168} step={0.25} value={weeklyTargetHours} onChange={(e) => setWeeklyTargetHours(e.target.value)} />
+              <Input
+                id="weeklyTarget"
+                type="number"
+                min={0}
+                max={168}
+                step={0.25}
+                value={weeklyTargetHours}
+                onChange={(e) => setWeeklyTargetHours(e.target.value)}
+              />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="ab6">{t("autoBreak6hMin")}</Label>
-              <Input id="ab6" type="number" min={0} value={ab6} onChange={(e) => setAb6(e.target.value)} />
+              <Input
+                id="ab6"
+                type="number"
+                min={0}
+                value={ab6}
+                onChange={(e) => setAb6(e.target.value)}
+              />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="ab9">{t("autoBreak9hMin")}</Label>
-              <Input id="ab9" type="number" min={0} value={ab9} onChange={(e) => setAb9(e.target.value)} />
+              <Input
+                id="ab9"
+                type="number"
+                min={0}
+                value={ab9}
+                onChange={(e) => setAb9(e.target.value)}
+              />
             </div>
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
           <DialogFooter>
-            <Button type="button" variant="secondary" onClick={() => setOpen(false)} disabled={loading}>{t("cancel")}</Button>
-            <Button type="submit" disabled={loading}>{t("save")}</Button>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setOpen(false)}
+              disabled={loading}
+            >
+              {t("cancel")}
+            </Button>
+            <Button type="submit" disabled={loading}>
+              {t("save")}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

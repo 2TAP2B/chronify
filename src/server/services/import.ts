@@ -77,9 +77,7 @@ export async function importTimeEntries(opts: {
   });
 
   const existingKeys = new Set(
-    existingEntries.map((e) =>
-      `${e.date.getTime()}|${e.startAt!.getTime()}|${e.endAt!.getTime()}`
-    )
+    existingEntries.map((e) => `${e.date.getTime()}|${e.startAt!.getTime()}|${e.endAt!.getTime()}`)
   );
 
   const toCreate: {

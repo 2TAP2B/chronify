@@ -21,11 +21,14 @@ export function VacationCancelAction({
   const [error, setError] = useState<string | null>(null);
 
   async function cancel() {
-    if (!await confirm({
-      title: t("confirmCancel"),
-      variant: "destructive",
-      confirmLabel: t("cancelRequest"),
-    })) return;
+    if (
+      !(await confirm({
+        title: t("confirmCancel"),
+        variant: "destructive",
+        confirmLabel: t("cancelRequest"),
+      }))
+    )
+      return;
     setLoading(true);
     setError(null);
     try {

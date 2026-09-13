@@ -49,10 +49,7 @@ export async function listForUser(actor: SessionUser, userId: string) {
   });
 }
 
-export async function createModel(opts: {
-  actor: SessionUser;
-  input: CreateWorkingModelInput;
-}) {
+export async function createModel(opts: { actor: SessionUser; input: CreateWorkingModelInput }) {
   requireAdmin(opts.actor);
   // If validTo is set, ensure validFrom < validTo
   if (opts.input.validTo && opts.input.validFrom.getTime() >= opts.input.validTo.getTime()) {

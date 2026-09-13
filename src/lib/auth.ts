@@ -69,29 +69,31 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
     }),
     ...(process.env.OIDC_ISSUER && process.env.OIDC_CLIENT_ID && process.env.OIDC_CLIENT_SECRET
-      ? [{
-          id: "pocket-id",
-          name: "Pocket-ID",
-          type: "oidc" as const,
-          issuer: process.env.OIDC_ISSUER,
-          clientId: process.env.OIDC_CLIENT_ID,
-          clientSecret: process.env.OIDC_CLIENT_SECRET,
-          authorization: {
-            url: `${process.env.OIDC_ISSUER}/authorize`,
-            params: { scope: "openid profile email" },
+      ? [
+          {
+            id: "pocket-id",
+            name: "Pocket-ID",
+            type: "oidc" as const,
+            issuer: process.env.OIDC_ISSUER,
+            clientId: process.env.OIDC_CLIENT_ID,
+            clientSecret: process.env.OIDC_CLIENT_SECRET,
+            authorization: {
+              url: `${process.env.OIDC_ISSUER}/authorize`,
+              params: { scope: "openid profile email" },
+            },
+            token: `${process.env.OIDC_ISSUER}/api/oidc/token`,
+            userinfo: `${process.env.OIDC_ISSUER}/api/oidc/userinfo`,
+            profile(profile: { email?: string; name?: string; sub?: string }) {
+              return {
+                id: profile.sub ?? "",
+                email: profile.email ?? "",
+                name: profile.name ?? profile.email ?? "",
+              };
+            },
+            allowDangerousEmailAccountLinking: true,
+            checks: ["pkce", "state"] as ("pkce" | "state")[],
           },
-          token: `${process.env.OIDC_ISSUER}/api/oidc/token`,
-          userinfo: `${process.env.OIDC_ISSUER}/api/oidc/userinfo`,
-          profile(profile: { email?: string; name?: string; sub?: string }) {
-            return {
-              id: profile.sub ?? "",
-              email: profile.email ?? "",
-              name: profile.name ?? profile.email ?? "",
-            };
-          },
-          allowDangerousEmailAccountLinking: true,
-          checks: ["pkce", "state"] as ("pkce" | "state")[],
-        }]
+        ]
       : []),
   ],
   callbacks: {
@@ -109,7 +111,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (user) {
         token.id = user.id as string;
         token.role = user.role;
-        token.mustChangePassword = (user as { mustChangePassword?: boolean }).mustChangePassword ?? false;
+        token.mustChangePassword =
+          (user as { mustChangePassword?: boolean }).mustChangePassword ?? false;
       }
       return token;
     },
