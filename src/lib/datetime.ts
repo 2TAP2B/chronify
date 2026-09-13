@@ -78,9 +78,9 @@ export function utcToZonedTime(instant: Date, timeZone: string): Date {
   if (h === 24) h = 0;
   const min = get("minute");
   const sec = get("second");
-  const targetWallAsUtc = Date.UTC(y, m, d, h, min, sec);
-  const hostOffsetMs = new Date().getTimezoneOffset() * -60_000;
-  return new Date(targetWallAsUtc - hostOffsetMs);
+  // Local-time constructor: the returned Date's local fields always carry the
+  // zoned wall clock, independent of the host timezone.
+  return new Date(y, m, d, h, min, sec);
 }
 
 export function zonedTimeToUtc(

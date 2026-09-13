@@ -8,6 +8,7 @@ import {
   startOfDayUtc,
   WEEKDAYS,
   utcToZonedTime,
+  formatInZone,
 } from "./datetime";
 
 const BERLIN = "Europe/Berlin";
@@ -22,12 +23,12 @@ describe("toCalendarDate", () => {
   it("crosses day boundary when instant is just past midnight UTC but still previous day in zone", () => {
     // 2026-03-15T22:30Z is 23:30 in Berlin (still Mar 15)
     // 2026-03-15T23:30Z is 00:30 next day in Berlin (Mar 16)
-    expect(
-      toCalendarDate(new Date("2026-03-15T22:30:00Z"), BERLIN).toISOString()
-    ).toBe("2026-03-15T00:00:00.000Z");
-    expect(
-      toCalendarDate(new Date("2026-03-15T23:30:00Z"), BERLIN).toISOString()
-    ).toBe("2026-03-16T00:00:00.000Z");
+    expect(toCalendarDate(new Date("2026-03-15T22:30:00Z"), BERLIN).toISOString()).toBe(
+      "2026-03-15T00:00:00.000Z"
+    );
+    expect(toCalendarDate(new Date("2026-03-15T23:30:00Z"), BERLIN).toISOString()).toBe(
+      "2026-03-16T00:00:00.000Z"
+    );
   });
 });
 
@@ -59,15 +60,15 @@ describe("startOfWeekUtc", () => {
 
 describe("addDaysUtc", () => {
   it("adds N days in UTC", () => {
-    expect(
-      addDaysUtc(new Date("2026-01-01T00:00:00Z"), 5).toISOString()
-    ).toBe("2026-01-06T00:00:00.000Z");
+    expect(addDaysUtc(new Date("2026-01-01T00:00:00Z"), 5).toISOString()).toBe(
+      "2026-01-06T00:00:00.000Z"
+    );
   });
 
   it("handles negative deltas", () => {
-    expect(
-      addDaysUtc(new Date("2026-01-10T00:00:00Z"), -3).toISOString()
-    ).toBe("2026-01-07T00:00:00.000Z");
+    expect(addDaysUtc(new Date("2026-01-10T00:00:00Z"), -3).toISOString()).toBe(
+      "2026-01-07T00:00:00.000Z"
+    );
   });
 
   it("does not mutate input", () => {
@@ -79,47 +80,48 @@ describe("addDaysUtc", () => {
 
 describe("addMinutes", () => {
   it("adds minutes to a Date", () => {
-    expect(
-      addMinutes(new Date("2026-01-01T10:00:00Z"), 90).toISOString()
-    ).toBe("2026-01-01T11:30:00.000Z");
+    expect(addMinutes(new Date("2026-01-01T10:00:00Z"), 90).toISOString()).toBe(
+      "2026-01-01T11:30:00.000Z"
+    );
   });
 });
 
 describe("isSameCalendarDay", () => {
   it("true when same calendar date in zone", () => {
     expect(
-      isSameCalendarDay(
-        new Date("2026-03-15T05:00:00Z"),
-        new Date("2026-03-15T22:00:00Z"),
-        BERLIN
-      )
+      isSameCalendarDay(new Date("2026-03-15T05:00:00Z"), new Date("2026-03-15T22:00:00Z"), BERLIN)
     ).toBe(true);
   });
 
   it("false across day boundary in zone", () => {
     expect(
-      isSameCalendarDay(
-        new Date("2026-03-15T22:30:00Z"),
-        new Date("2026-03-15T23:30:00Z"),
-        BERLIN
-      )
+      isSameCalendarDay(new Date("2026-03-15T22:30:00Z"), new Date("2026-03-15T23:30:00Z"), BERLIN)
     ).toBe(false);
   });
 });
 
 describe("utcToZonedTime", () => {
-  it("returns a Date whose UTC fields match wall-clock in Berlin (UTC+1 winter)", () => {
+  it("returns a Date whose wall-clock fields are Berlin winter time (UTC+1)", () => {
     // 2026-01-15T12:00:00Z → 13:00 Berlin (CET, UTC+1)
     const zoned = utcToZonedTime(new Date("2026-01-15T12:00:00Z"), BERLIN);
-    expect(zoned.getUTCHours()).toBe(13);
-    expect(zoned.getUTCMinutes()).toBe(0);
-    expect(zoned.getUTCDate()).toBe(15);
+    expect(zoned.getHours()).toBe(13);
+    expect(zoned.getMinutes()).toBe(0);
+    expect(zoned.getDate()).toBe(15);
   });
 
   it("handles DST (CEST, UTC+2) in summer", () => {
     // 2026-07-15T12:00:00Z → 14:00 Berlin (CEST)
     const zoned = utcToZonedTime(new Date("2026-07-15T12:00:00Z"), BERLIN);
-    expect(zoned.getUTCHours()).toBe(14);
+    expect(zoned.getHours()).toBe(14);
+  });
+
+  it("is consumed by formatInZone independently of the host timezone", () => {
+    expect(formatInZone(new Date("2026-01-15T12:00:00Z"), BERLIN, "dd.MM.yyyy HH:mm")).toBe(
+      "15.01.2026 13:00"
+    );
+    expect(formatInZone(new Date("2026-07-15T12:00:00Z"), BERLIN, "dd.MM.yyyy HH:mm")).toBe(
+      "15.07.2026 14:00"
+    );
   });
 });
 
