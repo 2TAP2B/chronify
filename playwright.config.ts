@@ -1,6 +1,6 @@
 import { defineConfig, devices } from "@playwright/test";
 
-const PORT = process.env.PORT ?? "3001";
+const PORT = process.env.PORT ?? "3100";
 const baseURL = process.env.E2E_BASE_URL ?? `http://localhost:${PORT}`;
 
 export default defineConfig({
@@ -23,17 +23,16 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"] },
     },
   ],
+  // Tests run against a production build on a dedicated port: the Next dev
+  // overlay (`nextjs-portal`) intercepts pointer events on sidebar controls, so
+  // reusing `npm run dev` (:3001) would make clicks flaky.
   webServer: process.env.E2E_BASE_URL
     ? undefined
     : {
-        command: "npm run dev",
+        command: `npm run build && npm run start`,
+        env: { PORT },
         url: baseURL,
-        timeout: 120_000,
-        reuseExistingServer: true,
+        timeout: 300_000,
+        reuseExistingServer: false,
       },
 });
-
-// Note: if dev server is already running, playwright requires the
-// webServer block to be omitted entirely (reuseExistingServer is not
-// honored when the port is already taken). Set E2E_BASE_URL to skip it.
-

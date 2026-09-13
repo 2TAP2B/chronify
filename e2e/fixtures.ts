@@ -11,28 +11,30 @@ async function login(page: Page, email: string, password: string) {
   await expect(page).toHaveURL(/dashboard/, { timeout: 15_000 });
 }
 
-async function fillDateInput(page: Page, selector: string, isoDate: string) {
-  await page.locator(selector).evaluate((el, val) => {
-    const setter = Object.getOwnPropertyDescriptor(
-      HTMLInputElement.prototype,
-      "value"
-    )!.set!;
-    setter.call(el, val);
-    el.dispatchEvent(new Event("input", { bubbles: true }));
-    el.dispatchEvent(new Event("change", { bubbles: true }));
-  }, isoDate);
+// Opens a <DatePicker> trigger and clicks the target day inside the popover
+// calendar (react-day-picker marks day buttons with data-day="D.M.YYYY").
+async function pickDate(page: Page, triggerId: string, isoDate: string) {
+  await page.locator(`#${triggerId}`).click();
+  const [year, month, day] = isoDate.split("-").map(Number);
+  // Radix keeps closed popovers mounted, so scope to the open one.
+  const popover = page.locator('[role="dialog"][data-state="open"]');
+  const dayButton = popover.locator(`button[data-day="${day}.${month}.${year}"]`);
+  for (let i = 0; i < 3 && (await dayButton.count()) === 0; i++) {
+    await popover.locator('button[aria-label="Go to the Next Month"]').click();
+  }
+  await dayButton.click();
 }
 
 export const test = base.extend<{
   adminPage: Page;
-  fillDate: (selector: string, isoDate: string) => Promise<void>;
+  pickDate: (triggerId: string, isoDate: string) => Promise<void>;
 }>({
   adminPage: async ({ page }, use) => {
     await login(page, ADMIN_EMAIL, ADMIN_PASSWORD);
     await use(page);
   },
-  fillDate: async ({ page }, use) => {
-    await use((selector, isoDate) => fillDateInput(page, selector, isoDate));
+  pickDate: async ({ page }, use) => {
+    await use((triggerId, isoDate) => pickDate(page, triggerId, isoDate));
   },
 });
 

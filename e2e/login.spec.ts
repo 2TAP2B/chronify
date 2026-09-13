@@ -6,12 +6,14 @@ test("redirects to login when unauthenticated", async ({ page }) => {
 });
 
 test("admin login lands on dashboard", async ({ adminPage: page }) => {
-  await expect(page.getByRole("heading", { name: /übersicht|dashboard/i })).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole("heading", { name: /übersicht|dashboard/i })).toBeVisible({
+    timeout: 15_000,
+  });
 });
 
 test("logout returns to login page", async ({ adminPage: page }) => {
-  // Open the user dropdown by clicking the avatar trigger (last button in header)
-  await page.locator("header").getByRole("button").last().click();
+  // The user menu lives in the sidebar footer (trigger shows name + email)
+  await page.getByRole("button", { name: /admin@puku\.local/ }).click();
   await page.getByRole("menuitem", { name: /abmelden|logout/i }).click();
   await expect(page).toHaveURL(/login/, { timeout: 15_000 });
 });
