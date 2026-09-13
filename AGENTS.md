@@ -140,14 +140,19 @@ A task is done only when all of the following hold:
 ## 9. Verification & subagent quality pass
 
 1. Self-verification: run the gates in §8 and state the exact commands and results.
-2. Quality pass: before yielding non-trivial work, spawn one subagent
-   (`task` tool) with this brief:
+2. **Verification is local only:** run the app in the dev shell (`dev-db start`,
+   `npm run dev` on :3001, or `npm run test:e2e`'s production server on :3100).
+   Never build Docker images, start the production compose stack, or test against
+   `chronify.h0melab.cc` — the user runs deployment/production checks themselves.
+   If a fix needs production evidence, state what to test and hand it over.
+3. Quality pass: before yielding non-trivial work, spawn one subagent (`task`
+   tool) with this brief:
    - Review only the changed files (diff) — no repo-wide refactors.
    - Look for bugs, unhandled edge cases, missing tests, logging gaps, naming
      inconsistencies, dead code, TODOs, and small QoL improvements.
    - Apply trivial fixes directly (formatting, typos, obvious null checks — obey
      §6/§7); report everything else as a short list with file:line references.
-3. Incorporate the report; if you reject a suggestion, say why in one line.
+4. Incorporate the report; if you reject a suggestion, say why in one line.
 
 ## 10. Known gotchas
 
