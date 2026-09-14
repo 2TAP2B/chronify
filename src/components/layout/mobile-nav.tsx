@@ -68,10 +68,13 @@ export function MobileNav() {
     <>
       <nav
         aria-label={tNav("mobileNavAria")}
-        className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 md:hidden"
-        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+        className={cn(
+          "fixed inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+0.625rem)] z-40 md:hidden",
+          "rounded-2xl border bg-background/90 shadow-lg backdrop-blur",
+          "supports-[backdrop-filter]:bg-background/75"
+        )}
       >
-        <div className="mx-auto grid max-w-lg grid-cols-5 items-center px-2">
+        <div className="mx-auto grid max-w-lg grid-cols-5 items-center px-1 py-1.5">
           {leadingItems.map((item) => (
             <MobileNavItem
               key={item.href}
@@ -87,10 +90,10 @@ export function MobileNav() {
               onClick={() => setAddOpen(true)}
               aria-label={tTimesheet("add")}
               className={cn(
-                "absolute -top-5 flex size-12 items-center justify-center rounded-full",
-                "bg-primary text-primary-foreground shadow-lg ring-2 ring-background",
+                "absolute -top-7 flex size-14 items-center justify-center rounded-full",
+                "bg-primary text-primary-foreground shadow-xl ring-4 ring-background/70",
                 "transition-[transform,background-color] hover:bg-primary/90 active:scale-95",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                "focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring"
               )}
             >
               <Plus className="size-6" />
