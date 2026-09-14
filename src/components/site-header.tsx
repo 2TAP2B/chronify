@@ -74,13 +74,16 @@ export function SiteHeader() {
       <div className="flex w-full items-center gap-1 px-4 lg:gap-2 lg:px-6">
         <SidebarTrigger className="-ml-1" />
         <Separator orientation="vertical" className="mx-2 data-[orientation=vertical]:h-4" />
-        <Breadcrumb>
-          <BreadcrumbList>
+        {/* min-w-0 keeps long crumbs inside the header instead of wrapping it. */}
+        <Breadcrumb className="min-w-0 flex-1 overflow-hidden">
+          <BreadcrumbList className="flex-nowrap">
             {segments.length > 0 && segments[0] !== "dashboard" && (
               <>
-                <BreadcrumbItem>
+                <BreadcrumbItem className="hidden sm:inline-flex min-w-0 max-w-32">
                   <BreadcrumbLink asChild>
-                    <Link href={`/${locale}/dashboard`}>{tNav("dashboard")}</Link>
+                    <Link href={`/${locale}/dashboard`} className="truncate">
+                      {tNav("dashboard")}
+                    </Link>
                   </BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator />
@@ -89,12 +92,14 @@ export function SiteHeader() {
             {crumbs.map((crumb, i) => (
               <Fragment key={crumb.href}>
                 {i > 0 && <BreadcrumbSeparator />}
-                <BreadcrumbItem>
+                <BreadcrumbItem className="min-w-0 max-w-40 lg:max-w-64">
                   {crumb.isLast ? (
-                    <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
+                    <BreadcrumbPage className="truncate">{crumb.label}</BreadcrumbPage>
                   ) : (
                     <BreadcrumbLink asChild>
-                      <Link href={crumb.href}>{crumb.label}</Link>
+                      <Link href={crumb.href} className="truncate">
+                        {crumb.label}
+                      </Link>
                     </BreadcrumbLink>
                   )}
                 </BreadcrumbItem>
