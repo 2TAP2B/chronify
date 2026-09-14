@@ -1,39 +1,49 @@
 # syntax=docker/dockerfile:1.7
 
+# CI runners on flaky networks fail apk/npm with DNS or ECONNRESET errors, so
+# every network-touching step retries with a backoff.
+
 # ---------- deps (dev — needed for build) ----------
 FROM node:20-alpine AS deps-dev
-RUN apk add --no-cache libc6-compat openssl
 WORKDIR /app
 COPY package.json package-lock.json* ./
-RUN npm ci --include=dev --omit=peer
+RUN npm ci --include=dev --omit=peer \
+    || (sleep 10 && npm ci --include=dev --omit=peer) \
+    || (sleep 30 && npm ci --include=dev --omit=peer)
 
 # ---------- deps (production only) ----------
 FROM node:20-alpine AS deps-prod
-RUN apk add --no-cache libc6-compat openssl
 WORKDIR /app
 COPY package.json package-lock.json* ./
-RUN npm ci --omit=dev --omit=peer
+RUN npm ci --omit=dev --omit=peer \
+    || (sleep 10 && npm ci --omit=dev --omit=peer) \
+    || (sleep 30 && npm ci --omit=dev --omit=peer)
 
 # ---------- builder ----------
 FROM node:20-alpine AS builder
-RUN apk add --no-cache libc6-compat openssl
 WORKDIR /app
 COPY --from=deps-dev /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NEXT_PUBLIC_OIDC_ENABLED=true
-RUN npx prisma generate
+RUN npx prisma generate \
+    || (sleep 10 && npx prisma generate) \
+    || (sleep 30 && npx prisma generate)
 RUN npm run build
 
 # ---------- runner ----------
 FROM node:20-alpine AS runner
-RUN apk add --no-cache libc6-compat openssl tini
+RUN apk add --no-cache openssl tini \
+    || (sleep 5 && apk add --no-cache openssl tini) \
+    || (sleep 20 && apk add --no-cache openssl tini)
 WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN addgroup -g 1001 -S nodejs && adduser -S nextjs -u 1001 -G nodejs
-RUN npm install -g tsx
+RUN npm install -g tsx \
+    || (sleep 10 && npm install -g tsx) \
+    || (sleep 30 && npm install -g tsx)
 
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next ./.next
