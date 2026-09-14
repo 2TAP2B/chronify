@@ -48,6 +48,7 @@ services:
       OIDC_CLIENT_ID: "${OIDC_CLIENT_ID}"
       OIDC_CLIENT_SECRET: "${OIDC_CLIENT_SECRET}"
       NEXT_PUBLIC_OIDC_ENABLED: "true"
+      REPORTS_EXPORT_DIR: "${REPORTS_EXPORT_DIR:-/data/reports}"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.chroify.entrypoints=websecure"
@@ -65,6 +66,11 @@ services:
     networks:
       - frontend
       - internal
+    volumes:
+      # Automated report export (PDF) — host bind mount for REPORTS_EXPORT_DIR.
+      # The container user is `nextjs` (uid 1001): make sure the host dir is
+      # writable for it, e.g. `install -d -o 1001 -g 1001 ./reports`.
+      - ./reports:/data/reports
 
 volumes:
   prod-db-data:

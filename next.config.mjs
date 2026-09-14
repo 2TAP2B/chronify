@@ -14,6 +14,10 @@ const nextConfig = {
   experimental: {
     optimizePackageImports: ["lucide-react", "recharts"],
   },
+  // instrumentation.ts pulls in the report scheduler (pg → fs, node-only).
+  // Keep those packages externalized so the edge compile of instrumentation
+  // does not try to bundle `pg`/`fs`.
+  serverExternalPackages: ["@prisma/adapter-pg"],
   images: {
     remotePatterns: [],
   },

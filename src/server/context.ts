@@ -2,6 +2,26 @@ import { cache } from "react";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import type { OrgSettings, User } from "@prisma/client";
+import { startReportAutomationScheduler } from "@/server/report-scheduler";
+
+// Report automation scheduler: started on the first authenticated request
+// instead of an instrumentation hook. This keeps its `pg`/`fs` dependency
+// chain strictly inside Node.js server bundles (never middleware/edge or
+// client chunks) and survives redeploys via the (kind, periodKey)
+// idempotency on ReportAutomationRun.
+let schedulerStarter: Promise<void> | null = null;
+
+function ensureReportScheduler(): void {
+  if (!schedulerStarter) {
+    schedulerStarter = startReportAutomationScheduler().then(
+      () => {},
+      (e) => {
+        console.error("[report-automation] scheduler failed to start:", e);
+        schedulerStarter = null;
+      }
+    );
+  }
+}
 
 export type SessionUser = {
   id: string;
@@ -15,6 +35,7 @@ export async function requireUser(): Promise<SessionUser> {
   if (!session?.user?.id || !session?.user?.role) {
     throw new Response("Unauthorized", { status: 401 });
   }
+  ensureReportScheduler();
   return {
     id: session.user.id,
     role: session.user.role,

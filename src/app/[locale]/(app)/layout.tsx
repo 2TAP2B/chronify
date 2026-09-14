@@ -61,6 +61,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           { href: "/admin", label: t("adminDashboard") },
           { href: "/admin/users", label: t("users") },
           { href: "/admin/working-models", label: t("workingModels") },
+          { href: "/admin/automation", label: t("automation") },
           { href: "/admin/holidays", label: t("holidays") },
           {
             href: "/admin/business-closures",
@@ -95,7 +96,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <SiteHeader />
         <div className="flex flex-1 flex-col">
           <div className="@container/main flex flex-1 flex-col gap-2">
-            <div className="flex flex-col gap-4 overflow-x-hidden px-4 py-4 pb-20 md:gap-6 md:px-6 md:py-6">
+            <div className="flex flex-col gap-4 overflow-x-hidden px-4 py-4 pb-24 md:gap-6 md:px-6 md:py-6">
               {children}
             </div>
           </div>
