@@ -85,8 +85,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             userinfo: `${process.env.OIDC_ISSUER}/api/oidc/userinfo`,
             profile(profile: { email?: string; name?: string; sub?: string }) {
               return {
+                // `id` is the OIDC `sub`; the signIn callback replaces it with
+                // the local DB user id before the JWT is created.
                 id: profile.sub ?? "",
-                email: profile.email ?? "",
+                // Normalized so the PrismaAdapter links accounts to the same
+                // row the signIn callback resolves.
+                email: (profile.email ?? "").toLowerCase(),
                 name: profile.name ?? profile.email ?? "",
               };
             },
@@ -98,17 +102,34 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ],
   callbacks: {
     signIn: async ({ user, account }) => {
-      if (account?.provider === "pocket-id" && user.email) {
+      if (account?.provider === "pocket-id") {
+        // Never fall through to the raw OIDC `sub` as identity: without a
+        // verified email match against a local user, sign-in must fail.
+        if (!user.email) return false;
         const dbUser = await db.user.findUnique({
           where: { email: (user.email as string).toLowerCase() },
         });
         if (!dbUser || !dbUser.active) return false;
         if (dbUser.mustChangePassword) return false;
+
+        // Use the local DB identity for the session, not the OIDC provider's
+        // `sub` — all services resolve data by DB user id and role.
+        user.id = dbUser.id;
+        user.role = dbUser.role;
+        user.mustChangePassword = dbUser.mustChangePassword;
+
+        await db.user.update({
+          where: { id: dbUser.id },
+          data: { lastLoginAt: new Date() },
+        });
       }
       return true;
     },
     jwt: ({ token, user }) => {
       if (user) {
+        // For OIDC sign-ins `user.id`/`user.role` were overridden with the
+        // local DB values in the signIn callback; for credentials logins the
+        // authorize() return value already carries the DB identity.
         token.id = user.id as string;
         token.role = user.role;
         token.mustChangePassword =
