@@ -23,6 +23,7 @@
     "imprint": "Imprint"
   },
   "nav": {
+    "mobileNavAria": "Main navigation",
     "dashboard": "Dashboard",
     "timesheet": "Timesheet",
     "calendar": "Calendar",

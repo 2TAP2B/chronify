@@ -23,6 +23,7 @@
     "imprint": "Impressum"
   },
   "nav": {
+    "mobileNavAria": "Hauptnavigation",
     "dashboard": "Übersicht",
     "timesheet": "Stundenzettel",
     "calendar": "Kalender",
