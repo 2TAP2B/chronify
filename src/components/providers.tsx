@@ -8,6 +8,8 @@ import { ConfirmProvider } from "@/components/ui/confirm-dialog";
 export type ColorScheme =
   | "default"
   | "mauve"
+  | "amethyst"
+  | "pastel-dreams"
   | "catppuccin-frappe"
   | "catppuccin-macchiato"
   | "catppuccin-mocha"
@@ -15,10 +17,13 @@ export type ColorScheme =
 
 const STORAGE_KEY = "puku-color-scheme";
 
+export const DEFAULT_COLOR_SCHEME: ColorScheme = "pastel-dreams";
+
 function ColorSchemeSync() {
   useEffect(() => {
     const apply = () => {
-      const scheme = (localStorage.getItem(STORAGE_KEY) as ColorScheme | null) ?? "default";
+      const scheme =
+        (localStorage.getItem(STORAGE_KEY) as ColorScheme | null) ?? DEFAULT_COLOR_SCHEME;
       if (scheme === "default") {
         document.documentElement.removeAttribute("data-theme");
       } else {

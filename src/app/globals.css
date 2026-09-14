@@ -4,7 +4,8 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    /* Page background slightly darker than cards so boxes stand out. */
+    --background: 210 40% 96.5%;
     --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
@@ -77,7 +78,7 @@
 
 @layer base {
   [data-theme="mauve"] {
-    --background: 300 20% 99%;
+    --background: 300 20% 95%;
     --foreground: 280 30% 10%;
     --card: 300 20% 99%;
     --card-foreground: 280 30% 10%;
@@ -152,7 +153,7 @@
   [data-theme="catppuccin-frappe"],
   [data-theme="catppuccin-macchiato"],
   [data-theme="catppuccin-mocha"] {
-    --background: 220 23% 95%;
+    --background: 220 23% 91%;
     --foreground: 234 16% 35%;
     --card: 220 23% 95%;
     --card-foreground: 234 16% 35%;
@@ -298,7 +299,7 @@
 @layer base {
   /* Dracula (light) */
   [data-theme="dracula"] {
-    --background: 60 30% 96%;
+    --background: 60 30% 92%;
     --foreground: 231 15% 18%;
     --card: 60 30% 96%;
     --card-foreground: 231 15% 18%;
@@ -366,6 +367,154 @@
     --chart-3: 135 94% 65%;
     --chart-4: 326 100% 74%;
     --chart-5: 31 100% 71%;
+  }
+}
+
+@layer base {
+  /* Pastel Dreams (light) */
+  [data-theme="pastel-dreams"] {
+    --background: 281 33% 96%;
+    --foreground: 217 19% 27%;
+    --card: 0 0% 100%;
+    --card-foreground: 217 19% 27%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 217 19% 27%;
+    --primary: 255 92% 76%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 268 90% 92%;
+    --secondary-foreground: 220 14% 34%;
+    --muted: 269 33% 96%;
+    --muted-foreground: 215 11% 46%;
+    --accent: 293 44% 93%;
+    --accent-foreground: 217 19% 27%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 269 27% 87%;
+    --input: 269 27% 85%;
+    --ring: 258 74% 66%;
+    --sidebar-background: 281 33% 96%;
+    --sidebar-foreground: 217 19% 27%;
+    --sidebar-primary: 255 92% 70%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 269 38% 90%;
+    --sidebar-accent-foreground: 217 19% 27%;
+    --sidebar-border: 269 27% 85%;
+    --sidebar-ring: 258 74% 66%;
+    --chart-1: 255 92% 68%;
+    --chart-2: 302 60% 70%;
+    --chart-3: 210 65% 60%;
+    --chart-4: 340 60% 70%;
+    --chart-5: 160 55% 50%;
+  }
+
+  /* Pastel Dreams (dark) */
+  [data-theme="pastel-dreams"].dark {
+    --background: 24 10% 10%;
+    --foreground: 227 100% 94%;
+    --card: 264 20% 18%;
+    --card-foreground: 227 100% 94%;
+    --popover: 264 20% 18%;
+    --popover-foreground: 227 100% 94%;
+    --primary: 257 95% 83%;
+    --primary-foreground: 24 10% 10%;
+    --secondary: 264 66% 25%;
+    --secondary-foreground: 220 12% 83%;
+    --muted: 264 28% 13%;
+    --muted-foreground: 220 9% 65%;
+    --accent: 266 21% 30%;
+    --accent-foreground: 220 12% 83%;
+    --destructive: 351 74% 60%;
+    --destructive-foreground: 227 100% 94%;
+    --border: 265 18% 24%;
+    --input: 265 18% 24%;
+    --ring: 257 95% 83%;
+    --sidebar-background: 24 12% 7%;
+    --sidebar-foreground: 227 100% 94%;
+    --sidebar-primary: 257 95% 83%;
+    --sidebar-primary-foreground: 24 10% 10%;
+    --sidebar-accent: 264 66% 25%;
+    --sidebar-accent-foreground: 220 12% 83%;
+    --sidebar-border: 265 16% 20%;
+    --sidebar-ring: 257 95% 83%;
+    --chart-1: 257 95% 83%;
+    --chart-2: 302 55% 75%;
+    --chart-3: 210 65% 68%;
+    --chart-4: 345 65% 78%;
+    --chart-5: 160 50% 60%;
+  }
+}
+
+@layer base {
+  /* Amethyst (light) */
+  [data-theme="amethyst"] {
+    --background: 260 16% 96%;
+    --foreground: 243 14% 27%;
+    --card: 0 0% 100%;
+    --card-foreground: 243 14% 27%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 243 14% 27%;
+    --primary: 260 23% 57%;
+    --primary-foreground: 260 16% 96%;
+    --secondary: 259 31% 89%;
+    --secondary-foreground: 243 14% 27%;
+    --muted: 260 17% 87%;
+    --muted-foreground: 248 10% 46%;
+    --accent: 343 57% 78%;
+    --accent-foreground: 343 24% 24%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 260 16% 96%;
+    --border: 260 18% 81%;
+    --input: 260 18% 81%;
+    --ring: 260 23% 57%;
+    --sidebar-background: 260 20% 94%;
+    --sidebar-foreground: 243 14% 27%;
+    --sidebar-primary: 260 23% 57%;
+    --sidebar-primary-foreground: 260 16% 96%;
+    --sidebar-accent: 260 20% 88%;
+    --sidebar-accent-foreground: 243 14% 27%;
+    --sidebar-border: 260 18% 81%;
+    --sidebar-ring: 260 23% 57%;
+    --chart-1: 260 23% 57%;
+    --chart-2: 343 57% 72%;
+    --chart-3: 190 60% 50%;
+    --chart-4: 270 45% 68%;
+    --chart-5: 150 45% 45%;
+  }
+
+  /* Amethyst (dark) */
+  [data-theme="amethyst"].dark {
+    --background: 251 19% 12%;
+    --foreground: 260 25% 90%;
+    --card: 251 20% 16%;
+    --card-foreground: 260 25% 90%;
+    --popover: 251 20% 16%;
+    --popover-foreground: 260 25% 90%;
+    --primary: 263 33% 69%;
+    --primary-foreground: 251 19% 12%;
+    --secondary: 255 15% 38%;
+    --secondary-foreground: 260 25% 90%;
+    --muted: 255 20% 16%;
+    --muted-foreground: 258 10% 64%;
+    --accent: 272 14% 21%;
+    --accent-foreground: 346 69% 83%;
+    --destructive: 0 72% 55%;
+    --destructive-foreground: 260 25% 90%;
+    --border: 252 14% 30%;
+    --input: 252 14% 30%;
+    --ring: 263 33% 69%;
+    --sidebar-background: 251 19% 9%;
+    --sidebar-foreground: 260 25% 90%;
+    --sidebar-primary: 263 33% 69%;
+    --sidebar-primary-foreground: 251 19% 12%;
+    --sidebar-accent: 251 20% 16%;
+    --sidebar-accent-foreground: 260 25% 90%;
+    --sidebar-border: 252 13% 24%;
+    --sidebar-ring: 263 33% 69%;
+    --chart-1: 263 33% 69%;
+    --chart-2: 346 69% 78%;
+    --chart-3: 190 60% 60%;
+    --chart-4: 270 45% 72%;
+    --chart-5: 150 50% 55%;
   }
 }
 
