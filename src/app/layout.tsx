@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   },
   description: "Zeiterfassung für Mitarbeiter",
   applicationName: "Chronify",
-  manifest: "/manifest",
+  manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
