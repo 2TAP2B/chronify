@@ -15,13 +15,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { TimeInput } from "@/components/timesheet/time-input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { formatInZone, zonedTimeToUtc } from "@/lib/datetime";
@@ -118,6 +111,7 @@ export function TimeEntryDialog({
   mode,
   initial,
   adminUserId,
+  breakMode,
   onClose,
   onSaved,
 }: {
@@ -133,6 +127,7 @@ export function TimeEntryDialog({
     note: string | null;
   };
   adminUserId?: string;
+  breakMode?: "AUTO" | "MANUAL";
   onClose: () => void;
   onSaved: () => void;
 }) {
@@ -152,7 +147,6 @@ export function TimeEntryDialog({
   const [endAt, setEndAt] = useState(initEnd);
   const [durationInput, setDurationInput] = useState("");
   const [breakMinutes, setBreakMinutes] = useState(initBreak);
-  const [type, setType] = useState(initial.type || "WORK");
   const [note, setNote] = useState(initial.note ?? "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -241,14 +235,16 @@ export function TimeEntryDialog({
     try {
       const startIso = combine(date, startAt);
       const endIso = combine(date, endAt);
-      const body = {
+      const body: Record<string, unknown> = {
         date: new Date(date + "T00:00:00Z").toISOString(),
         startAt: startIso,
         endAt: endIso,
         breakMinutes: Number(breakMinutes) || 0,
-        type,
         note: note || null,
       };
+      // Create always writes WORK; on edit the type must not change (absence
+      // entries come from the vacation/sickness workflows instead).
+      if (mode === "create") body.type = "WORK";
       const qs = adminUserId ? `?userId=${adminUserId}` : "";
       const url =
         mode === "edit" ? `/api/time-entries/${initial.id}${qs}` : `/api/time-entries${qs}`;
@@ -291,21 +287,6 @@ export function TimeEntryDialog({
                 value={date ? new Date(date + "T00:00:00") : undefined}
                 onChange={(d) => d && setDate(format(d, "yyyy-MM-dd"))}
               />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="type">{t("type")}</Label>
-              <Select value={type} onValueChange={setType}>
-                <SelectTrigger id="type">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="WORK">{t("types.WORK")}</SelectItem>
-                  <SelectItem value="VACATION">{t("types.VACATION")}</SelectItem>
-                  <SelectItem value="SICK">{t("types.SICK")}</SelectItem>
-                  <SelectItem value="PUBLIC_HOLIDAY">{t("types.PUBLIC_HOLIDAY")}</SelectItem>
-                  <SelectItem value="PERSONAL">{t("types.PERSONAL")}</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="start">{t("start")}</Label>
@@ -351,6 +332,9 @@ export function TimeEntryDialog({
                 <p className="text-xs text-muted-foreground">
                   {t("netDuration")}: {formatDuration(netDuration)}
                 </p>
+              )}
+              {breakMode === "AUTO" && (
+                <p className="text-xs text-amber-600 dark:text-amber-400">{t("autoBreakHint")}</p>
               )}
             </div>
             <div className="space-y-1.5">

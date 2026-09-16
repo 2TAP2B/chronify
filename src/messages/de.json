@@ -160,6 +160,7 @@
     "break": "Pause",
     "duration": "Dauer",
     "netDuration": "Netto",
+    "autoBreakHint": "Im AUTO-Pausenmodus wird die Pause automatisch berechnet und übernimmt diese Angabe beim Speichern.",
     "type": "Typ",
     "note": "Notiz",
     "actions": "Aktionen",

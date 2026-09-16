@@ -160,6 +160,7 @@
     "break": "Break",
     "duration": "Duration",
     "netDuration": "Net",
+    "autoBreakHint": "In AUTO break mode the break is calculated automatically and overrides this input on save.",
     "type": "Type",
     "note": "Note",
     "actions": "Actions",

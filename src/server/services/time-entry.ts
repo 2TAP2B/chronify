@@ -2,6 +2,8 @@ import { db } from "@/lib/db";
 import { audit, getUserContext, type SessionUser } from "@/server/context";
 import { toCalendarDate, addDaysUtc } from "@/lib/datetime";
 import { isEntryLocked } from "@/lib/timer-utils";
+import { applyBreakPolicyToEntry } from "@/lib/overtime/breaks";
+import { getActiveWorkingModel } from "@/server/services/timer";
 import {
   createTimeEntrySchema,
   updateTimeEntrySchema,
@@ -69,13 +71,30 @@ export async function createTimeEntry(opts: {
     await assertNoOverlap(userId, opts.input.startAt, opts.input.endAt, ctx.timeZone);
   }
 
+  // Apply the org's break mode: in AUTO the user's break input is forced to
+  // the statutory break computed from the worked duration (ArbZG §4), same as
+  // a timer stop. MANUAL mode keeps the user's value.
+  let breakMinutes = opts.input.breakMinutes;
+  const model = await getActiveWorkingModel(userId, date);
+  if (model) {
+    const applied = applyBreakPolicyToEntry({
+      type: opts.input.type,
+      breakMode: ctx.user.breakMode,
+      startAt: opts.input.startAt,
+      endAt: opts.input.endAt,
+      manualBreakMinutes: opts.input.breakMinutes,
+      model,
+    });
+    if (applied !== null) breakMinutes = applied;
+  }
+
   const entry = await db.timeEntry.create({
     data: {
       userId,
       date,
       startAt: opts.input.startAt,
       endAt: opts.input.endAt,
-      breakMinutes: opts.input.breakMinutes,
+      breakMinutes,
       type: opts.input.type,
       source: isAdminForOther ? "ADMIN" : "MANUAL",
       note: opts.input.note ?? null,
@@ -123,9 +142,26 @@ export async function updateTimeEntry(opts: {
   const finalType = (data.type as string | undefined) ?? existing.type;
   const finalStart = (data.startAt as Date | undefined) ?? existing.startAt;
   const finalEnd = (data.endAt as Date | undefined) ?? existing.endAt;
+  const finalBreak = (data.breakMinutes as number | undefined) ?? existing.breakMinutes;
 
   if (finalType === "WORK" && finalStart && finalEnd) {
     await assertNoOverlap(existing.userId, finalStart, finalEnd, ctx.timeZone, existing.id);
+
+    // Enforce the break-mode policy on updates as well: AUTO recalculates
+    // from the final worked duration (also when the duration was changed),
+    // MANUAL keeps the submitted value. Reuses the outer checkDate.
+    const model = await getActiveWorkingModel(existing.userId, checkDate);
+    if (model) {
+      const applied = applyBreakPolicyToEntry({
+        type: finalType,
+        breakMode: ctx.user.breakMode,
+        startAt: finalStart,
+        endAt: finalEnd,
+        manualBreakMinutes: finalBreak,
+        model,
+      });
+      if (applied !== null) data.breakMinutes = applied;
+    }
   }
 
   const updated = await db.timeEntry.update({

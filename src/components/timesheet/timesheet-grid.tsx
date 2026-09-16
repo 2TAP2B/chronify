@@ -55,11 +55,13 @@ export function TimesheetGrid({
   timeZone,
   lockWindowDays,
   adminUserId,
+  breakMode,
 }: {
   days: GridDay[];
   timeZone: string;
   lockWindowDays: number;
   adminUserId?: string;
+  breakMode?: "AUTO" | "MANUAL";
 }) {
   const t = useTranslations("timesheet");
   const confirm = useConfirm();
@@ -268,6 +270,7 @@ export function TimesheetGrid({
           mode={editing ? "edit" : "create"}
           initial={dialogInitial}
           adminUserId={adminUserId}
+          breakMode={breakMode}
           onClose={() => setDialogOpen(false)}
           onSaved={() => window.location.reload()}
         />

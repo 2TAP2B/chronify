@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  applyBreakPolicyToEntry,
   computeAutoBreakMinutes,
   isManualBreakSufficient,
   resolveBreakMinutes,
@@ -136,5 +137,72 @@ describe("edge cases", () => {
   it("negative workedMs treated as 0", () => {
     expect(computeAutoBreakMinutes(-1000, defaultModel)).toBe(0);
     expect(workedMsToMinutes(-1000)).toBe(0);
+  });
+});
+
+describe("applyBreakPolicyToEntry", () => {
+  const start = new Date(Date.UTC(2026, 8, 16, 5, 0)); // arbitrary
+  const end8h = new Date(start.getTime() + 8 * H);
+
+  it("forced auto break without threshold help", () => {
+    expect(
+      applyBreakPolicyToEntry({
+        type: "WORK",
+        breakMode: "AUTO",
+        startAt: start,
+        endAt: end8h,
+        manualBreakMinutes: 0,
+        model: defaultModel,
+      })
+    ).toBe(30);
+  });
+
+  it("auto branch overrides manual break entries", () => {
+    expect(
+      applyBreakPolicyToEntry({
+        type: "WORK",
+        breakMode: "AUTO",
+        startAt: start,
+        endAt: new Date(end8h.getTime() + 2 * H), // ~10h
+        manualBreakMinutes: 5,
+        model: defaultModel,
+      })
+    ).toBe(45);
+  });
+
+  it("MANUAL mode keeps the user input", () => {
+    expect(
+      applyBreakPolicyToEntry({
+        type: "WORK",
+        breakMode: "MANUAL",
+        startAt: start,
+        endAt: end8h,
+        manualBreakMinutes: 15,
+        model: defaultModel,
+      })
+    ).toBe(15);
+  });
+
+  it("skips entries without time range", () => {
+    expect(
+      applyBreakPolicyToEntry({
+        type: "WORK",
+        breakMode: "AUTO",
+        startAt: null,
+        endAt: null,
+        manualBreakMinutes: 0,
+        model: defaultModel,
+      })
+    ).toBeNull();
+    expect(
+      applyBreakPolicyToEntry({
+        type: "SICK",
+        breakMode: "AUTO",
+        startAt: start,
+        endAt: end8h,
+        manualBreakMinutes: 0,
+        model: defaultModel,
+      })
+    ).toBeNull();
   });
 });

@@ -67,3 +67,29 @@ export function describeBreakRule(workedMs: number, model: BreakModel): string {
   }
   return "no statutory break required";
 }
+
+/**
+ * Applies the organization's break-mode policy to a manually created/edited
+ * WORK entry: in AUTO mode the user's break input is ignored and the break is
+ * derived from the worked duration (same as a timer stop); in MANUAL mode the
+ * user's input is kept as-is. Returns null when no automatic override applies
+ * (no covered time range).
+ */
+export function applyBreakPolicyToEntry(opts: {
+  type: string;
+  breakMode: BreakMode;
+  startAt: Date | null;
+  endAt: Date | null;
+  manualBreakMinutes: number;
+  model: BreakModel;
+}): number | null {
+  if (opts.type !== "WORK" || !opts.startAt || !opts.endAt) return null;
+  const workedMs = opts.endAt.getTime() - opts.startAt.getTime();
+  const resolved = resolveBreakMinutes({
+    breakMode: opts.breakMode,
+    workedMs,
+    manualBreakMinutes: opts.manualBreakMinutes,
+    model: opts.model,
+  });
+  return resolved.minutes;
+}

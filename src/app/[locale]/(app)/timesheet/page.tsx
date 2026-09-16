@@ -135,6 +135,7 @@ export default async function TimesheetPage({ params, searchParams }: Props) {
         timeZone={timeZone}
         lockWindowDays={lockWindowDays}
         adminUserId={isAdmin ? targetUserId : undefined}
+        breakMode={user.breakMode}
       />
     </div>
   );
