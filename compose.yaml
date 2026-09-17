@@ -17,7 +17,7 @@ services:
       - internal
 
   app:
-    image: git.steltner.cloud/2tap2b/time-track-v3:latest
+    image: ghcr.io/2tap2b/chronify:latest
     restart: unless-stopped
     depends_on:
       db:

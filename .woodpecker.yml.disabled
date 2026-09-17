@@ -1,3 +1,9 @@
+# DEACTIVATED — image builds now run via GitHub Actions
+# (.github/workflows/docker.yml, image: ghcr.io/2tap2b/chronify).
+# Kept as reference for how the image used to be built with Woodpecker on
+# the self-hosted Forgejo instance (git.steltner.cloud). To re-enable:
+# rename this file back to .woodpecker.yml and configure the
+# forgejo_username / forgejo_token secrets in the Woodpecker project.
 steps:
   - name: build-and-push
     image: woodpeckerci/plugin-docker-buildx
