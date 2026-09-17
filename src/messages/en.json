@@ -315,8 +315,17 @@
     "addForUser": "Add sick note for employee"
   },
   "adminUsers": {
+    "roleAdmin": "Administrator",
+    "roleEmployee": "Employee",
     "title": "User management",
     "newUser": "New user",
+    "saveOk": "Saved.",
+    "saving": "Saving …",
+    "backToList": "Back to list",
+    "usedDays": "Used days",
+    "defaultLabel": "Default",
+    "cannotDeleteSelf": "You cannot delete your own account.",
+    "passwordPlaceholder": "Leave empty to keep current password",
     "email": "Email",
     "password": "Password",
     "name": "Name",
