@@ -18,6 +18,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       select: {
         name: true,
         email: true,
+        avatarUrl: true,
         role: true,
         firstName: true,
         lastName: true,
@@ -89,6 +90,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         user={{
           name: user?.name ?? "Benutzer",
           email: user?.email ?? "",
+          avatarUrl: user?.avatarUrl ?? null,
         }}
         branding={branding}
       />

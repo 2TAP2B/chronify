@@ -2,12 +2,12 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getOwnProfile } from "@/server/services/profile";
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ThemePicker } from "@/components/theme-picker";
+
 import { OidcLinkManager } from "@/components/auth/oidc-link-manager";
 import { GdprExportButton } from "@/components/profile/gdpr-export-button";
 import { PersonalDataCard, type OwnProfileView } from "@/components/profile/personal-data-card";
+import { ThemeCard } from "@/components/profile/theme-card";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -39,6 +39,7 @@ export default async function ProfilePage({ params }: Props) {
     hireDate: user.hireDate?.toISOString() ?? null,
     lastLoginAt: user.lastLoginAt?.toISOString() ?? null,
     hasPassword: user.hasPassword,
+    avatarUrl: user.avatarUrl,
   };
 
   const oidcEnabled = !!process.env.NEXT_PUBLIC_OIDC_ENABLED;
@@ -50,15 +51,7 @@ export default async function ProfilePage({ params }: Props) {
 
       <PersonalDataCard profile={profile} />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>{t("appearance")}</CardTitle>
-          <CardDescription>{t("appearanceHint")}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ThemePicker />
-        </CardContent>
-      </Card>
+      <ThemeCard />
 
       {!oidcOnly && (
         <Card>

@@ -13,6 +13,7 @@ export type OwnProfile = {
   hireDate: Date | null;
   lastLoginAt: Date | null;
   hasPassword: boolean;
+  avatarUrl: string | null;
 };
 
 export async function getOwnProfile(userId: string): Promise<OwnProfile> {
@@ -29,6 +30,7 @@ export async function getOwnProfile(userId: string): Promise<OwnProfile> {
       hireDate: true,
       lastLoginAt: true,
       passwordHash: true,
+      avatarUrl: true,
     },
   });
   return {
@@ -42,6 +44,7 @@ export async function getOwnProfile(userId: string): Promise<OwnProfile> {
     hireDate: user.hireDate,
     lastLoginAt: user.lastLoginAt,
     hasPassword: user.passwordHash !== null && user.passwordHash !== "",
+    avatarUrl: user.avatarUrl,
   };
 }
 
@@ -85,6 +88,41 @@ export async function updateOwnProfile(opts: {
     entity: "User",
     entityId: opts.actor.id,
     payload: { firstName, lastName },
+  });
+  return getOwnProfile(opts.actor.id);
+}
+
+const AVATAR_MAX_BYTES = 300 * 1024;
+const AVATAR_ALLOWED_PREFIXES = [
+  "data:image/png;base64,",
+  "data:image/jpeg;base64,",
+  "data:image/webp;base64,",
+];
+
+export async function setOwnAvatar(opts: {
+  actor: SessionUser;
+  dataUrl: string | null;
+}): Promise<OwnProfile> {
+  let avatarUrl: string | null = null;
+  if (opts.dataUrl !== null) {
+    const url = opts.dataUrl;
+    const ok = AVATAR_ALLOWED_PREFIXES.some((p) => url.startsWith(p));
+    if (!ok) throw new Error("Avatar must be a PNG/JPEG/WebP image");
+    if (url.length > AVATAR_MAX_BYTES * 1.4) {
+      // base64 overhead ≈ 4/3 — compare against a generous tolerance.
+      throw new Error("Avatar too large (max ~300 KB)");
+    }
+    avatarUrl = url;
+  }
+  await db.user.update({
+    where: { id: opts.actor.id },
+    data: { avatarUrl },
+  });
+  await audit({
+    actorId: opts.actor.id,
+    action: avatarUrl === null ? "profile.avatar.remove" : "profile.avatar.set",
+    entity: "User",
+    entityId: opts.actor.id,
   });
   return getOwnProfile(opts.actor.id);
 }
