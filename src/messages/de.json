@@ -606,7 +606,7 @@
     "firstName": "Vorname",
     "lastName": "Nachname",
     "email": "E-Mail",
-    "username": "Benutzername / Anzeigename",
+    "username": "Benutzername",
     "nfcCardId": "NFC-Karten-ID",
     "role": "Rolle",
     "roleAdmin": "Administrator",
