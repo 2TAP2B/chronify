@@ -11,6 +11,36 @@ workflow, sickness/AU certificates, admin backend, GDPR tooling, reports, PWA.
 German is the default locale (`de`), English (`en`) is a placeholder.
 Production runs as a Docker image; this repo is also the dev environment.
 
+Repo: `https://github.com/2TAP2B/chronify` (canonical; image builds on GHCR
+via `.github/workflows/docker.yml`). The legacy self-hosted Forgejo /
+Woodpecker setup lives on as reference (`.woodpecker.yml.disabled`);
+`gh` CLI is expected to be installed and authenticated on dev machines.
+
+## 1a. Branch & PR workflow — MANDATORY
+
+Direct commits to `main` are **not allowed**. Every change, no matter how
+small, goes through: issue → branch → pull request → explicit merge.
+
+For every new task (feature/fix/chore, including two-line fixes):
+
+1. **Issue first.** Create a GitHub issue (`gh issue create -R 2TAP2B/chronify`)
+   with a clear title, a short scope description and acceptance criteria.
+2. **Branch.** `git checkout -b <type>/<slug>` from an up-to-date `main`
+   (`type` ∈ `feat|fix|docs|chore|refactor|test`). One branch per task, linked
+   to its issue.
+3. **Work + commits** on that branch (several small commits are fine).
+4. **Definition of done (§8) must hold locally** before the PR is opened.
+5. **Push + PR.** `git push -u github <branch>` and
+   `gh pr create -R 2TAP2B/chronify --fill`, PR body includes `Closes #<issue>`.
+6. **Merge is explicit-only.** Never merge without a direct user instruction
+   ("go", "merge", "merge to main"). Merge with
+   `gh pr merge -R 2TAP2B/chronify --squash --delete-branch` (squash keeps the
+   history clean; the `Closes #n` closes the issue automatically). Afterwards
+   update local `main` (checkout + pull) and push `main` to both remotes
+   (`github` and legacy `origin`).
+7. Skipped/held-for-later work: still open the issue, note the branch, and
+   report the PR link back to the user.
+
 ## 2. Tech stack
 
 | Layer        | Choice                                                                          |
@@ -126,7 +156,8 @@ e2e/                          Playwright specs + fixtures (login, timer, vacatio
 
 ## 8. Definition of done
 
-A task is done only when all of the following hold:
+A task is done only when all of the following hold — and only on its branch,
+never directly on `main` (see §1a):
 
 1. `npm run typecheck`, `npm run lint`, `npm test`, `npm run build` all pass.
 2. `npm run format:check` passes for touched files.
