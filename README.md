@@ -43,4 +43,4 @@ Agent-facing conventions live in [`AGENTS.md`](./AGENTS.md).
 
 ## License
 
-Proprietary — internal use by the operating company.
+MIT — see [`LICENSE`](./LICENSE).
