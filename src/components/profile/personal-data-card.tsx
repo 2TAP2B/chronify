@@ -50,22 +50,26 @@ function cropToDataUrl(file: File): Promise<string | null> {
     reader.onload = () => {
       const img = new Image();
       img.onload = () => {
-        const size = Math.min(img.width, img.height);
+        // Center-crop to square, then downscale to max 1024 px so the
+        // re-encoded data URL stays well under the 3 MB server cap even
+        // for huge source photos.
+        const cropSize = Math.min(img.width, img.height);
+        const out = Math.min(cropSize, 1024);
         const canvas = document.createElement("canvas");
-        canvas.width = size;
-        canvas.height = size;
+        canvas.width = out;
+        canvas.height = out;
         const ctx = canvas.getContext("2d");
         if (!ctx) return resolve(null);
         ctx.drawImage(
           img,
-          (img.width - size) / 2,
-          (img.height - size) / 2,
-          size,
-          size,
+          (img.width - cropSize) / 2,
+          (img.height - cropSize) / 2,
+          cropSize,
+          cropSize,
           0,
           0,
-          size,
-          size
+          out,
+          out
         );
         resolve(canvas.toDataURL("image/png"));
       };
@@ -137,8 +141,10 @@ export function PersonalDataCard({ profile }: { profile: OwnProfileView }) {
         body: JSON.stringify({ dataUrl }),
       });
       if (!res.ok) {
-        const b = (await res.json().catch(() => ({}))) as { error?: string };
-        throw new Error(b.error ?? `HTTP ${res.status}`);
+        const b = (await res.json().catch(() => ({}))) as { error?: string; code?: string };
+        throw new Error(
+          b.code === "AVATAR_TOO_LARGE" ? t("avatarTooLarge") : (b.error ?? `HTTP ${res.status}`)
+        );
       }
       setMsg(t("avatarSaved"));
       router.refresh();

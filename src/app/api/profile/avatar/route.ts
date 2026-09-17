@@ -18,7 +18,8 @@ export async function PUT(request: Request) {
   } catch (e) {
     if (e instanceof Response) return e;
     if (e instanceof Error) {
-      return NextResponse.json({ error: e.message }, { status: 400 });
+      const code = (e as Error & { code?: string }).code;
+      return NextResponse.json({ error: e.message, ...(code ? { code } : {}) }, { status: 400 });
     }
     return NextResponse.json({ error: "Internal error" }, { status: 500 });
   }
