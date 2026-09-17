@@ -26,7 +26,8 @@ export type OwnProfileView = {
   avatarUrl: string | null;
 };
 
-function ReadOnlyRow({
+/** Aligned single-column meta row (label left, value right). */
+function MetaRow({
   label,
   value,
   mono,
@@ -36,9 +37,9 @@ function ReadOnlyRow({
   mono?: boolean;
 }) {
   return (
-    <div className="flex items-baseline justify-between gap-4 border-b py-2 last:border-b-0">
-      <dt className="text-xs font-medium text-muted-foreground">{label}</dt>
-      <dd className={`truncate text-sm ${mono ? "font-mono" : ""}`}>{value}</dd>
+    <div className="flex min-w-0 items-center justify-between gap-3 border-b py-2.5 last:border-b-0">
+      <dt className="shrink-0 text-xs font-medium text-muted-foreground">{label}</dt>
+      <dd className={`min-w-0 truncate text-sm text-right ${mono ? "font-mono" : ""}`}>{value}</dd>
     </div>
   );
 }
@@ -140,7 +141,6 @@ export function PersonalDataCard({ profile }: { profile: OwnProfileView }) {
         const b = (await res.json().catch(() => ({}))) as { error?: string };
         throw new Error(b.error ?? `HTTP ${res.status}`);
       }
-      setMsg(t("avatarSaved"));
       router.refresh();
     } catch (e) {
       setError(e instanceof Error ? e.message : "error");
@@ -150,7 +150,6 @@ export function PersonalDataCard({ profile }: { profile: OwnProfileView }) {
   }
 
   async function removeAvatar() {
-    setMsg(null);
     setError(null);
     setAvatarBusy(true);
     try {
@@ -171,7 +170,7 @@ export function PersonalDataCard({ profile }: { profile: OwnProfileView }) {
     }
   }
 
-  const initials = [firstName, lastName]
+  const initials = [profile.firstName, profile.lastName]
     .map((v) => v?.[0] ?? "")
     .join("")
     .toUpperCase();
@@ -182,85 +181,84 @@ export function PersonalDataCard({ profile }: { profile: OwnProfileView }) {
         <CardTitle>{t("personalData")}</CardTitle>
         <CardDescription>{t("personalDataHint")}</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-5">
-        {/* Avatar + name editing side by side */}
-        <div className="flex items-start gap-4">
-          <div className="flex flex-col items-center gap-1.5">
-            <Avatar className="size-20">
-              {profile.avatarUrl && (
-                <AvatarImage src={profile.avatarUrl} alt="/alt" className="object-cover" />
-              )}
-              <AvatarFallback className="text-lg">{initials || "?"}</AvatarFallback>
-            </Avatar>
-            <div className="flex items-center gap-1">
-              <Label
-                htmlFor="avatar-upload"
-                className="cursor-pointer rounded bg-secondary px-2 py-1 text-[11px] font-medium hover:bg-accent"
-              >
-                {profile.avatarUrl ? t("avatarReplace") : t("avatarUpload")}
-              </Label>
-              {profile.avatarUrl && (
-                <button
-                  type="button"
-                  aria-label={t("avatarRemove")}
-                  title={t("avatarRemove")}
-                  onClick={removeAvatar}
-                  disabled={avatarBusy}
-                  className="rounded px-1 py-1 text-muted-foreground hover:text-destructive disabled:opacity-50"
-                >
-                  <Trash2 className="size-3.5" />
-                </button>
-              )}
-            </div>
-            <input
-              ref={fileInputRef}
-              id="avatar-upload"
-              type="file"
-              accept="image/*"
-              className="sr-only"
-              onChange={onAvatarPicked}
+      <CardContent className="space-y-6">
+        {/* Avatar centered on top */}
+        <div className="flex flex-col items-center gap-2">
+          <Avatar className="size-24 ring-2 ring-border">
+            {profile.avatarUrl && (
+              <AvatarImage src={profile.avatarUrl} alt={profile.name} className="object-cover" />
+            )}
+            <AvatarFallback className="text-xl">{initials || "?"}</AvatarFallback>
+          </Avatar>
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-7 rounded-full text-xs"
               disabled={avatarBusy}
-            />
-          </div>
-          <form
-            onSubmit={saveNames}
-            className="min-w-0 flex-1 space-y-3"
-            aria-label={t("personalData")}
-          >
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <div className="space-y-1.5">
-                <Label htmlFor="firstName">{t("firstName")}</Label>
-                <Input
-                  id="firstName"
-                  value={firstName}
-                  maxLength={50}
-                  onChange={(e) => setFirstName(e.target.value)}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="lastName">{t("lastName")}</Label>
-                <Input
-                  id="lastName"
-                  value={lastName}
-                  maxLength={50}
-                  onChange={(e) => setLastName(e.target.value)}
-                />
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button type="submit" disabled={saving}>
-                {saving ? t("saving") : t("save")}
+              aria-label={profile.avatarUrl ? t("avatarReplace") : t("avatarUpload")}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              {profile.avatarUrl ? t("avatarReplace") : t("avatarUpload")}
+            </Button>
+            {profile.avatarUrl && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
+                aria-label={t("avatarRemove")}
+                title={t("avatarRemove")}
+                disabled={avatarBusy}
+                onClick={removeAvatar}
+              >
+                <Trash2 className="size-3.5" />
               </Button>
-            </div>
-          </form>
+            )}
+          </div>
+          <input
+            ref={fileInputRef}
+            id="avatar-upload"
+            type="file"
+            accept="image/*"
+            className="sr-only"
+            onChange={onAvatarPicked}
+            disabled={avatarBusy}
+          />
         </div>
 
-        {/* Read-only context: single column */}
-        <dl className="grid grid-cols-1">
-          <ReadOnlyRow label={t("email")} value={profile.email} />
-          <ReadOnlyRow label={t("username")} value={profile.name} />
-          <ReadOnlyRow label={t("nfcCardId")} value={profile.nfcCardId || t("noValue")} mono />
-          <ReadOnlyRow
+        {/* Stacked editable fields: one per row */}
+        <form onSubmit={saveNames} className="space-y-4" aria-label={t("personalData")}>
+          <div className="space-y-1.5">
+            <Label htmlFor="firstName">{t("firstName")}</Label>
+            <Input
+              id="firstName"
+              value={firstName}
+              maxLength={50}
+              onChange={(e) => setFirstName(e.target.value)}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="lastName">{t("lastName")}</Label>
+            <Input
+              id="lastName"
+              value={lastName}
+              maxLength={50}
+              onChange={(e) => setLastName(e.target.value)}
+            />
+          </div>
+          <Button type="submit" disabled={saving}>
+            {saving ? t("saving") : t("save")}
+          </Button>
+        </form>
+
+        {/* Single-column context */}
+        <dl className="rounded-lg bg-muted/30 px-4">
+          <MetaRow label={t("username")} value={profile.name} />
+          <MetaRow label={t("email")} value={profile.email} />
+          <MetaRow label={t("nfcCardId")} value={profile.nfcCardId || t("noValue")} mono />
+          <MetaRow
             label={t("role")}
             value={
               <Badge variant={profile.role === "ADMIN" ? "default" : "secondary"}>
@@ -268,7 +266,7 @@ export function PersonalDataCard({ profile }: { profile: OwnProfileView }) {
               </Badge>
             }
           />
-          <ReadOnlyRow
+          <MetaRow
             label={t("hireDate")}
             value={
               profile.hireDate
@@ -276,7 +274,7 @@ export function PersonalDataCard({ profile }: { profile: OwnProfileView }) {
                 : t("noValue")
             }
           />
-          <ReadOnlyRow
+          <MetaRow
             label={t("lastLoginAt")}
             value={
               profile.lastLoginAt
