@@ -2,9 +2,11 @@
 
 import { useEffect, useRef } from "react";
 import { create } from "zustand";
+import { useLocale } from "next-intl";
 import { formatDuration } from "@/lib/timer-utils";
 import { computeElapsedMs, computeBreakMs, type TimerState } from "@/lib/timer-utils";
 import { checkMaxDailyHours, checkRestPeriod, type ArbzgWarning } from "@/lib/arbzg";
+import { arbzgWarningText } from "@/lib/notifications/server-texts";
 
 export type TimerStatus = {
   active: boolean;
@@ -182,42 +184,13 @@ export function useTimerInit() {
   }, [loaded, refresh]);
 }
 
-const ARBZG_TITLES: Record<string, { de: string; en: string }> = {
-  approachingMax: {
-    de: "ArbZG: Mehr als 8 Stunden gearbeitet",
-    en: "ArbZG: More than 8 hours worked",
-  },
-  exceededMax: {
-    de: "ArbZG: Höchstarbeitszeit überschritten (10h)",
-    en: "ArbZG: Maximum working time exceeded (10h)",
-  },
-  restPeriodShort: {
-    de: "ArbZG: Ruhezeit unter 11 Stunden",
-    en: "ArbZG: Rest period below 11 hours",
-  },
-};
-
-const ARBZG_BODIES: Record<string, { de: string; en: string }> = {
-  approachingMax: {
-    de: "Sie haben heute mehr als 8 Stunden gearbeitet. Ab 10 Stunden ist die gesetzliche Höchstarbeitszeit erreicht (§3 ArbZG).",
-    en: "You have worked more than 8 hours today. At 10 hours the statutory maximum working time is reached (§3 ArbZG).",
-  },
-  exceededMax: {
-    de: "Die gesetzliche Höchstarbeitszeit von 10 Stunden pro Tag wurde überschritten (§3 ArbZG). Bitte informieren Sie Ihren Vorgesetzten.",
-    en: "The statutory maximum working time of 10 hours per day has been exceeded (§3 ArbZG). Please inform your supervisor.",
-  },
-  restPeriodShort: {
-    de: "Seit dem Ende der letzten Schicht sind noch keine 11 Stunden Ruhezeit vergangen (§5 ArbZG).",
-    en: "Less than 11 hours of rest period have passed since the end of the last shift (§5 ArbZG).",
-  },
-};
-
 function useArbzgNotifications(opts: {
   active: boolean;
   totalWorkedMs: number;
   lastWorkEndAt: string | null;
 }) {
   const notifiedRef = useRef<Set<string>>(new Set());
+  const locale = useLocale() === "en" ? "en" : "de";
 
   useEffect(() => {
     const checks: Array<ArbzgWarning | null> = [
@@ -231,22 +204,24 @@ function useArbzgNotifications(opts: {
       if (notifiedRef.current.has(warningKey)) continue;
       notifiedRef.current.add(warningKey);
 
-      const locale =
-        typeof navigator !== "undefined" && navigator.language.startsWith("en") ? "en" : "de";
-
-      const title = ARBZG_TITLES[warningKey]?.[locale] ?? warningKey;
-      const body = ARBZG_BODIES[warningKey]?.[locale] ?? "";
+      const text = arbzgWarningText(warningKey, locale) ?? {
+        title: warningKey,
+        body: "",
+      };
 
       fetch("/api/notifications", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           type: "GENERIC",
-          title,
-          body,
+          title: text.title,
+          body: text.body,
           payload: { category: "arbzg", warningKey },
         }),
       }).catch(() => {});
     }
+    // `locale` is intentionally excluded: re-running on a language switch
+    // would re-post already surfaced warnings under the new locale.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [opts.active, opts.totalWorkedMs, opts.lastWorkEndAt]);
 }

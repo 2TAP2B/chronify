@@ -3,6 +3,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { audit, getUserContext, type SessionUser } from "@/server/context";
 import { notifyUser } from "@/server/services/notification";
+import { notificationText } from "@/lib/notifications/server-texts";
 import { toCalendarDate, addDaysUtc, isSameCalendarDay } from "@/lib/datetime";
 import { makeHolidayResolver, isWeekend } from "@/lib/vacation/business-days";
 
@@ -76,7 +77,7 @@ export async function createClosure({
 
   const activeUsers = await db.user.findMany({
     where: { active: true },
-    select: { id: true, name: true },
+    select: { id: true, name: true, locale: true },
   });
 
   for (const day of businessDays) {
@@ -112,12 +113,19 @@ export async function createClosure({
       })
       .catch(() => {});
 
+    const locale: "de" | "en" = (u.locale ?? "de") === "en" ? "en" : "de";
     await notifyUser({
       userId: u.id,
-      type: "GENERIC",
-      title: "Schließtag",
-      body: `${input.name}: ${businessDays.length} Tag(e) wurden als Urlaub eingetragen. Du kannst stattdessen Überstunden abbauen.`,
-      payload: { closureId: closure.id, businessDays: businessDays.length },
+      type: "CLOSURE_CHOICE",
+      ...notificationText("closureChoice", locale, {
+        closureName: input.name,
+        days: businessDays.length,
+      }),
+      payload: {
+        closureId: closure.id,
+        closureName: input.name,
+        businessDays: businessDays.length,
+      },
       url: "/de/closure-choices",
     });
   }
