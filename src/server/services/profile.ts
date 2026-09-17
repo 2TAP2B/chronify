@@ -92,7 +92,7 @@ export async function updateOwnProfile(opts: {
   return getOwnProfile(opts.actor.id);
 }
 
-const AVATAR_MAX_BYTES = 300 * 1024;
+const AVATAR_MAX_BYTES = 3 * 1024 * 1024;
 const AVATAR_ALLOWED_PREFIXES = [
   "data:image/png;base64,",
   "data:image/jpeg;base64,",
@@ -107,10 +107,18 @@ export async function setOwnAvatar(opts: {
   if (opts.dataUrl !== null) {
     const url = opts.dataUrl;
     const ok = AVATAR_ALLOWED_PREFIXES.some((p) => url.startsWith(p));
-    if (!ok) throw new Error("Avatar must be a PNG/JPEG/WebP image");
-    if (url.length > AVATAR_MAX_BYTES * 1.4) {
-      // base64 overhead ≈ 4/3 — compare against a generous tolerance.
-      throw new Error("Avatar too large (max ~300 KB)");
+    if (!ok) {
+      const e = new Error("Invalid avatar type");
+      (e as Error & { code: string }).code = "AVATAR_BAD_TYPE";
+      throw e;
+    }
+    // Decode base64 size accurately (header = "data:...;base64,").
+    const header = url.slice(0, url.indexOf(",") + 1);
+    const decodedBytes = Math.floor(((url.length - header.length) * 3) / 4);
+    if (decodedBytes > AVATAR_MAX_BYTES) {
+      const e = new Error("Avatar too large (max 3 MB)");
+      (e as Error & { code: string }).code = "AVATAR_TOO_LARGE";
+      throw e;
     }
     avatarUrl = url;
   }
