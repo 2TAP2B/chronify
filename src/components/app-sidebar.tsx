@@ -27,7 +27,7 @@ export function AppSidebar({
 }: {
   navItems: NavItem[];
   adminItems: NavItem[];
-  user: { name: string; email: string };
+  user: { name: string; email: string; avatarUrl?: string | null };
   branding?: { appName: string; appLogo: string | null };
 } & React.ComponentProps<typeof Sidebar>) {
   const { setOpenMobile } = useSidebar();
