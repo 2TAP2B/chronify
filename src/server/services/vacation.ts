@@ -10,6 +10,7 @@ import {
   overlapsExisting,
 } from "@/lib/vacation/business-days";
 import { toCalendarDate } from "@/lib/datetime";
+import { notificationText } from "@/lib/notifications/server-texts";
 import { targetMinutesForDate } from "@/lib/overtime/calculate";
 import type { FederalState, VacationRequest, VacationStatus } from "@prisma/client";
 
@@ -156,14 +157,30 @@ export async function createVacationRequest(opts: {
   });
   if (admins.length) {
     await db.notification.createMany({
-      data: admins.map((a) => ({
-        userId: a.id,
-        type: "VACATION_REQUESTED",
-        title: "Neuer Urlaubsantrag",
-        body: `${actor.name ?? actor.email} beantragt ${businessDays.length} Tage Urlaub (${from.toISOString().slice(0, 10)} – ${to.toISOString().slice(0, 10)})`,
-        payload: { requestId: created.id, userId: actor.id },
-        channel: "APP",
-      })),
+      data: admins.map((a) => {
+        const locale: "de" | "en" = (a.locale ?? "de") === "en" ? "en" : "de";
+        const text = notificationText("vacationRequested", locale, {
+          actorName: actor.name ?? actor.email ?? "",
+          days: businessDays.length,
+          fromDate: from.toISOString().slice(0, 10),
+          toDate: to.toISOString().slice(0, 10),
+        });
+        return {
+          userId: a.id,
+          type: "VACATION_REQUESTED",
+          title: text.title,
+          body: text.body,
+          payload: {
+            requestId: created.id,
+            userId: actor.id,
+            actorName: actor.name ?? actor.email ?? "",
+            days: businessDays.length,
+            fromDate: from.toISOString().slice(0, 10),
+            toDate: to.toISOString().slice(0, 10),
+          },
+          channel: "APP",
+        };
+      }),
     });
 
     const appUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
@@ -314,9 +331,15 @@ export async function approveVacationRequest(opts: {
   await notifyUser({
     userId: req.userId,
     type: "VACATION_APPROVED",
-    title: "Urlaub genehmigt",
-    body: `Urlaub ${req.from.toISOString().slice(0, 10)} – ${req.to.toISOString().slice(0, 10)} wurde genehmigt.`,
-    payload: { requestId: req.id },
+    ...notificationText("vacationApproved", (ctx.user.locale ?? "de") === "en" ? "en" : "de", {
+      fromDate: req.from.toISOString().slice(0, 10),
+      toDate: req.to.toISOString().slice(0, 10),
+    }),
+    payload: {
+      requestId: req.id,
+      fromDate: req.from.toISOString().slice(0, 10),
+      toDate: req.to.toISOString().slice(0, 10),
+    },
     url: "/de/vacation",
     email: {
       template: "vacation_approved",
@@ -370,9 +393,19 @@ export async function rejectVacationRequest(opts: {
   await notifyUser({
     userId: req.userId,
     type: "VACATION_REJECTED",
-    title: "Urlaub abgelehnt",
-    body: `Urlaub ${req.from.toISOString().slice(0, 10)} – ${req.to.toISOString().slice(0, 10)} wurde abgelehnt.`,
-    payload: { requestId: req.id },
+    ...notificationText(
+      "vacationRejected",
+      (rejectCtx.user.locale ?? "de") === "en" ? "en" : "de",
+      {
+        fromDate: req.from.toISOString().slice(0, 10),
+        toDate: req.to.toISOString().slice(0, 10),
+      }
+    ),
+    payload: {
+      requestId: req.id,
+      fromDate: req.from.toISOString().slice(0, 10),
+      toDate: req.to.toISOString().slice(0, 10),
+    },
     url: "/de/vacation",
     email: {
       template: "vacation_rejected",

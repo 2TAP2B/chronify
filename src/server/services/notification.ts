@@ -12,6 +12,7 @@ type CreateNotificationInput = {
     | "VACATION_REQUESTED"
     | "SICK_NOTE_REMINDER"
     | "TIMER_REMINDER"
+    | "CLOSURE_CHOICE"
     | "GENERIC";
   title: string;
   body: string;
