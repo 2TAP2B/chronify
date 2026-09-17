@@ -12,7 +12,6 @@ export function SickNoteForm() {
   const t = useTranslations("sickness");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
-  const [aubUntil, setAubUntil] = useState("");
   const [note, setNote] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -29,7 +28,6 @@ export function SickNoteForm() {
         body: JSON.stringify({
           from: new Date(from + "T00:00:00Z").toISOString(),
           to: new Date(to + "T00:00:00Z").toISOString(),
-          aubUntil: aubUntil ? new Date(aubUntil + "T00:00:00Z").toISOString() : null,
           note: note || null,
         }),
       });
@@ -48,7 +46,7 @@ export function SickNoteForm() {
 
   return (
     <form onSubmit={onSubmit} className="space-y-4">
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div className="space-y-1.5">
           <Label htmlFor="from">{t("from")}</Label>
           <DatePicker
@@ -61,13 +59,6 @@ export function SickNoteForm() {
           <DatePicker
             value={to ? new Date(to + "T00:00:00") : undefined}
             onChange={(d) => d && setTo(format(d, "yyyy-MM-dd"))}
-          />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="aubUntil">{t("aubUntil")}</Label>
-          <DatePicker
-            value={aubUntil ? new Date(aubUntil + "T00:00:00") : undefined}
-            onChange={(d) => d && setAubUntil(format(d, "yyyy-MM-dd"))}
           />
         </div>
       </div>
