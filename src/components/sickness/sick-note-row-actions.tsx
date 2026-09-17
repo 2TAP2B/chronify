@@ -26,13 +26,11 @@ export function SickNoteRowActions({
   noteId,
   from: initialFrom,
   to: initialTo,
-  aubUntil: initialAub,
   note: initialNote,
 }: {
   noteId: string;
   from: string;
   to: string;
-  aubUntil: string | null;
   note: string | null;
 }) {
   const t = useTranslations("sickness");

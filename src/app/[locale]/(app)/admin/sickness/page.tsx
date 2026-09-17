@@ -98,7 +98,6 @@ export default async function AdminSicknessPage({ params }: Props) {
                           noteId={n.id}
                           from={n.from.toISOString()}
                           to={n.to.toISOString()}
-                          aubUntil={n.aubUntil?.toISOString() ?? null}
                           note={n.note}
                         />
                       </TableCell>
