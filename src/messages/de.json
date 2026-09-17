@@ -315,8 +315,17 @@
     "addForUser": "Krankmeldung für Mitarbeiter erfassen"
   },
   "adminUsers": {
+    "roleAdmin": "Administrator",
+    "roleEmployee": "Mitarbeiter",
     "title": "Benutzerverwaltung",
     "newUser": "Neuer Benutzer",
+    "saveOk": "Gespeichert.",
+    "saving": "Speichert …",
+    "backToList": "Zurück zur Liste",
+    "usedDays": "Verbrauchte Tage",
+    "defaultLabel": "Standard",
+    "cannotDeleteSelf": "Der eigene Benutzer kann nicht gelöscht werden.",
+    "passwordPlaceholder": "Leer lassen = unverändert",
     "email": "E-Mail",
     "password": "Passwort",
     "name": "Name",

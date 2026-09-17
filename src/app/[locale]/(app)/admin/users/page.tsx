@@ -2,6 +2,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -78,7 +79,14 @@ export default async function AdminUsersPage({ params }: Props) {
               <TableBody>
                 {users.map((u) => (
                   <TableRow key={u.id}>
-                    <TableCell className="font-medium">{u.name}</TableCell>
+                    <TableCell className="font-medium">
+                      <Link
+                        href={`/${locale}/admin/users/${u.id}`}
+                        className="hover:underline underline-offset-2 text-foreground"
+                      >
+                        {u.name}
+                      </Link>
+                    </TableCell>
                     <TableCell className="text-muted-foreground">{u.email}</TableCell>
                     <TableCell>
                       <Badge variant={u.role === "ADMIN" ? "default" : "secondary"}>{u.role}</Badge>
