@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
-import { Bar, CartesianGrid, ComposedChart, Line, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import {
   ChartContainer,
   ChartLegend,
@@ -57,9 +57,10 @@ const EMPTY_MONTHS = () =>
   }));
 
 function fmtH(minutes: number): string {
+  const sign = minutes < 0 ? "-" : "";
   const h = Math.floor(Math.abs(minutes) / 60);
   const m = Math.abs(minutes) % 60;
-  return `${h}:${String(m).padStart(2, "0")}`;
+  return `${sign}${h}:${String(m).padStart(2, "0")}`;
 }
 
 function useChartConfig() {
@@ -69,7 +70,6 @@ function useChartConfig() {
       ({
         worked: { label: t("workedLabel"), color: "hsl(var(--chart-1))" },
         target: { label: t("targetLabel"), color: "hsl(var(--chart-5))" },
-        overtime: { label: t("overtimeLabel"), color: "hsl(var(--chart-3))" },
       }) satisfies ChartConfig,
     [t]
   );
@@ -122,7 +122,6 @@ export function WorkOverviewPanel({
         month: t(`monthNames.${m.month - 1}` as never),
         worked: Math.round((m.workedMinutes / 60) * 10) / 10,
         target: Math.round((m.targetMinutes / 60) * 10) / 10,
-        overtime: Math.round((m.overtimeMinutes / 60) * 10) / 10,
       })),
     [months, t]
   );
@@ -142,11 +141,19 @@ export function WorkOverviewPanel({
     [months]
   );
 
-  const stat = (label: string, value: string) => (
+  const stat = (label: string, value: string, negative?: boolean) => (
     <Card className="py-3">
       <CardContent className="px-4">
         <p className="text-xs text-muted-foreground">{label}</p>
-        <p className="mt-1 font-mono text-lg font-semibold tabular-nums">{value}</p>
+        <p
+          className={
+            negative
+              ? "mt-1 font-mono text-lg font-semibold tabular-nums text-destructive"
+              : "mt-1 font-mono text-lg font-semibold tabular-nums"
+          }
+        >
+          {value}
+        </p>
       </CardContent>
     </Card>
   );
@@ -195,11 +202,11 @@ export function WorkOverviewPanel({
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {stat(t("workedTotal") as string, fmtH(totals.workedMinutes))}
         {stat(t("targetTotal") as string, fmtH(totals.targetMinutes))}
-        {stat(t("overtimeBalance") as string, fmtH(balance))}
+        {stat(t("overtimeBalance") as string, fmtH(balance), balance < 0)}
         {stat(t("vacationSick") as string, `${totals.vacationDays} / ${totals.sickDays}`)}
       </div>
 
-      {/* Monthly chart */}
+      {/* Monthly chart: grouped Soll vs. worked bars */}
       <Card>
         <CardHeader>
           <CardTitle>
@@ -208,43 +215,15 @@ export function WorkOverviewPanel({
         </CardHeader>
         <CardContent>
           <ChartContainer config={chartConfig} className="h-[280px] w-full">
-            <ComposedChart data={chartData} accessibilityLayer>
+            <BarChart data={chartData} accessibilityLayer barGap={4}>
               <CartesianGrid vertical={false} />
               <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} />
-              <YAxis
-                yAxisId="h"
-                tickLine={false}
-                axisLine={false}
-                width={40}
-                tickFormatter={(v) => `${v}h`}
-              />
-              <YAxis
-                yAxisId="d"
-                orientation="right"
-                tickLine={false}
-                axisLine={false}
-                width={28}
-                tickFormatter={(v) => `${v}d`}
-              />
+              <YAxis tickLine={false} axisLine={false} width={44} tickFormatter={(v) => `${v}h`} />
               <ChartTooltip content={<ChartTooltipContent indicator="dashed" />} />
               <ChartLegend content={<ChartLegendContent />} />
-              <Bar dataKey="worked" fill="var(--color-worked)" radius={4} yAxisId="h" />
-              <Line
-                dataKey="target"
-                stroke="var(--color-target)"
-                strokeDasharray="4 4"
-                strokeWidth={2}
-                dot={false}
-                yAxisId="h"
-              />
-              <Line
-                dataKey="overtime"
-                stroke="var(--color-overtime)"
-                strokeWidth={2}
-                dot={false}
-                yAxisId="d"
-              />
-            </ComposedChart>
+              <Bar dataKey="target" fill="var(--color-target)" radius={4} />
+              <Bar dataKey="worked" fill="var(--color-worked)" radius={4} />
+            </BarChart>
           </ChartContainer>
         </CardContent>
       </Card>
