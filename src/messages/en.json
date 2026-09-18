@@ -34,6 +34,7 @@
     "team": "Team",
     "admin": "Admin",
     "adminDashboard": "Admin Dashboard",
+    "workOverview": "Work times",
     "users": "Users",
     "workingModels": "Working Models",
     "holidays": "Holidays",
@@ -457,6 +458,35 @@
     "assignModel": "Assign model",
     "assignDescription": "Choose a working model for this user",
     "assign": "Assign"
+  },
+  "workOverview": {
+    "title": "Work times",
+    "selectUser": "Select user",
+    "openUserPage": "Open user page",
+    "workedTotal": "Worked",
+    "targetTotal": "Target",
+    "overtimeBalance": "Overtime balance",
+    "vacationSick": "Vacation days / Sick days",
+    "monthlyChart": "Monthly overview",
+    "vacationMonths": "Vacation days per month",
+    "sickMonths": "Sick days per month",
+    "workedLabel": "Worked (h)",
+    "targetLabel": "Target (h)",
+    "overtimeLabel": "Overtime (h)",
+    "monthNames": [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec"
+    ]
   },
   "adminHolidays": {
     "title": "Holidays",
