@@ -60,6 +60,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     user?.role === "ADMIN"
       ? [
           { href: "/admin", label: t("adminDashboard") },
+          { href: "/admin/work-overview", label: t("workOverview") },
           { href: "/admin/users", label: t("users") },
           { href: "/admin/working-models", label: t("workingModels") },
           { href: "/admin/automation", label: t("automation") },
