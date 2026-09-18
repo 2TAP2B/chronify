@@ -109,13 +109,7 @@ export function KioskScreen({ locale }: { locale: string }) {
         if (!res.ok) {
           const err = data as ErrorResponse;
           setState("error");
-          setErrorMsg(
-            err.error === "card_not_found"
-              ? t("cardNotFound")
-              : err.error === "rate_limited"
-                ? t("rateLimited")
-                : t("scanError")
-          );
+          setErrorMsg(err.error === "card_not_found" ? t("cardNotFound") : t("scanError"));
           scheduleRevert(3);
           return;
         }
