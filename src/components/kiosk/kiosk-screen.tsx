@@ -40,6 +40,7 @@ export function KioskScreen({ locale }: { locale: string }) {
   const [isStandalone, setIsStandalone] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
   const revertTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const nfcStartingRef = useRef(false);
 
   useEffect(() => {
     setNfcSupported(typeof window !== "undefined" && "NDEFReader" in window);
@@ -142,8 +143,11 @@ export function KioskScreen({ locale }: { locale: string }) {
       setNfcError("not_available");
       return;
     }
+    // Re-entry guard: focus/visibility effects and rapid taps must not start
+    // concurrent NDEFReader sessions.
+    if (nfcStartingRef.current) return;
+    nfcStartingRef.current = true;
 
-    const reader = new NDEFReader();
     const controller = new AbortController();
     abortControllerRef.current = controller;
 
@@ -151,12 +155,14 @@ export function KioskScreen({ locale }: { locale: string }) {
     setNfcError(null);
 
     try {
+      const reader = new NDEFReader();
+      // No abort on reading: the scan stays armed so consecutive taps work
+      // without re-pressing the NFC button. Only onreadingerror/unmount
+      // end the session.
       await reader.scan({ signal: controller.signal });
+      localStorage.setItem("kiosk-nfc-pref", "1");
 
       reader.onreading = (event: NDEFReadingEvent) => {
-        controller.abort();
-        setNfcActive(false);
-
         for (const record of event.message.records) {
           if (record.recordType === "text") {
             const textDecoder = new TextDecoder();
@@ -165,6 +171,8 @@ export function KioskScreen({ locale }: { locale: string }) {
             if (trimmed) {
               handleCardTap(trimmed);
             }
+            // Keep scanning further cards; only the first text record per
+            // reading event counts.
             return;
           }
         }
@@ -172,11 +180,20 @@ export function KioskScreen({ locale }: { locale: string }) {
 
       reader.onreadingerror = () => {
         setNfcError("scan_error");
-        setNfcActive(false);
       };
-    } catch {
+    } catch (e) {
       setNfcActive(false);
-      setNfcError("permission_denied");
+      localStorage.removeItem("kiosk-nfc-pref");
+      const name = (e as { name?: string }).name;
+      if (name === "NotAllowedError") {
+        setNfcError("permission_denied");
+      } else if (name === "AbortError") {
+        // intentional teardown (unmount) — no error surface
+      } else {
+        setNfcError("scan_error");
+      }
+    } finally {
+      nfcStartingRef.current = false;
     }
   }, [handleCardTap]);
 
@@ -186,6 +203,27 @@ export function KioskScreen({ locale }: { locale: string }) {
       if (revertTimer.current) clearTimeout(revertTimer.current);
     };
   }, []);
+
+  // Auto re-arm: if NFC was enabled once (localStorage pref), resume scanning
+  // when the kiosk becomes visible again (reload, PWA resume). Chromium
+  // requires a gesture for a fresh scan() — if that fails the session falls
+  // back to the manual NFC button.
+  useEffect(() => {
+    const tryArm = () => {
+      if (
+        document.visibilityState === "visible" &&
+        !nfcStartingRef.current &&
+        !abortControllerRef.current?.signal.aborted &&
+        "NDEFReader" in window &&
+        localStorage.getItem("kiosk-nfc-pref") === "1"
+      ) {
+        void handleNfcScan();
+      }
+    };
+    tryArm();
+    document.addEventListener("visibilitychange", tryArm);
+    return () => document.removeEventListener("visibilitychange", tryArm);
+  }, [handleNfcScan]);
 
   const localeStr = locale === "en" ? "en-US" : "de-DE";
   const timeStr = now.toLocaleTimeString(localeStr, {
