@@ -55,6 +55,7 @@
   "auth": {
     "loginTitle": "Anmelden",
     "loginSubtitle": "Melden Sie sich bei Ihrem Konto an",
+    "passwordLoginDisabledHint": "Passwort-Anmeldung ist deaktiviert — bitte über SSO/OIDC anmelden. Falls SSO nicht verfügbar ist, wende dich an die Verwaltung.",
     "email": "E-Mail",
     "emailOrUsername": "E-Mail oder Benutzername",
     "password": "Passwort",

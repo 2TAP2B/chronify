@@ -55,6 +55,7 @@
   "auth": {
     "loginTitle": "Sign in",
     "loginSubtitle": "Sign in to your account",
+    "passwordLoginDisabledHint": "Password sign-in is disabled — please sign in via SSO/OIDC. If a password sign-in should work for you, contact your administrator.",
     "email": "Email",
     "emailOrUsername": "Email or username",
     "password": "Password",
