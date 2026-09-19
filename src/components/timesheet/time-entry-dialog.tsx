@@ -280,14 +280,16 @@ export function TimeEntryDialog({
           <DialogDescription>{date}</DialogDescription>
         </DialogHeader>
         <form onSubmit={onSubmit} className="space-y-4">
+          {/* Row 1: day */}
+          <div className="space-y-1.5">
+            <Label htmlFor="date">{t("day")}</Label>
+            <DatePicker
+              value={date ? new Date(date + "T00:00:00") : undefined}
+              onChange={(d) => d && setDate(format(d, "yyyy-MM-dd"))}
+            />
+          </div>
+          {/* Row 2: start + end */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="date">{t("day")}</Label>
-              <DatePicker
-                value={date ? new Date(date + "T00:00:00") : undefined}
-                onChange={(d) => d && setDate(format(d, "yyyy-MM-dd"))}
-              />
-            </div>
             <div className="space-y-1.5">
               <Label htmlFor="start">{t("start")}</Label>
               <TimeInput placeholder="08:00" value={startAt} onChange={onStartTimeChange} />
@@ -296,6 +298,9 @@ export function TimeEntryDialog({
               <Label htmlFor="end">{t("end")}</Label>
               <TimeInput placeholder="16:00" value={endAt} onChange={onEndTimeChange} />
             </div>
+          </div>
+          {/* Row 3: duration + break */}
+          <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="duration">{t("duration")}</Label>
               <div className="relative">
@@ -333,9 +338,6 @@ export function TimeEntryDialog({
                   {t("netDuration")}: {formatDuration(netDuration)}
                 </p>
               )}
-              {breakMode === "AUTO" && (
-                <p className="text-xs text-amber-600 dark:text-amber-400">{t("autoBreakHint")}</p>
-              )}
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="break">
@@ -350,11 +352,16 @@ export function TimeEntryDialog({
                 onChange={(e) => setBreakMinutes(e.target.value)}
               />
             </div>
-            <div className="col-span-2 space-y-1.5">
-              <Label htmlFor="note">{t("note")}</Label>
-              <Input id="note" value={note} onChange={(e) => setNote(e.target.value)} />
-            </div>
           </div>
+          {/* Row 4: note */}
+          <div className="space-y-1.5">
+            <Label htmlFor="note">{t("note")}</Label>
+            <Input id="note" value={note} onChange={(e) => setNote(e.target.value)} />
+          </div>
+          {/* Hint: AUTO break, small at the bottom */}
+          {breakMode === "AUTO" && (
+            <p className="text-[11px] text-muted-foreground">{t("autoBreakHint")}</p>
+          )}
           {error && <p className="text-sm text-destructive">{error}</p>}
           <DialogFooter>
             <Button type="button" variant="secondary" onClick={onClose} disabled={saving}>
