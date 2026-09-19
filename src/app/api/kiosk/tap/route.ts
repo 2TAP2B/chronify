@@ -4,7 +4,6 @@ import { db } from "@/lib/db";
 import { audit } from "@/server/context";
 import { startTimer, stopTimer, getTimerStatus } from "@/server/services/timer";
 import { TimerError } from "@/server/services/timer";
-import { rateLimit } from "@/lib/rate-limit";
 
 const tapSchema = z.object({
   cardId: z.string().min(1).max(20),
@@ -20,14 +19,11 @@ export async function POST(request: Request) {
 
     const cardId = parsed.data.cardId.trim();
 
-    const ip =
-      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-      request.headers.get("x-real-ip") ??
-      "unknown";
-    const rl = rateLimit({ key: `kiosk:${ip}:${cardId}`, max: 10, windowMs: 60_000 });
-    if (!rl.ok) {
-      return NextResponse.json({ error: "rate_limited" }, { status: 429 });
-    }
+    // NOTE: intentionally no rate limiting here — the kiosk is a shared
+    // terminal where rapid consecutive taps (in/out) are the normal flow.
+    // Brute-force protection is not a meaningful threat: card IDs are
+    // physical NFC payloads, not user-chosen secrets (policy decision 2026-09,
+    // see issue #23).
 
     const user = await db.user.findUnique({
       where: { nfcCardId: cardId },
