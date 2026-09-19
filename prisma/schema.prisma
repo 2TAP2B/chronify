@@ -279,6 +279,7 @@ model OrgSettings {
   retentionYears                   Int          @default(2)
   sickNoteRetentionMonths          Int          @default(12)
   auditLogRetentionMonths         Int          @default(6)
+  passwordLoginDisabled           Boolean      @default(false)
   imprintName                      String?
   imprintAddress                   String?
   imprintEmail                     String?

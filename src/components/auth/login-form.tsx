@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import * as React from "react";
+import { useEffect, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import { signIn } from "next-auth/react";
-import { useTranslations, useLocale } from "next-intl";
 import { useTheme } from "next-themes";
 import { AlertCircle, KeyRound, Moon, Sun } from "lucide-react";
-import { Link } from "@/i18n/routing";
+import Link from "next/link";
+
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -23,7 +25,13 @@ type Branding = {
   loginQuoteAuthor: string | null;
 };
 
-export function LoginForm({ className, ...props }: React.ComponentProps<"div">) {
+export function LoginForm({
+  passwordLoginDisabled = false,
+  className,
+  ...props
+}: {
+  passwordLoginDisabled?: boolean;
+} & React.ComponentProps<"div">) {
   const t = useTranslations("auth");
   const tCommon = useTranslations("common");
   const locale = useLocale();
@@ -75,7 +83,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
       </div>
       <Card className="overflow-hidden">
         <CardContent className="grid p-0 md:grid-cols-2">
-          <form onSubmit={onSubmit} className="p-6 md:p-8">
+          <div className="p-6 md:p-8">
             <div className="flex flex-col gap-6">
               <div className="flex flex-col items-center text-center">
                 <div className="mb-4 flex h-12 w-12 items-center justify-center">
@@ -88,72 +96,93 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
                 <h1 className="text-2xl font-bold">{t("loginTitle")}</h1>
                 <p className="text-balance text-muted-foreground">{t("loginSubtitle")}</p>
               </div>
-              <div className="grid gap-2">
-                <Label htmlFor="email">{t("emailOrUsername")}</Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="text"
-                  autoComplete="username"
-                  placeholder="m@example.com"
-                  required
-                  autoFocus
-                />
-              </div>
-              <div className="grid gap-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password">{t("password")}</Label>
-                  <Link
-                    href="/forgot-password"
-                    className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    {t("forgotPassword")}
-                  </Link>
-                </div>
-                <Input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
-                  required
-                />
-              </div>
 
-              {error && (
+              {!passwordLoginDisabled && (
+                <form onSubmit={onSubmit} className="contents">
+                  <div className="grid gap-2">
+                    <Label htmlFor="email">{t("emailOrUsername")}</Label>
+                    <Input
+                      id="email"
+                      name="email"
+                      type="text"
+                      autoComplete="username"
+                      placeholder="m@example.com"
+                      required
+                      autoFocus
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="password">{t("password")}</Label>
+                      <Link
+                        href="/forgot-password"
+                        className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        {t("forgotPassword")}
+                      </Link>
+                    </div>
+                    <Input
+                      id="password"
+                      name="password"
+                      type="password"
+                      autoComplete="current-password"
+                      required
+                    />
+                  </div>
+
+                  {error && (
+                    <div className="flex items-center gap-2 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+                      <AlertCircle className="h-4 w-4 shrink-0" />
+                      <span>{error}</span>
+                    </div>
+                  )}
+
+                  <Button type="submit" className="w-full" disabled={loading}>
+                    {loading ? "…" : t("loginButton")}
+                  </Button>
+
+                  {OIDC_ENABLED && (
+                    <>
+                      <div className="relative my-2">
+                        <div className="absolute inset-0 flex items-center">
+                          <span className="w-full border-t" />
+                        </div>
+                        <div className="relative flex justify-center text-xs uppercase">
+                          <span className="bg-card px-2 text-muted-foreground">{t("or")}</span>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </form>
+              )}
+
+              {passwordLoginDisabled && !OIDC_ENABLED && (
                 <div className="flex items-center gap-2 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
                   <AlertCircle className="h-4 w-4 shrink-0" />
-                  <span>{error}</span>
+                  <span>{t("passwordLoginDisabledHint")}</span>
                 </div>
               )}
 
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "…" : t("loginButton")}
-              </Button>
+              {passwordLoginDisabled && OIDC_ENABLED && (
+                <p className="text-center text-sm text-muted-foreground">
+                  {t("passwordLoginDisabledHint")}
+                </p>
+              )}
 
               {OIDC_ENABLED && (
-                <>
-                  <div className="relative my-2">
-                    <div className="absolute inset-0 flex items-center">
-                      <span className="w-full border-t" />
-                    </div>
-                    <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-card px-2 text-muted-foreground">{t("or")}</span>
-                    </div>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full"
-                    disabled={loading}
-                    onClick={() => signIn("pocket-id", { callbackUrl: `/${locale}/dashboard` })}
-                  >
-                    <KeyRound className="mr-2 h-4 w-4" />
-                    {t("oidcLogin")}
-                  </Button>
-                </>
+                <Button
+                  type="button"
+                  variant={passwordLoginDisabled ? "default" : "outline"}
+                  className="w-full"
+                  disabled={loading}
+                  onClick={() => signIn("pocket-id", { callbackUrl: `/${locale}/dashboard` })}
+                >
+                  <KeyRound className="mr-2 h-4 w-4" />
+                  {t("oidcLogin")}
+                </Button>
               )}
             </div>
-          </form>
+          </div>
           <div className="relative hidden bg-primary md:block">
             {loginImage ? (
               <div className="absolute inset-0">
