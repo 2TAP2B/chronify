@@ -34,6 +34,7 @@
     "team": "Team",
     "admin": "Verwaltung",
     "adminDashboard": "Admin-Dashboard",
+    "workOverview": "Arbeitszeiten",
     "users": "Benutzer",
     "workingModels": "Arbeitszeitmodelle",
     "holidays": "Feiertage",
@@ -464,6 +465,35 @@
     "assignModel": "Modell zuweisen",
     "assignDescription": "Wähle ein Arbeitszeitmodell für diesen Benutzer",
     "assign": "Zuweisen"
+  },
+  "workOverview": {
+    "title": "Arbeitszeiten",
+    "selectUser": "Benutzer auswählen",
+    "openUserPage": "Benutzerseite öffnen",
+    "workedTotal": "Gearbeitet",
+    "targetTotal": "Soll",
+    "overtimeBalance": "Überstunden-Saldo",
+    "vacationSick": "Urlaubstage / Kranktage",
+    "monthlyChart": "Monatsübersicht",
+    "vacationMonths": "Urlaubstage pro Monat",
+    "sickMonths": "Kranktage pro Monat",
+    "workedLabel": "Gearbeitet (h)",
+    "targetLabel": "Soll (h)",
+    "overtimeLabel": "Überstunden (h)",
+    "monthNames": [
+      "Jan",
+      "Feb",
+      "Mär",
+      "Apr",
+      "Mai",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Okt",
+      "Nov",
+      "Dez"
+    ]
   },
   "adminHolidays": {
     "title": "Feiertage",
