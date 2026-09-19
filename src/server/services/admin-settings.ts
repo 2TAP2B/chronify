@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
 import { audit, type SessionUser } from "@/server/context";
 import { z } from "zod";
-import type { BreakMode, FederalState } from "@prisma/client";
+import type { BreakMode, FederalState, OrgSettings } from "@prisma/client";
 
 export function requireAdmin(actor: SessionUser) {
   if (actor.role !== "ADMIN") {
@@ -43,17 +43,48 @@ export const updateSettingsSchema = z.object({
   loginQuote: z.string().max(200).nullable().optional(),
   loginQuoteAuthor: z.string().max(50).nullable().optional(),
   passwordLoginDisabled: z.boolean().optional(),
+  smtpHost: z.string().max(255).nullable().optional(),
+  smtpPort: z.number().int().min(1).max(65535).nullable().optional(),
+  smtpUser: z.string().max(255).nullable().optional(),
+  smtpPassword: z.string().max(255).nullable().optional(),
+  smtpFrom: z.string().max(255).nullable().optional(),
+  smtpTls: z.boolean().nullable().optional(),
 });
 
 export type UpdateSettingsInput = z.infer<typeof updateSettingsSchema>;
 
+export type SettingsView = Omit<OrgSettings, "smtpPassword"> & {
+  smtpPassword: string | null;
+  smtpSource: "env" | "db" | "none";
+  smtpHasPassword: boolean;
+};
+
 export async function getSettings(actor: SessionUser) {
   requireAdmin(actor);
-  return db.orgSettings.findUniqueOrThrow({ where: { id: "singleton" } });
+  const settings = await db.orgSettings.findUniqueOrThrow({ where: { id: "singleton" } });
+  const hasEnvSmtp = !!process.env.SMTP_HOST;
+  return {
+    ...settings,
+    // smtpPassword is write-only: never returned to the client.
+    smtpPassword: null,
+    smtpSource: hasEnvSmtp
+      ? ("env" as const)
+      : settings.smtpHost
+        ? ("db" as const)
+        : ("none" as const),
+    smtpFrom: hasEnvSmtp && process.env.SMTP_FROM ? process.env.SMTP_FROM : settings.smtpFrom,
+  } as SettingsView;
 }
 
 export async function updateSettings(opts: { actor: SessionUser; input: UpdateSettingsInput }) {
   requireAdmin(opts.actor);
+  const smtpSourceEnv = !!process.env.SMTP_HOST;
+  if (smtpSourceEnv) {
+    const smtpKeys = Object.keys(opts.input).filter((k) => k.startsWith("smtp"));
+    if (smtpKeys.length > 0) {
+      throw new Error("SMTP_MANAGED_BY_ENV");
+    }
+  }
   if (opts.input.passwordLoginDisabled === true && !oidcConfigured()) {
     // Guard against lockout: with password login off, SSO is the only way in.
     throw new Error("OIDC_NOT_CONFIGURED");

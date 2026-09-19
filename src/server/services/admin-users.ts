@@ -93,6 +93,8 @@ export const updateUserSchema = z.object({
   hireDate: z.string().datetime().nullable().optional(),
   nfcCardId: z.string().max(20).nullable().optional(),
   mustChangePassword: z.boolean().optional(),
+  sickMailEnabled: z.boolean().optional(),
+  vacationMailEnabled: z.boolean().optional(),
 });
 
 export type CreateUserInput = z.infer<typeof createUserSchema>;
@@ -201,6 +203,9 @@ export async function updateUser(opts: {
   if (opts.input.hireDate !== undefined)
     data.hireDate = opts.input.hireDate ? new Date(opts.input.hireDate) : null;
   if (opts.input.nfcCardId !== undefined) data.nfcCardId = opts.input.nfcCardId?.trim() || null;
+  if (opts.input.sickMailEnabled !== undefined) data.sickMailEnabled = opts.input.sickMailEnabled;
+  if (opts.input.vacationMailEnabled !== undefined)
+    data.vacationMailEnabled = opts.input.vacationMailEnabled;
   if (opts.input.password) {
     data.passwordHash = await bcrypt.hash(opts.input.password, 12);
     data.mustChangePassword = true;

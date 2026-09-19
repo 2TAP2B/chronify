@@ -105,6 +105,8 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   lastLoginAt   DateTime?
+  sickMailEnabled     Boolean @default(true)
+  vacationMailEnabled Boolean @default(true)
 
   workingModels        WorkingModel[]
   timeEntries          TimeEntry[]
@@ -280,6 +282,12 @@ model OrgSettings {
   sickNoteRetentionMonths          Int          @default(12)
   auditLogRetentionMonths         Int          @default(6)
   passwordLoginDisabled           Boolean      @default(false)
+  smtpHost                        String?
+  smtpPort                        Int?
+  smtpUser                        String?
+  smtpPassword                    String?
+  smtpFrom                        String?
+  smtpTls                         Boolean?
   imprintName                      String?
   imprintAddress                   String?
   imprintEmail                     String?

@@ -29,6 +29,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
+import { Switch } from "@/components/ui/switch";
 import { format } from "date-fns";
 import { STATE_CODES, STATE_NAMES } from "@/lib/federal-states";
 import { useConfirm } from "@/components/ui/confirm-dialog";
@@ -48,6 +49,8 @@ type AdminUser = {
   hireDate: string | null;
   nfcCardId: string | null;
   lastLoginAt: string | null;
+  sickMailEnabled: boolean | null;
+  vacationMailEnabled: boolean | null;
 };
 
 type WorkingModelRecord = {
@@ -474,7 +477,95 @@ function EntitlementSection({ userId }: { userId: string }) {
   );
 }
 
-/**--------------- overtime */
+/**--------------- notification prefs */
+function NotificationsSection({ user }: { user: AdminUser }) {
+  const t = useTranslations("adminUsers");
+  const router = useRouter();
+  const [sick, setSick] = useState(user.sickMailEnabled !== false);
+  const [vacation, setVacation] = useState(user.vacationMailEnabled !== false);
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  async function onSave(payload: { sickMailEnabled?: boolean; vacationMailEnabled?: boolean }) {
+    setSaving(true);
+    setMsg(null);
+    setError(null);
+    try {
+      const res = await fetch(`/api/admin/users/${user.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        const b = await res.json().catch(() => ({}));
+        throw new Error(b.error ?? "error");
+      }
+      setMsg(t("saveOk"));
+      router.refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "error");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{t("notificationSection")}</CardTitle>
+        <p className="text-xs text-muted-foreground">{t("notificationSectionHint")}</p>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="flex items-center justify-between rounded-lg border p-3">
+          <div className="space-y-0.5">
+            <Label htmlFor="sickMail">{t("sickMailLabel")}</Label>
+            <p className="text-xs text-muted-foreground">{t("sickMailHint")}</p>
+          </div>
+          <Switch id="sickMail" checked={sick} onCheckedChange={(v) => setSick(v)} />
+        </div>
+        <div className="flex items-center justify-between rounded-lg border p-3">
+          <div className="space-y-0.5">
+            <Label htmlFor="vacationMail">{t("vacationMailLabel")}</Label>
+            <p className="text-xs text-muted-foreground">{t("vacationMailHint")}</p>
+          </div>
+          <Switch id="vacationMail" checked={vacation} onCheckedChange={(v) => setVacation(v)} />
+        </div>
+        {msg && <p className="text-sm text-green-600 dark:text-green-400">{msg}</p>}
+        {error && <p className="text-sm text-destructive">{error}</p>}
+        <Button
+          type="button"
+          variant="default"
+          disabled={saving}
+          onClick={async () => {
+            setSaving(true);
+            try {
+              const res = await fetch(`/api/admin/users/${user.id}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ sickMailEnabled: sick, vacationMailEnabled: vacation }),
+              });
+              if (!res.ok) {
+                const b = await res.json().catch(() => ({}));
+                throw new Error(b.error ?? "error");
+              }
+              setMsg(t("saveOk"));
+              router.refresh();
+            } catch (e) {
+              setError(e instanceof Error ? e.message : "error");
+            } finally {
+              setSaving(false);
+            }
+          }}
+        >
+          <Save className="mr-2 size-4" /> {saving ? t("saving") : t("save")}
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
+/*--------------- overtime */
 function OvertimeSection({ userId }: { userId: string }) {
   const t = useTranslations("adminUsers");
   const router = useRouter();
@@ -719,6 +810,7 @@ export function UserDetail({
         <WorkingModelSection userId={user.id} workingModel={workingModel} />
         <EntitlementSection userId={user.id} />
         <OvertimeSection userId={user.id} />
+        <NotificationsSection user={user} />
         <AccountSection user={user} self={user.isSelf} listHref={listHref} />
       </div>
     </div>
