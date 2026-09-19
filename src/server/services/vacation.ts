@@ -152,7 +152,7 @@ export async function createVacationRequest(opts: {
 
   // Notify admins
   const admins = await db.user.findMany({
-    where: { role: "ADMIN", active: true },
+    where: { role: "ADMIN", active: true, vacationMailEnabled: true },
     select: { id: true, email: true, name: true, locale: true },
   });
   if (admins.length) {

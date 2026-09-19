@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { getSettings } from "@/server/services/admin-settings";
 import { SettingsForm } from "@/components/admin/settings-form";
 import { BrandingSettings } from "@/components/admin/branding-settings";
 import { YearSetupCard } from "@/components/admin/year-setup-card";
@@ -20,7 +21,7 @@ export default async function AdminSettingsPage({ params }: Props) {
   if (!session?.user?.id) return null;
   if (session.user.role !== "ADMIN") redirect(`/${locale}/dashboard`);
 
-  const settings = await db.orgSettings.findUniqueOrThrow({ where: { id: "singleton" } });
+  const settings = await getSettings(session.user);
   const appLocale = (await getLocale()) as "de" | "en";
 
   return (

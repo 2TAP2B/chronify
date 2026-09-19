@@ -1,29 +1,55 @@
 import "server-only";
 import nodemailer, { type Transporter } from "nodemailer";
+import { db } from "@/lib/db";
+import { maskMailConfig, resolveMailConfig, type ResolvedMailConfig } from "@/lib/mail-config";
 
-let transporter: Transporter | null = null;
+type CacheEntry = { key: string; transporter: Transporter };
 
-function getTransporter(): Transporter {
-  if (transporter) return transporter;
+let cached: CacheEntry | null = null;
 
-  const host = process.env.SMTP_HOST;
-  const port = parseInt(process.env.SMTP_PORT ?? "587", 10);
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASS;
-  const tls = process.env.SMTP_TLS !== "false";
+function configKey(cfg: ResolvedMailConfig): string {
+  return [cfg.host, cfg.port, cfg.user, cfg.pass, cfg.tls].join("|");
+}
 
-  if (!host) {
-    throw new Error("SMTP_HOST not configured");
-  }
-
-  transporter = nodemailer.createTransport({
-    host,
-    port,
-    secure: port === 465,
-    auth: user && pass ? { user, pass } : undefined,
-    requireTLS: tls,
+export async function getMailConfig(): Promise<ResolvedMailConfig> {
+  const settings = await db.orgSettings.findUniqueOrThrow({
+    where: { id: "singleton" },
+    select: {
+      smtpHost: true,
+      smtpPort: true,
+      smtpUser: true,
+      smtpPassword: true,
+      smtpFrom: true,
+      smtpTls: true,
+    },
   });
+  return resolveMailConfig(
+    {
+      SMTP_HOST: process.env.SMTP_HOST,
+      SMTP_PORT: process.env.SMTP_PORT,
+      SMTP_USER: process.env.SMTP_USER,
+      SMTP_PASS: process.env.SMTP_PASS,
+      SMTP_FROM: process.env.SMTP_FROM,
+      SMTP_TLS: process.env.SMTP_TLS,
+    },
+    settings
+  );
+}
 
+function getTransporter(cfg: ResolvedMailConfig) {
+  const key = configKey(cfg);
+  if (cached && cached.key === key) return cached.transporter;
+
+  if (!cfg.host) throw new Error("SMTP not configured");
+
+  const transporter = nodemailer.createTransport({
+    host: cfg.host,
+    port: cfg.port,
+    secure: cfg.port === 465,
+    auth: cfg.user && cfg.pass ? { user: cfg.user, pass: cfg.pass } : undefined,
+    requireTLS: cfg.tls,
+  });
+  cached = { key, transporter };
   return transporter;
 }
 
@@ -34,30 +60,70 @@ export type SendMailInput = {
   text?: string;
 };
 
-export async function sendMail(input: SendMailInput): Promise<void> {
-  const from = process.env.SMTP_FROM ?? "chronify@example.com";
+export type SendMailResult = {
+  delivered: boolean;
+  skipped: boolean;
+  error?: string;
+};
 
-  if (!process.env.SMTP_HOST) {
+export async function sendMail(input: SendMailInput): Promise<SendMailResult> {
+  const cfg = await getMailConfig();
+
+  if (!cfg.host) {
+    // Mail deactivated: keep a log trail so operators are not surprised when
+    // notifications are missing.
     console.log("[mail] SMTP not configured — logging instead of sending:");
     console.log(`[mail]   To: ${input.to}`);
     console.log(`[mail]   Subject: ${input.subject}`);
     console.log(`[mail]   Body: ${input.text ?? input.html.slice(0, 200)}`);
-    return;
+    return { delivered: false, skipped: true };
   }
 
   try {
-    await getTransporter().sendMail({
-      from,
+    await getTransporter(cfg).sendMail({
+      from: cfg.from,
       to: input.to,
       subject: input.subject,
       html: input.html,
       text: input.text,
     });
+    return { delivered: true, skipped: false };
   } catch (err) {
-    console.error("[mail] Failed to send email:", err);
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("[mail] Failed to send email:", message);
+    return { delivered: false, skipped: false, error: message };
   }
 }
 
-export function isMailConfigured(): boolean {
-  return !!process.env.SMTP_HOST;
+export function isMailConfigured(cfg: ResolvedMailConfig): boolean {
+  return !!cfg.host;
+}
+
+export async function getMailStatus() {
+  const settings = await db.orgSettings.findUniqueOrThrow({
+    where: { id: "singleton" },
+    select: {
+      smtpHost: true,
+      smtpPort: true,
+      smtpUser: true,
+      smtpPassword: true,
+      smtpFrom: true,
+      smtpTls: true,
+    },
+  });
+  const cfg = resolveMailConfig(
+    {
+      SMTP_HOST: process.env.SMTP_HOST,
+      SMTP_PORT: process.env.SMTP_PORT,
+      SMTP_USER: process.env.SMTP_USER,
+      SMTP_PASS: process.env.SMTP_PASS,
+      SMTP_FROM: process.env.SMTP_FROM,
+      SMTP_TLS: process.env.SMTP_TLS,
+    },
+    settings
+  );
+  return {
+    configured: !!cfg.host,
+    masked: maskMailConfig(cfg),
+  };
 }

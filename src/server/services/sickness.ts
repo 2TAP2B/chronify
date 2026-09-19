@@ -122,7 +122,7 @@ export async function createSickNote(opts: {
     payload: { from: from.toISOString(), to: to.toISOString(), days: businessDays.length },
   });
 
-  if (!opts.input.aubUntil) {
+  if (!opts.input.aubUntil && ctx.user.sickMailEnabled) {
     const appUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
     const appName = process.env.APP_NAME ?? "Chronify";
     const sicknessUrl = `${appUrl}/${ctx.user.locale ?? "de"}/sickness`;

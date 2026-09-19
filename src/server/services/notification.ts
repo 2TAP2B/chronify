@@ -52,9 +52,10 @@ export async function notifyUser(input: CreateNotificationInput) {
   if (input.email) {
     const user = await db.user.findUnique({
       where: { id: input.userId },
-      select: { email: true },
+      select: { email: true, vacationMailEnabled: true },
     });
-    if (user?.email) {
+    // Recipient-level opt-out: the in-app notification is independent (loap).
+    if (user?.email && user.vacationMailEnabled) {
       const v = input.email.vars;
       const baseUrl = input.url ?? `${APP_URL}/${input.email.locale}/vacation`;
       let mailContent;

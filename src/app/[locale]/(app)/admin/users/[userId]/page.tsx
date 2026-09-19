@@ -33,6 +33,8 @@ export default async function AdminUserDetailPage({ params }: Props) {
         hireDate: true,
         nfcCardId: true,
         lastLoginAt: true,
+        sickMailEnabled: true,
+        vacationMailEnabled: true,
       },
     }),
     db.workingModel.findFirst({
