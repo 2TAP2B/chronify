@@ -27,6 +27,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const password = credentials?.password as string | undefined;
         if (!identifier || !password) return null;
 
+        // Org-level gate: when the admin disables password login, only
+        // SSO/OIDC sign-ins are accepted.
+        const settings = await db.orgSettings.findUniqueOrThrow({
+          where: { id: "singleton" },
+          select: { passwordLoginDisabled: true },
+        });
+        if (settings.passwordLoginDisabled) return null;
+
         const lookupKey = identifier.toLowerCase().trim();
 
         const ip =

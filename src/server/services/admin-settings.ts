@@ -42,6 +42,7 @@ export const updateSettingsSchema = z.object({
   loginImage: z.string().nullable().optional(),
   loginQuote: z.string().max(200).nullable().optional(),
   loginQuoteAuthor: z.string().max(50).nullable().optional(),
+  passwordLoginDisabled: z.boolean().optional(),
 });
 
 export type UpdateSettingsInput = z.infer<typeof updateSettingsSchema>;
@@ -53,6 +54,10 @@ export async function getSettings(actor: SessionUser) {
 
 export async function updateSettings(opts: { actor: SessionUser; input: UpdateSettingsInput }) {
   requireAdmin(opts.actor);
+  if (opts.input.passwordLoginDisabled === true && !oidcConfigured()) {
+    // Guard against lockout: with password login off, SSO is the only way in.
+    throw new Error("OIDC_NOT_CONFIGURED");
+  }
   const updated = await db.orgSettings.update({
     where: { id: "singleton" },
     data: opts.input as never,
@@ -92,4 +97,13 @@ export async function listAuditLog(opts: {
     db.auditLog.count({ where: where as never }),
   ]);
   return { entries, total };
+}
+
+/** OIDC (Pocket-ID) availability is env-driven; used by the password-login gate. */
+export function oidcConfigured(): boolean {
+  return !!(
+    process.env.OIDC_ISSUER &&
+    process.env.OIDC_CLIENT_ID &&
+    process.env.OIDC_CLIENT_SECRET
+  );
 }

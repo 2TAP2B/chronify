@@ -28,6 +28,7 @@ export function SettingsForm({ settings }: { settings: OrgSettings }) {
     timeEntryLockWindowDays: String(settings.timeEntryLockWindowDays),
     autoBreakDefault: settings.autoBreakDefault,
     defaultVacationDays: String(settings.defaultVacationDays),
+    passwordLoginDisabled: settings.passwordLoginDisabled,
   });
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
@@ -51,6 +52,7 @@ export function SettingsForm({ settings }: { settings: OrgSettings }) {
         timeEntryLockWindowDays: Number(form.timeEntryLockWindowDays),
         autoBreakDefault: form.autoBreakDefault,
         defaultVacationDays: Number(form.defaultVacationDays),
+        passwordLoginDisabled: form.passwordLoginDisabled,
       };
       if (form.overtimeCarryoverCutoffEnabled) {
         body.overtimeCarryoverCutoffMonth = form.overtimeCarryoverCutoffMonth;
@@ -76,6 +78,27 @@ export function SettingsForm({ settings }: { settings: OrgSettings }) {
 
   return (
     <form onSubmit={onSubmit} className="space-y-6">
+      {/* Section: Login */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">{t("sectionLogin")}</CardTitle>
+          <CardDescription>{t("sectionLoginHint")}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between rounded-lg border p-3">
+            <div className="space-y-0.5">
+              <Label htmlFor="pwLogin">{t("passwordLoginDisabled")}</Label>
+              <p className="text-xs text-muted-foreground">{t("passwordLoginDisabledHint")}</p>
+            </div>
+            <Switch
+              id="pwLogin"
+              checked={form.passwordLoginDisabled}
+              onCheckedChange={(v) => setForm((f) => ({ ...f, passwordLoginDisabled: v }))}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Section: Organisation */}
       <Card>
         <CardHeader>
