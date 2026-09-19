@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { audit, getUserContext, type SessionUser } from "@/server/context";
 import { toCalendarDate, zonedTimeToUtc } from "@/lib/datetime";
+import { overlapsAnyInterval, dedupeKey } from "@/lib/import/overlap";
 import { z } from "zod";
 
 export class ImportError extends Error {
@@ -77,8 +78,21 @@ export async function importTimeEntries(opts: {
   });
 
   const existingKeys = new Set(
-    existingEntries.map((e) => `${e.date.getTime()}|${e.startAt!.getTime()}|${e.endAt!.getTime()}`)
+    existingEntries.map((e) =>
+      dedupeKey(e.date.getTime(), e.startAt!.getTime(), e.endAt!.getTime())
+    )
   );
+
+  // Existing intervals grouped per calendar day for overlap-based skipping:
+  // a re-imported CSV with different time boxes that already have booked work
+  // overlaps must not be booked twice.
+  const intervalsByDay = new Map<number, { startMs: number; endMs: number }[]>();
+  for (const e of existingEntries) {
+    const list = intervalsByDay.get(e.date.getTime()) ?? [];
+    list.push({ startMs: e.startAt!.getTime(), endMs: e.endAt!.getTime() });
+    intervalsByDay.set(e.date.getTime(), list);
+  }
+  const pendingByDay = new Map<number, { startMs: number; endMs: number }[]>();
 
   const toCreate: {
     userId: string;
@@ -127,13 +141,27 @@ export async function importTimeEntries(opts: {
       continue;
     }
 
-    const key = `${calendarDate.getTime()}|${startAt.getTime()}|${endAt.getTime()}`;
+    const key = dedupeKey(calendarDate.getTime(), startAt.getTime(), endAt.getTime());
+    // Skip exact duplicates...
     if (existingKeys.has(key)) {
+      result.skipped++;
+      continue;
+    }
+    // ...and any row that would overlap already booked work (existing or a
+    // pending row from this same import) on the same day.
+    const dayIntervals = [
+      ...(intervalsByDay.get(calendarDate.getTime()) ?? []),
+      ...(pendingByDay.get(calendarDate.getTime()) ?? []),
+    ];
+    if (overlapsAnyInterval(startAt.getTime(), endAt.getTime(), dayIntervals)) {
       result.skipped++;
       continue;
     }
 
     existingKeys.add(key);
+    const pendingList = pendingByDay.get(calendarDate.getTime()) ?? [];
+    pendingList.push({ startMs: startAt.getTime(), endMs: endAt.getTime() });
+    pendingByDay.set(calendarDate.getTime(), pendingList);
     toCreate.push({
       userId: opts.targetUserId,
       date: calendarDate,
