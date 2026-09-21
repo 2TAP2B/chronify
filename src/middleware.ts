@@ -6,7 +6,14 @@ import { isMutationMethod, checkCsrfOrigin } from "@/lib/csrf";
 
 const intlMiddleware = createMiddleware(routing);
 
-const publicRoutes = ["/login", "/kiosk", "/privacy", "/imprint"];
+const publicRoutes = [
+  "/login",
+  "/forgot-password",
+  "/reset-password",
+  "/kiosk",
+  "/privacy",
+  "/imprint",
+];
 
 type Session = { user: { id: string; role: "EMPLOYEE" | "ADMIN" } } | null;
 
@@ -81,7 +88,7 @@ export async function middleware(request: NextRequest) {
   const session = await getSession(request);
 
   const isAuthRoute = pathname.includes("/login");
-  const isPublicRoute = publicRoutes.some((r) => pathname.endsWith(r));
+  const isPublicRoute = publicRoutes.some((r) => pathname.includes(r));
 
   if (isAuthRoute && session) {
     const locale = pathname.split("/")[1] || routing.defaultLocale;
