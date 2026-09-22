@@ -5,6 +5,10 @@ import { getMailConfig, isMailConfigured, sendMail } from "@/server/services/mai
 export async function POST() {
   try {
     const user = await requireUser();
+    // SMTP configuration is an admin concern; employees must not fire mails.
+    if (user.role !== "ADMIN") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
     const cfg = await getMailConfig();
     if (!isMailConfigured(cfg)) {
       return NextResponse.json(
