@@ -68,14 +68,23 @@ function checkApiCsrf(request: NextRequest): NextResponse | null {
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // Kiosk host gate: the kiosk page + tap API may only be served on the
+  // dedicated kiosk host (LAN-only in production). On the public app domain
+  // these routes are closed to prevent card-id brute force.
+  const isKioskRoute = pathname.startsWith("/api/kiosk") || pathname.includes("/kiosk");
+  const kioskHost = process.env.KIOSK_HOST;
+  const requestHost = request.headers.get("host");
+  const isKioskHost = !!kioskHost && requestHost === kioskHost;
+  if (isKioskRoute && !isKioskHost) {
+    return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  }
+
   if (pathname.startsWith("/api/")) {
     return checkApiCsrf(request) ?? NextResponse.next();
   }
 
   // Kiosk subdomain: serve only the kiosk page, no auth
-  const kioskHost = process.env.KIOSK_HOST;
-  const requestHost = request.headers.get("host");
-  if (kioskHost && requestHost === kioskHost) {
+  if (isKioskHost) {
     const locale = pathname.split("/")[1] || routing.defaultLocale || "de";
     if (!pathname.endsWith("/kiosk")) {
       return NextResponse.redirect(redirectUrl(request, `/${locale}/kiosk`));
