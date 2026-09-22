@@ -115,7 +115,7 @@ export function LoginForm({
                     <div className="flex items-center justify-between">
                       <Label htmlFor="password">{t("password")}</Label>
                       <Link
-                        href="/forgot-password"
+                        href={`/${locale}/forgot-password`}
                         className="text-xs text-muted-foreground hover:text-foreground transition-colors"
                       >
                         {t("forgotPassword")}
@@ -187,24 +187,32 @@ export function LoginForm({
             {loginImage ? (
               <div className="absolute inset-0">
                 <img src={loginImage} alt="" className="h-full w-full object-cover" />
+                {/* scrim: keeps the panel dark so any image stays legible */}
+                <div className="absolute inset-0 bg-primary/60" />
               </div>
             ) : (
               <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-primary-foreground/20" />
             )}
-            <div className="relative flex h-full flex-col items-center justify-center p-8 text-primary-foreground">
+            {/* Clean SaaS panel: brand only — quote text lives on the left */}
+            <div className="relative flex h-full flex-col items-center justify-center p-8 text-white">
               {appLogo ? (
-                <img src={appLogo} alt="Logo" className="mb-6 h-16 w-16 object-contain" />
+                <img src={appLogo} alt="Logo" className="h-20 w-20 object-contain" />
               ) : (
-                <Logo className="mb-6 h-16 w-16 text-white" />
+                <Logo className="h-20 w-20 text-white" />
               )}
-              <blockquote className="text-center text-lg font-medium leading-relaxed">
-                {displayQuote}
-              </blockquote>
-              <p className="mt-4 text-sm text-primary-foreground/80">{displayAuthor}</p>
+              <span className="mt-4 text-sm font-medium uppercase tracking-[0.2em] text-white/80">
+                {branding?.appName ?? tCommon("appName")}
+              </span>
             </div>
           </div>
         </CardContent>
       </Card>
+      {/* Quote: quiet footer strip, always readable on light background */}
+      <p className="text-center text-xs leading-relaxed text-muted-foreground">
+        <span className="italic">&bdquo;{displayQuote}&ldquo;</span>
+        <span className="mx-1.5">·</span>
+        <span className="not-italic">{displayAuthor}</span>
+      </p>
       <div className="flex flex-col items-center gap-1 text-center text-xs text-muted-foreground">
         <span>{branding?.appName ?? tCommon("appName")}</span>
         <div className="flex gap-3">

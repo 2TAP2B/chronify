@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/routing";
 import { AlertCircle, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ export function ResetPasswordForm({
   ...props
 }: React.ComponentProps<"div"> & { token: string }) {
   const t = useTranslations("auth");
+  const locale = useLocale();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -71,7 +72,7 @@ export function ResetPasswordForm({
             <div className="flex flex-col items-center gap-4 text-center">
               <CheckCircle2 className="h-12 w-12 text-green-600" />
               <p className="text-sm text-muted-foreground">{t("resetPasswordSuccess")}</p>
-              <Button onClick={() => router.push("/login")}>{t("backToLogin")}</Button>
+              <Button onClick={() => router.push(`/${locale}/login`)}>{t("backToLogin")}</Button>
             </div>
           </CardContent>
         </Card>

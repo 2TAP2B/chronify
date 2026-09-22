@@ -65,7 +65,7 @@ export function ForgotPasswordForm({ className, ...props }: React.ComponentProps
               <div className="flex flex-col items-center gap-4 py-4 text-center">
                 <Mail className="h-12 w-12 text-muted-foreground" />
                 <p className="text-sm text-muted-foreground">{t("forgotPasswordSent")}</p>
-                <Button variant="outline" onClick={() => router.push("/login")}>
+                <Button variant="outline" onClick={() => router.push(`/${locale}/login`)}>
                   {t("backToLogin")}
                 </Button>
               </div>
@@ -99,7 +99,7 @@ export function ForgotPasswordForm({ className, ...props }: React.ComponentProps
 
             <div className="text-center">
               <Link
-                href="/login"
+                href={`/${locale}/login`}
                 className="text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
                 {t("backToLogin")}
