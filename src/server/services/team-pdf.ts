@@ -20,8 +20,26 @@ const MONTH_NAMES_DE = [
 const WEEKDAY_SHORT = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
 
 const styles = StyleSheet.create({
-  page: { padding: 24, fontSize: 7, fontFamily: "Helvetica" },
-  title: { fontSize: 16, fontFamily: "Helvetica-Bold", marginBottom: 4 },
+  page: {
+    paddingTop: 0,
+    paddingHorizontal: 24,
+    paddingBottom: 48,
+    fontSize: 7,
+    fontFamily: "Helvetica",
+    color: "#111827",
+  },
+  headerBand: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-end",
+    backgroundColor: "#111827",
+    color: "#fff",
+    paddingHorizontal: 24,
+    paddingTop: 12,
+    paddingBottom: 10,
+  },
+  title: { fontSize: 16, fontFamily: "Helvetica-Bold" },
+  brand: { fontSize: 10, fontFamily: "Helvetica-Bold", color: "#fff", letterSpacing: 1 },
   meta: { fontSize: 9, color: "#666", marginBottom: 2 },
   legend: { flexDirection: "row", gap: 8, marginBottom: 8, fontSize: 7 },
   legendItem: { flexDirection: "row", alignItems: "center", gap: 2 },
@@ -65,6 +83,19 @@ const styles = StyleSheet.create({
   },
   cellText: { fontSize: 6, fontWeight: "bold" },
   weekend: { backgroundColor: "#f0f0f0" },
+  footerBand: {
+    position: "absolute",
+    bottom: 22,
+    left: 24,
+    right: 24,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    fontSize: 7,
+    color: "#666",
+    borderTopWidth: 0.5,
+    borderTopColor: "#ccc",
+    paddingTop: 6,
+  },
   holiday: { backgroundColor: "#d1fae5" },
   closure: { backgroundColor: "#fef3c7" },
   vacation: { backgroundColor: "#dbeafe", color: "#1e40af" },
@@ -106,9 +137,11 @@ export async function generateTeamPdf(opts: {
   users: { id: string; name: string }[];
   year: number;
   month: number;
+  appName?: string;
 }): Promise<Buffer> {
   const { days, users, year, month } = opts;
   const monthName = MONTH_NAMES_DE[month - 1];
+  const appName = opts.appName ?? "Chronify";
 
   const doc = React.createElement(
     Document,
@@ -116,8 +149,21 @@ export async function generateTeamPdf(opts: {
     React.createElement(
       Page,
       { size: "A4", orientation: "landscape", style: styles.page },
-      React.createElement(Text, { style: styles.title }, `Team-Schichtplan — ${monthName} ${year}`),
-      React.createElement(Text, { style: styles.meta }, `${users.length} Mitarbeiter`),
+      React.createElement(
+        View,
+        { style: styles.headerBand, fixed: true },
+        React.createElement(
+          Text,
+          { style: styles.title },
+          `Team-Schichtplan — ${monthName} ${year}`
+        ),
+        React.createElement(Text, { style: styles.brand }, appName)
+      ),
+      React.createElement(
+        Text,
+        { style: { fontSize: 9, color: "#666", marginTop: 6, marginBottom: 2 } },
+        `${users.length} Mitarbeiter`
+      ),
       // Legend
       React.createElement(
         View,
@@ -192,6 +238,16 @@ export async function generateTeamPdf(opts: {
             })
           )
         )
+      ),
+      React.createElement(
+        Text,
+        {
+          style: styles.footerBand,
+          fixed: true,
+          render: ({ pageNumber, totalPages }: { pageNumber: number; totalPages: number }) =>
+            `Erstellt am ${new Date().toISOString().slice(0, 10)} · ${appName} · Seite ${pageNumber}/${totalPages}`,
+        },
+        ""
       )
     )
   );

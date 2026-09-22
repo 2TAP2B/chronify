@@ -7,6 +7,7 @@ import Papa from "papaparse";
 import * as XLSX from "xlsx";
 import React from "react";
 import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
+import { renderToBuffer } from "@react-pdf/renderer";
 
 export type ReportRow = {
   date: string;
@@ -41,7 +42,7 @@ export async function gatherReportData(opts: {
       userId,
       date: { gte: opts.from, lte: opts.to },
     },
-    orderBy: { date: "asc" },
+    orderBy: [{ date: "asc" }, { startAt: "asc" }],
     include: { user: { select: { name: true } } },
   });
 
@@ -152,139 +153,254 @@ export function toExcel(data: {
   return Buffer.from(buf);
 }
 
-const pdfStyles = StyleSheet.create({
-  page: { padding: 30, fontSize: 10 },
-  title: { fontSize: 16, fontWeight: "bold", marginBottom: 8 },
-  meta: { marginBottom: 4 },
-  tableHeader: { flexDirection: "row", backgroundColor: "#e2e8f0", fontWeight: "bold" },
-  tableRow: { flexDirection: "row", borderBottom: "1px solid #e2e8f0" },
-  tableRowTotal: { flexDirection: "row", borderTop: "2px solid #000", fontWeight: "bold" },
-  cell: { padding: 4, fontSize: 8 },
-  cellDate: { padding: 4, fontSize: 8, width: "20%" },
-  cellType: { padding: 4, fontSize: 8, width: "15%" },
-  cellTime: { padding: 4, fontSize: 8, width: "10%" },
-  cellBreak: { padding: 4, fontSize: 8, width: "10%" },
-  cellHours: { padding: 4, fontSize: 8, width: "10%" },
-  cellNote: { padding: 4, fontSize: 8, width: "25%" },
-  cellHeader: { padding: 4, fontSize: 8, fontWeight: "bold" },
+/* ------------------------------------------------------------------ PDF ---- */
+
+const INK = "#111827";
+const SLATE = "#475569";
+const LIGHT = "#f1f5f9";
+const BORDER = "#cbd5e1";
+const ACCENT = "#1d4ed8";
+
+const reportPdfStyles = StyleSheet.create({
+  page: {
+    paddingTop: 0,
+    paddingHorizontal: 36,
+    paddingBottom: 52,
+    fontSize: 9,
+    color: INK,
+    fontFamily: "Helvetica",
+  },
+  headerBand: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-end",
+    backgroundColor: INK,
+    color: "#ffffff",
+    paddingHorizontal: 36,
+    paddingTop: 18,
+    paddingBottom: 16,
+  },
+  headerBrand: { fontSize: 12, fontWeight: "bold", letterSpacing: 1.2 },
+  headerTitle: { fontSize: 18, fontWeight: "bold" },
+  metaBlock: {
+    marginTop: 16,
+    marginBottom: 12,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 4,
+  },
+  metaItem: { width: "33.33%", lineHeight: 1.5 },
+  metaLabel: { fontSize: 7, color: SLATE, textTransform: "uppercase", letterSpacing: 0.8 },
+  metaValue: { fontSize: 10, fontWeight: "bold" },
+  tableHeader: {
+    flexDirection: "row",
+    backgroundColor: LIGHT,
+    borderBottomWidth: 2,
+    borderBottomColor: INK,
+    paddingVertical: 6,
+  },
+  tableRow: {
+    flexDirection: "row",
+    borderBottomWidth: 0.5,
+    borderBottomColor: BORDER,
+    paddingVertical: 5,
+    minHeight: 18,
+  },
+  tableRowZebra: { backgroundColor: "#f8fafc" },
+  tableRowTotal: {
+    flexDirection: "row",
+    backgroundColor: "#e2e8f0",
+    borderTopWidth: 2,
+    borderTopColor: INK,
+    paddingVertical: 7,
+    fontWeight: "bold",
+  },
+  headerCell: { fontSize: 8, fontWeight: "bold", color: INK },
+  bodyCell: { fontSize: 8, paddingRight: 8, lineHeight: 1.35 },
+  totalCell: { fontSize: 9, fontWeight: "bold", paddingRight: 8 },
+  footerBand: {
+    position: "absolute",
+    bottom: 24,
+    left: 36,
+    right: 36,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    fontSize: 7,
+    color: SLATE,
+    borderTopWidth: 0.5,
+    borderTopColor: BORDER,
+    paddingTop: 6,
+  },
 });
 
-export async function toPdf(data: {
+const TYPE_LABELS: Record<string, string> = {
+  WORK: "Arbeit",
+  VACATION: "Urlaub",
+  SICK: "Krank",
+  PUBLIC_HOLIDAY: "Feiertag",
+  PERSONAL: "Persönlich",
+};
+
+const COL_WIDTHS = {
+  date: "16%",
+  type: "12%",
+  start: "10%",
+  end: "10%",
+  break: "8%",
+  hours: "10%",
+  note: "36%",
+};
+
+function formatPdfRow(row: ReportRow) {
+  const timeValue = (v: string | null) => (v ? v.replace(/^0/, (m) => m) : "—");
+  return [
+    row.date,
+    TYPE_LABELS[row.type] ?? row.type,
+    row.startAt ? timeValue(row.startAt) : "—",
+    row.endAt ? timeValue(row.endAt) : "—",
+    row.breakMinutes > 0 ? String(row.breakMinutes) : "—",
+    row.workedHours > 0 ? row.workedHours.toFixed(2) : "—",
+    row.note ?? "—",
+  ];
+}
+
+export async function toPdfExport(data: {
   rows: ReportRow[];
   userName: string;
   range: { from: string; to: string };
 }): Promise<Buffer> {
   const totalHours = data.rows.reduce((s, r) => s + r.workedHours, 0);
+  const settings = await db.orgSettings.findUniqueOrThrow({ where: { id: "singleton" } });
+  const appName = settings.appName || "Chronify";
+  const today = new Date().toISOString().slice(0, 10);
+
+  const headerLabels = ["Datum", "Typ", "Start", "Ende", "Pause", "Std.", "Notiz"];
+  const widths = [
+    COL_WIDTHS.date,
+    COL_WIDTHS.type,
+    COL_WIDTHS.start,
+    COL_WIDTHS.end,
+    COL_WIDTHS.break,
+    COL_WIDTHS.hours,
+    COL_WIDTHS.note,
+  ];
 
   const doc = React.createElement(
     Document,
     null,
     React.createElement(
       Page,
-      { size: "A4", style: pdfStyles.page },
-      React.createElement(Text, { style: pdfStyles.title }, "Stundenzettel"),
-      React.createElement(Text, { style: pdfStyles.meta }, `Mitarbeiter: ${data.userName}`),
-      React.createElement(
-        Text,
-        { style: pdfStyles.meta },
-        `Zeitraum: ${data.range.from} – ${data.range.to}`
-      ),
+      { size: "A4", style: reportPdfStyles.page },
+      // Title band
       React.createElement(
         View,
-        { style: { marginTop: 12 } },
-        // Header
+        { style: reportPdfStyles.headerBand, fixed: true },
+        React.createElement(Text, { style: reportPdfStyles.headerTitle }, "Stundenzettel"),
+        React.createElement(Text, { style: reportPdfStyles.headerBrand }, appName)
+      ),
+      // Meta block
+      React.createElement(
+        View,
+        { style: reportPdfStyles.metaBlock },
         React.createElement(
           View,
-          { style: pdfStyles.tableHeader },
-          ["Datum", "Typ", "Start", "Ende", "Pause", "Std.", "Notiz"].map((h, i) =>
+          { style: reportPdfStyles.metaItem },
+          React.createElement(Text, { style: reportPdfStyles.metaLabel }, "MITARBEITER"),
+          React.createElement(Text, { style: reportPdfStyles.metaValue }, data.userName)
+        ),
+        React.createElement(
+          View,
+          { style: reportPdfStyles.metaItem },
+          React.createElement(Text, { style: reportPdfStyles.metaLabel }, "ZEITRAUM"),
+          React.createElement(
+            Text,
+            { style: reportPdfStyles.metaValue },
+            `${data.range.from} – ${data.range.to}`
+          )
+        ),
+        React.createElement(
+          View,
+          { style: reportPdfStyles.metaItem },
+          React.createElement(Text, { style: reportPdfStyles.metaLabel }, "ERSTELLT AM"),
+          React.createElement(Text, { style: reportPdfStyles.metaValue }, today)
+        )
+      ),
+      // Table
+      React.createElement(
+        View,
+        { style: { marginTop: 4 } },
+        React.createElement(
+          View,
+          { style: reportPdfStyles.tableHeader, fixed: true },
+          ...headerLabels.map((label, i) =>
             React.createElement(
               Text,
-              {
-                key: i,
-                style: [
-                  pdfStyles.cellHeader,
-                  [
-                    pdfStyles.cellDate,
-                    pdfStyles.cellType,
-                    pdfStyles.cellTime,
-                    pdfStyles.cellTime,
-                    pdfStyles.cellBreak,
-                    pdfStyles.cellHours,
-                    pdfStyles.cellNote,
-                  ][i],
-                ],
-              },
-              h
+              { key: `h${i}`, style: [{ width: widths[i] }, reportPdfStyles.headerCell] },
+              label
             )
           )
         ),
-        // Data rows
-        ...data.rows.map((r, i) =>
+        ...data.rows.map((row, i) =>
           React.createElement(
             View,
-            { key: i, style: pdfStyles.tableRow, wrap: false },
+            {
+              key: `r${i}`,
+              style:
+                i % 2 === 1
+                  ? [reportPdfStyles.tableRow, reportPdfStyles.tableRowZebra]
+                  : reportPdfStyles.tableRow,
+              wrap: false,
+            },
             [
-              r.date,
-              r.type,
-              r.startAt ?? "—",
-              r.endAt ?? "—",
-              String(r.breakMinutes),
-              r.workedHours.toFixed(2),
-              r.note ?? "—",
+              row.date,
+              TYPE_LABELS[row.type] ?? row.type,
+              row.startAt ?? "—",
+              row.endAt ?? "—",
+              row.breakMinutes > 0 ? String(row.breakMinutes) : "—",
+              row.workedHours > 0 ? row.workedHours.toFixed(2) : "—",
+              row.note ?? "—",
             ].map((cell, j) =>
               React.createElement(
                 Text,
                 {
-                  key: j,
-                  style: [
-                    pdfStyles.cell,
-                    [
-                      pdfStyles.cellDate,
-                      pdfStyles.cellType,
-                      pdfStyles.cellTime,
-                      pdfStyles.cellTime,
-                      pdfStyles.cellBreak,
-                      pdfStyles.cellHours,
-                      pdfStyles.cellNote,
-                    ][j],
-                  ],
+                  key: `c${j}`,
+                  style: { width: widths[j], paddingRight: 8, fontSize: 8, lineHeight: 1.35 },
                 },
-                String(cell)
+                cell
               )
             )
           )
         ),
-        // Total row
         React.createElement(
           View,
-          { style: pdfStyles.tableRowTotal },
-          ["Gesamt", "", "", "", "", totalHours.toFixed(2), ""].map((cell, j) =>
-            React.createElement(
-              Text,
-              {
-                key: j,
-                style: [
-                  pdfStyles.cell,
-                  [
-                    pdfStyles.cellDate,
-                    pdfStyles.cellType,
-                    pdfStyles.cellTime,
-                    pdfStyles.cellTime,
-                    pdfStyles.cellBreak,
-                    pdfStyles.cellHours,
-                    pdfStyles.cellNote,
-                  ][j],
-                ],
-              },
-              cell
-            )
+          { style: reportPdfStyles.tableRowTotal, wrap: false },
+          React.createElement(
+            Text,
+            { style: { width: "70%", paddingLeft: 0, fontSize: 9, fontWeight: "bold" } },
+            "Gesamt"
+          ),
+          React.createElement(
+            Text,
+            { style: { width: "20%", fontSize: 9, fontWeight: "bold" } },
+            `${totalHours.toFixed(2)} h`
           )
         )
+      ),
+      // Footer
+      React.createElement(
+        Text,
+        {
+          style: reportPdfStyles.footerBand,
+          fixed: true,
+          render: ({ pageNumber, totalPages }: { pageNumber: number; totalPages: number }) =>
+            `Erstellt am ${today} · ${appName} · Seite ${pageNumber}/${totalPages}`,
+        } as never,
+        ""
       )
     )
   );
 
-  const { renderToBuffer } = await import("@react-pdf/renderer");
-  const buffer = await renderToBuffer(doc);
-  return Buffer.from(buffer);
+  return renderToBuffer(doc);
 }
+
+export const toPdf = toPdfExport;

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { db } from "@/lib/db";
 import { requireUser } from "@/server/context";
 import { getTeamCalendar } from "@/server/services/team";
 import { generateTeamPdf } from "@/server/services/team-pdf";
@@ -20,11 +21,16 @@ export async function GET(request: Request) {
       month: Number(month),
     });
 
+    const settings = await db.orgSettings.findUniqueOrThrow({
+      where: { id: "singleton" },
+      select: { appName: true },
+    });
     const buffer = await generateTeamPdf({
       days,
       users,
       year: Number(year),
       month: Number(month),
+      appName: settings.appName,
     });
 
     const y = String(year);
