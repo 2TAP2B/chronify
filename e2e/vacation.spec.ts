@@ -28,7 +28,8 @@ test("submit vacation request, then admin approves it", async ({ adminPage: page
   await page.locator("#note").fill("E2E: " + fromStr);
   await page.getByRole("button", { name: /antrag einreichen/i }).click();
 
-  await expect(page.getByRole("cell", { name: fromLabel })).toBeVisible({
+  const ownRow = page.getByRole("row").filter({ hasText: "E2E: " + fromStr });
+  await expect(ownRow.getByRole("cell", { name: fromLabel })).toBeVisible({
     timeout: 15_000,
   });
 
@@ -49,6 +50,6 @@ test("submit vacation request, then admin approves it", async ({ adminPage: page
 
   // The approved request is no longer pending and shows as approved for the employee
   await page.goto("/de/vacation");
-  const request = page.getByRole("row").filter({ hasText: fromLabel });
+  const request = page.getByRole("row").filter({ hasText: "E2E: " + fromStr });
   await expect(request.getByText(/genehmigt/i)).toBeVisible({ timeout: 15_000 });
 });
