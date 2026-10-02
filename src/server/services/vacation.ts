@@ -447,6 +447,18 @@ export async function cancelVacationRequest(opts: {
   if (req.status === "REJECTED") {
     throw new VacationError("Cannot reject a rejected request", "BAD_STATE", 409);
   }
+  // Approved leave is consumed time: owners may only cancel while the
+  // vacation still lies ahead of today's date. Admins keep full control.
+  if (req.status === "APPROVED" && opts.actor.id === req.userId && opts.actor.role !== "ADMIN") {
+    const todayBerlin = toCalendarDate(new Date(), "Europe/Berlin");
+    if (req.from.getTime() < todayBerlin.getTime()) {
+      throw new VacationError(
+        "Approved vacation in the past cannot be cancelled by the user",
+        "APPROVED_PAST",
+        403
+      );
+    }
+  }
 
   // If was approved, reverse the consumption
   if (req.status === "APPROVED") {
