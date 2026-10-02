@@ -64,6 +64,12 @@ enum VacationStatus {
   CANCELLED
 }
 
+enum VacationKind {
+  REGULAR
+  SPECIAL
+  REGENERATION
+}
+
 enum PublicHolidaySource {
   NAGER
   MANUAL
@@ -196,6 +202,7 @@ model VacationRequest {
   year         Int
   note         String?
   approverNote String?
+  kind         VacationKind @default(REGULAR)
   useOvertime  Boolean         @default(false)
   createdAt    DateTime        @default(now())
   updatedAt    DateTime        @updatedAt

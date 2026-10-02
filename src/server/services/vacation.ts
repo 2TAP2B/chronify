@@ -12,7 +12,7 @@ import {
 import { toCalendarDate } from "@/lib/datetime";
 import { notificationText } from "@/lib/notifications/server-texts";
 import { targetMinutesForDate } from "@/lib/overtime/calculate";
-import type { FederalState, VacationRequest, VacationStatus } from "@prisma/client";
+import type { FederalState, VacationKind, VacationRequest, VacationStatus } from "@prisma/client";
 
 export class VacationError extends Error {
   constructor(
@@ -30,6 +30,9 @@ export type VacationCreateInput = {
   note?: string | null;
   year?: number;
   useOvertime?: boolean;
+  kind?: VacationKind;
+  /** Admin-only: assign a leave to another user (regeneration flow). */
+  targetUserId?: string;
 };
 
 export async function listVacationRequests(opts: {
@@ -71,7 +74,16 @@ export async function createVacationRequest(opts: {
     throw new VacationError("from > to", "INVALID_RANGE");
   }
 
-  const ctx = await getUserContext(actor.id);
+  const kind = opts.input.kind ?? "REGULAR";
+  if (kind === "REGENERATION" && actor.role !== "ADMIN") {
+    throw new VacationError("Forbidden", "FORBIDDEN", 403);
+  }
+  if (opts.input.targetUserId && actor.role !== "ADMIN") {
+    throw new VacationError("Forbidden", "FORBIDDEN", 403);
+  }
+  const ownerUserId =
+    opts.input.targetUserId && actor.role === "ADMIN" ? opts.input.targetUserId : actor.id;
+  const ctx = await getUserContext(ownerUserId);
   const state = ctx.user.federalState;
   const year = opts.input.year ?? from.getUTCFullYear();
 
@@ -97,9 +109,10 @@ export async function createVacationRequest(opts: {
     );
   }
 
-  // Check overlap with existing requests
+  // Check overlap with existing (still active) requests; rejected or
+  // cancelled requests must not block re-application.
   const existing = await db.vacationRequest.findMany({
-    where: { userId: actor.id, year },
+    where: { userId: ownerUserId, year, status: { in: ["PENDING", "APPROVED"] } },
   });
   if (overlapsExisting(from, to, existing)) {
     throw new VacationError("Range overlaps an existing request", "OVERLAP");
@@ -108,7 +121,7 @@ export async function createVacationRequest(opts: {
   // Entitlement check (falls back to org default when no row exists yet)
   const [entitlement, settings] = await Promise.all([
     db.vacationEntitlement.findUnique({
-      where: { userId_year: { userId: actor.id, year } },
+      where: { userId_year: { userId: ownerUserId, year } },
     }),
     db.orgSettings.findUniqueOrThrow({ where: { id: "singleton" } }),
   ]);
@@ -122,7 +135,7 @@ export async function createVacationRequest(opts: {
   if (useOvertime) {
     // Check overtime balance instead of vacation entitlement
     const { computation } = await computeYearOvertime({
-      userId: actor.id,
+      userId: ownerUserId,
       year,
       timeZone: ctx.timeZone,
     });
@@ -139,13 +152,14 @@ export async function createVacationRequest(opts: {
 
   const created = await db.vacationRequest.create({
     data: {
-      userId: actor.id,
+      userId: ownerUserId,
       from,
       to,
       days: businessDays.length,
       status: "PENDING",
       year,
       note: opts.input.note ?? null,
+      kind,
       useOvertime,
     },
   });
@@ -159,8 +173,9 @@ export async function createVacationRequest(opts: {
     await db.notification.createMany({
       data: admins.map((a) => {
         const locale: "de" | "en" = (a.locale ?? "de") === "en" ? "en" : "de";
+        const requesterName = ctx.user.name ?? ctx.user.email ?? "";
         const text = notificationText("vacationRequested", locale, {
-          actorName: actor.name ?? actor.email ?? "",
+          actorName: requesterName,
           days: businessDays.length,
           fromDate: from.toISOString().slice(0, 10),
           toDate: to.toISOString().slice(0, 10),
@@ -172,8 +187,8 @@ export async function createVacationRequest(opts: {
           body: text.body,
           payload: {
             requestId: created.id,
-            userId: actor.id,
-            actorName: actor.name ?? actor.email ?? "",
+            userId: ownerUserId,
+            actorName: requesterName,
             days: businessDays.length,
             fromDate: from.toISOString().slice(0, 10),
             toDate: to.toISOString().slice(0, 10),
@@ -192,7 +207,7 @@ export async function createVacationRequest(opts: {
         locale: (admin.locale ?? "de") as "de" | "en",
         appName,
         adminName: admin.name,
-        requesterName: actor.name ?? actor.email ?? "User",
+        requesterName: ctx.user.name ?? ctx.user.email ?? "User",
         fromDate: from.toISOString().slice(0, 10),
         toDate: to.toISOString().slice(0, 10),
         days: businessDays.length,
@@ -209,7 +224,7 @@ export async function createVacationRequest(opts: {
 
   await audit({
     actorId: actor.id,
-    targetId: actor.id,
+    targetId: ownerUserId,
     action: "vacation_request.create",
     entity: "VacationRequest",
     entityId: created.id,
@@ -446,6 +461,18 @@ export async function cancelVacationRequest(opts: {
   }
   if (req.status === "REJECTED") {
     throw new VacationError("Cannot reject a rejected request", "BAD_STATE", 409);
+  }
+  // Approved leave is consumed time: owners may only cancel while the
+  // vacation still lies ahead of today's date. Admins keep full control.
+  if (req.status === "APPROVED" && opts.actor.id === req.userId && opts.actor.role !== "ADMIN") {
+    const todayBerlin = toCalendarDate(new Date(), "Europe/Berlin");
+    if (req.from.getTime() < todayBerlin.getTime()) {
+      throw new VacationError(
+        "Approved vacation in the past cannot be cancelled by the user",
+        "APPROVED_PAST",
+        403
+      );
+    }
   }
 
   // If was approved, reverse the consumption

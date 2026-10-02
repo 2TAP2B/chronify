@@ -8,6 +8,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
 
 type Props = {
@@ -27,6 +34,7 @@ export function VacationRequestForm({ overtimeHours = 0 }: Props) {
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [note, setNote] = useState("");
+  const [kind, setKind] = useState<"REGULAR" | "SPECIAL">("REGULAR");
   const [useOvertime, setUseOvertime] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -48,6 +56,10 @@ export function VacationRequestForm({ overtimeHours = 0 }: Props) {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!from || !to) return;
+    if (kind === "SPECIAL" && !note.trim()) {
+      setError(t("specialReasonRequired"));
+      return;
+    }
     setLoading(true);
     setError(null);
     setSuccess(false);
@@ -58,8 +70,9 @@ export function VacationRequestForm({ overtimeHours = 0 }: Props) {
         body: JSON.stringify({
           from: new Date(from + "T00:00:00Z").toISOString(),
           to: new Date(to + "T00:00:00Z").toISOString(),
-          note: note || null,
+          note: kind === "SPECIAL" && !note.trim() ? undefined : note || null,
           useOvertime,
+          kind,
         }),
       });
       if (!res.ok) {
@@ -117,31 +130,50 @@ export function VacationRequestForm({ overtimeHours = 0 }: Props) {
           />
         </div>
       </div>
-      <div className="space-y-1.5">
-        <Label htmlFor="note">{t("note")}</Label>
-        <Input id="note" value={note} onChange={(e) => setNote(e.target.value)} />
-      </div>
-      <div className="flex items-start gap-2">
-        <Checkbox
-          id="useOvertime"
-          checked={useOvertime}
-          onCheckedChange={(v) => setUseOvertime(v === true)}
-          disabled={!overtimeAvailable}
-        />
-        <div className="grid gap-0.5 leading-none">
-          <Label
-            htmlFor="useOvertime"
-            className={overtimeAvailable ? "cursor-pointer" : "cursor-not-allowed opacity-50"}
-          >
-            {t("useOvertimeLabel")}
-          </Label>
-          <p className="text-xs text-muted-foreground">
-            {overtimeAvailable
-              ? t("overtimeAvailable", { hours: overtimeHours })
-              : t("noOvertimeAvailable")}
-          </p>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="space-y-1.5">
+          <Label htmlFor="kind">{t("kindLabel")}</Label>
+          <Select value={kind} onValueChange={(v) => setKind(v as "REGULAR" | "SPECIAL")}>
+            <SelectTrigger id="kind">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="REGULAR">{t("kindRegular")}</SelectItem>
+              <SelectItem value="SPECIAL">{t("kindSpecial")}</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
+      <div className="space-y-1.5">
+        <Label htmlFor="note">{kind === "SPECIAL" ? t("specialNoteLabel") : t("note")}</Label>
+        <Input id="note" value={note} onChange={(e) => setNote(e.target.value)} />
+        {kind === "SPECIAL" && (
+          <p className="text-xs text-muted-foreground">{t("specialExamples")}</p>
+        )}
+      </div>
+      {kind === "REGULAR" && (
+        <div className="flex items-start gap-2">
+          <Checkbox
+            id="useOvertime"
+            checked={useOvertime}
+            onCheckedChange={(v) => setUseOvertime(v === true)}
+            disabled={!overtimeAvailable}
+          />
+          <div className="grid gap-0.5 leading-none">
+            <Label
+              htmlFor="useOvertime"
+              className={overtimeAvailable ? "cursor-pointer" : "cursor-not-allowed opacity-50"}
+            >
+              {t("useOvertimeLabel")}
+            </Label>
+            <p className="text-xs text-muted-foreground">
+              {overtimeAvailable
+                ? t("overtimeAvailable", { hours: overtimeHours })
+                : t("noOvertimeAvailable")}
+            </p>
+          </div>
+        </div>
+      )}
       {error && <p className="text-sm text-destructive">{error}</p>}
       {success && <p className="text-sm text-emerald-600">✓</p>}
       <Button type="submit" disabled={loading}>

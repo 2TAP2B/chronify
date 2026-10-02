@@ -22,6 +22,6 @@ test("wrong password shows error", async ({ page }) => {
   await page.goto("/de/login");
   await page.getByLabel(/e-mail|email/i).fill("admin@puku.local");
   await page.getByLabel(/passwort|password/i).fill("wrong-password");
-  await page.getByRole("button", { name: /anmelden|sign in|login/i }).click();
+  await page.getByRole("button", { name: /^(anmelden|sign in|log in)$/i }).click();
   await expect(page).toHaveURL(/login/, { timeout: 10_000 });
 });

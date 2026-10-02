@@ -7,9 +7,10 @@ async function login(page: Page, email: string, password: string) {
   await page.goto("/de/login");
   await page.getByLabel(/e-mail|email/i).fill(email);
   await page.getByLabel(/passwort|password/i).fill(password);
-  await page.getByRole("button", { name: /anmelden|sign in|login/i }).click();
+  await page.getByRole("button", { name: /^(anmelden|sign in|log in)$/i }).click();
   await expect(page).toHaveURL(/dashboard/, { timeout: 15_000 });
 }
+export { login };
 
 // Opens a <DatePicker> trigger and clicks the target day inside the popover
 // calendar (react-day-picker marks day buttons with data-day="D.M.YYYY").
