@@ -48,7 +48,7 @@ function combine(dateStr: string, timeStr: string): string | null {
 }
 
 const MAX_DURATION_MIN = 1440;
-const STEP_MIN = 15;
+const STEP_MIN = 1;
 const DEFAULT_START = "08:00";
 const DEFAULT_END = "16:00";
 const DEFAULT_BREAK = "30";
