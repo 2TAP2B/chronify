@@ -112,6 +112,16 @@ export default async function VacationApprovalsPage({ params }: Props) {
                             {t("overtimeBadge")}
                           </Badge>
                         )}
+                        {r.kind === "SPECIAL" && (
+                          <Badge variant="outline" className="ml-2 text-xs">
+                            {t("specialBadge")}
+                          </Badge>
+                        )}
+                        {r.kind === "REGENERATION" && (
+                          <Badge variant="outline" className="ml-2 text-xs">
+                            {t("regenBadge")}
+                          </Badge>
+                        )}
                       </TableCell>
                       <TableCell>
                         <VacationApprovalActions requestId={r.id} />

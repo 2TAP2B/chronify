@@ -14,6 +14,8 @@ const createSchema = z.object({
   note: z.string().trim().max(500).nullish(),
   year: z.number().int().optional(),
   useOvertime: z.boolean().optional(),
+  kind: z.enum(["REGULAR", "SPECIAL", "REGENERATION"]).optional(),
+  userId: z.string().min(1).optional(),
 });
 
 export async function GET(request: Request) {
@@ -52,7 +54,10 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
-    const created = await createVacationRequest({ actor: user, input: input.data });
+    const created = await createVacationRequest({
+      actor: user,
+      input: { ...input.data, targetUserId: input.data.userId },
+    });
     return NextResponse.json({ request: created }, { status: 201 });
   } catch (e) {
     if (e instanceof Response) return e;

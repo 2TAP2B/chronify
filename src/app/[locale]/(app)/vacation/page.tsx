@@ -156,6 +156,16 @@ export default async function VacationPage({ params, searchParams }: Props) {
                           {t("overtimeBadge")}
                         </Badge>
                       )}
+                      {r.kind === "SPECIAL" && (
+                        <Badge variant="outline" className="ml-2 text-xs">
+                          {t("specialBadge")}
+                        </Badge>
+                      )}
+                      {r.kind === "REGENERATION" && (
+                        <Badge variant="outline" className="ml-2 text-xs">
+                          {t("regenBadge")}
+                        </Badge>
+                      )}
                     </TableCell>
                     <TableCell className="max-w-[200px] truncate">
                       {r.note ?? r.approverNote ?? <span className="text-muted-foreground">—</span>}
