@@ -161,7 +161,8 @@ export default async function VacationPage({ params, searchParams }: Props) {
                       {r.note ?? r.approverNote ?? <span className="text-muted-foreground">—</span>}
                     </TableCell>
                     <TableCell className="pr-3">
-                      {(r.status === "PENDING" || r.status === "APPROVED") && (
+                      {(r.status === "PENDING" ||
+                        (r.status === "APPROVED" && r.from > new Date())) && (
                         <VacationCancelAction requestId={r.id} />
                       )}
                     </TableCell>
