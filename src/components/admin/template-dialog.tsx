@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { Plus, Pencil } from "lucide-react";
 import type { WorkingModelTemplate } from "@prisma/client";
+import { parseHMM, formatMinutesHMM } from "@/lib/duration";
 
 const DAYS = [
   { key: "mondayMinutes" as const, label: "Mo" },
@@ -43,14 +44,14 @@ export function TemplateDialog({
     DAYS.reduce(
       (acc, d) => {
         const mins = template?.[d.key] ?? 0;
-        acc[d.key] = (mins / 60).toString();
+        acc[d.key] = formatMinutesHMM(mins);
         return acc;
       },
       {} as Record<string, string>
     )
   );
   const [weeklyTargetHours, setWeeklyTargetHours] = useState(
-    ((template?.weeklyTargetMinutes ?? 0) / 60).toString()
+    formatMinutesHMM(template?.weeklyTargetMinutes ?? 0)
   );
   const [ab6, setAb6] = useState(template?.autoBreakMinutes6h ?? 30);
   const [ab9, setAb9] = useState(template?.autoBreakMinutes9h ?? 45);
@@ -62,14 +63,12 @@ export function TemplateDialog({
     setError(null);
     const dayMinutes: Record<string, number> = {};
     for (const d of DAYS) {
-      const hours = parseFloat(dayHours[d.key] ?? "0");
-      dayMinutes[d.key] = Math.round((isNaN(hours) ? 0 : hours) * 60);
+      dayMinutes[d.key] = parseHMM(dayHours[d.key] ?? "0") ?? 0;
     }
-    const wtHours = parseFloat(weeklyTargetHours ?? "0");
     const body = {
       name,
       ...dayMinutes,
-      weeklyTargetMinutes: Math.round((isNaN(wtHours) ? 0 : wtHours) * 60),
+      weeklyTargetMinutes: parseHMM(weeklyTargetHours ?? "0") ?? 0,
       autoBreakMinutes6h: Number(ab6),
       autoBreakMinutes9h: Number(ab9),
       autoBreakThreshold6h: true,
@@ -128,14 +127,13 @@ export function TemplateDialog({
             {DAYS.map((d) => (
               <div key={d.key} className="space-y-1">
                 <Label htmlFor={d.key} className="text-xs">
-                  {d.label} (h)
+                  {d.label} (h:mm)
                 </Label>
                 <Input
                   id={d.key}
-                  type="number"
-                  min={0}
-                  max={24}
-                  step={0.25}
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="7:30"
                   value={dayHours[d.key]}
                   onChange={(e) => setDayHours({ ...dayHours, [d.key]: e.target.value })}
                   className="text-sm"
@@ -145,13 +143,12 @@ export function TemplateDialog({
           </div>
           <div className="grid grid-cols-3 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="weekly-target">{t("weeklyTarget")} (h)</Label>
+              <Label htmlFor="weekly-target">{t("weeklyTarget")} (h:mm)</Label>
               <Input
                 id="weekly-target"
-                type="number"
-                min={0}
-                max={168}
-                step={0.25}
+                type="text"
+                inputMode="numeric"
+                placeholder="37:30"
                 value={weeklyTargetHours}
                 onChange={(e) => setWeeklyTargetHours(e.target.value)}
               />

@@ -3,6 +3,7 @@ import { type SessionUser } from "@/server/context";
 import { formatInZone } from "@/lib/datetime";
 import { workedMsFromEntry } from "@/server/services/overtime";
 import { msToSignedHours } from "@/lib/overtime/calculate";
+import { decimalHoursToHMM } from "@/lib/duration";
 import Papa from "papaparse";
 import * as XLSX from "xlsx";
 import React from "react";
@@ -259,7 +260,7 @@ function formatPdfRow(row: ReportRow) {
     row.startAt ? timeValue(row.startAt) : "—",
     row.endAt ? timeValue(row.endAt) : "—",
     row.breakMinutes > 0 ? String(row.breakMinutes) : "—",
-    row.workedHours > 0 ? row.workedHours.toFixed(2) : "—",
+    row.workedHours > 0 ? decimalHoursToHMM(row.workedHours) : "—",
     row.note ?? "—",
   ];
 }
@@ -382,7 +383,7 @@ export async function toPdfExport(data: {
           React.createElement(
             Text,
             { style: { width: "20%", fontSize: 9, fontWeight: "bold" } },
-            `${totalHours.toFixed(2)} h`
+            decimalHoursToHMM(totalHours)
           )
         )
       ),

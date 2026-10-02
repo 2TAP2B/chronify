@@ -18,6 +18,7 @@ import { Label } from "@/components/ui/label";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Pencil, Plus } from "lucide-react";
 import type { WorkingModel } from "@prisma/client";
+import { parseHMM, formatMinutesHMM } from "@/lib/duration";
 
 const DAYS = [
   "monday",
@@ -55,12 +56,12 @@ export function WorkingModelDialog({
     const init: Record<string, string> = {};
     for (const d of DAYS) {
       const mins = Number(model?.[`${d}Minutes` as keyof WorkingModel] ?? 0);
-      init[d] = (mins / 60).toString();
+      init[d] = formatMinutesHMM(mins);
     }
     return init;
   });
   const [weeklyTargetHours, setWeeklyTargetHours] = useState(
-    ((model?.weeklyTargetMinutes ?? 0) / 60).toString()
+    formatMinutesHMM(model?.weeklyTargetMinutes ?? 0)
   );
   const [ab6, setAb6] = useState(String(model?.autoBreakMinutes6h ?? 30));
   const [ab9, setAb9] = useState(String(model?.autoBreakMinutes9h ?? 45));
@@ -74,15 +75,14 @@ export function WorkingModelDialog({
         userId,
         validFrom: new Date(validFrom + "T00:00:00Z").toISOString(),
         validTo: validTo ? new Date(validTo + "T00:00:00Z").toISOString() : null,
-        weeklyTargetMinutes: Math.round((parseFloat(weeklyTargetHours) || 0) * 60),
+        weeklyTargetMinutes: parseHMM(weeklyTargetHours) ?? 0,
         autoBreakMinutes6h: Number(ab6) || 0,
         autoBreakMinutes9h: Number(ab9) || 0,
         autoBreakThreshold6h: true,
         autoBreakThreshold9h: true,
       };
       for (const d of DAYS) {
-        const hours = parseFloat(dayHours[d]) || 0;
-        body[`${d}Minutes`] = Math.round(hours * 60);
+        body[`${d}Minutes`] = parseHMM(dayHours[d]) ?? 0;
       }
       const url =
         mode === "edit" ? `/api/admin/working-models/${model!.id}` : "/api/admin/working-models";
@@ -143,26 +143,24 @@ export function WorkingModelDialog({
           <div className="grid grid-cols-4 gap-3">
             {DAYS.map((d) => (
               <div key={d} className="space-y-1.5">
-                <Label htmlFor={d}>{t(d as never)} (h)</Label>
+                <Label htmlFor={d}>{t(d as never)} (h:mm)</Label>
                 <Input
                   id={d}
-                  type="number"
-                  min={0}
-                  max={24}
-                  step={0.25}
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="7:30"
                   value={dayHours[d]}
                   onChange={(e) => setDayHours({ ...dayHours, [d]: e.target.value })}
                 />
               </div>
             ))}
             <div className="space-y-1.5">
-              <Label htmlFor="weeklyTarget">{t("weeklyTarget")} (h)</Label>
+              <Label htmlFor="weeklyTarget">{t("weeklyTarget")} (h:mm)</Label>
               <Input
                 id="weeklyTarget"
-                type="number"
-                min={0}
-                max={168}
-                step={0.25}
+                type="text"
+                inputMode="numeric"
+                placeholder="37:30"
                 value={weeklyTargetHours}
                 onChange={(e) => setWeeklyTargetHours(e.target.value)}
               />
