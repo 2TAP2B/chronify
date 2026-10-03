@@ -411,7 +411,8 @@ function EntitlementSection({ userId }: { userId: string }) {
       .then((d) => {
         const ent = d.entitlement;
         if (ent?.totalDays !== undefined) {
-          setTotalDays(String(ent.totalDays));
+          // baseTotalDays = stored total (without regeneration +2) to avoid ratcheting
+          setTotalDays(String(ent.baseTotalDays ?? ent.totalDays));
           setUsedDays(ent.consumedDays ?? null);
         }
         if (d.defaultDays != null) setDefaultDays(d.defaultDays);

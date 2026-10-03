@@ -44,6 +44,7 @@ export default async function AdminUsersPage({ params }: Props) {
       active: true,
       hireDate: true,
       nfcCardId: true,
+      regeneration: true,
     },
   });
 

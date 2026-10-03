@@ -56,6 +56,7 @@ export const createUserSchema = z.object({
   active: z.boolean().default(true),
   hireDate: z.string().datetime().nullable().optional(),
   nfcCardId: z.string().max(20).nullable().optional(),
+  regeneration: z.boolean().default(false),
 });
 
 export const updateUserSchema = z.object({
@@ -95,6 +96,7 @@ export const updateUserSchema = z.object({
   mustChangePassword: z.boolean().optional(),
   sickMailEnabled: z.boolean().optional(),
   vacationMailEnabled: z.boolean().optional(),
+  regeneration: z.boolean().optional(),
 });
 
 export type CreateUserInput = z.infer<typeof createUserSchema>;
@@ -120,6 +122,7 @@ export async function listUsers(actor: SessionUser) {
       createdAt: true,
       hireDate: true,
       nfcCardId: true,
+      regeneration: true,
     },
   });
 }
@@ -147,6 +150,7 @@ export async function createUser(opts: { actor: SessionUser; input: CreateUserIn
       hireDate: opts.input.hireDate ? new Date(opts.input.hireDate) : null,
       nfcCardId: opts.input.nfcCardId?.trim() || null,
       mustChangePassword: true,
+      regeneration: opts.input.regeneration,
     },
     select: { id: true, email: true, name: true },
   });
@@ -206,6 +210,7 @@ export async function updateUser(opts: {
   if (opts.input.sickMailEnabled !== undefined) data.sickMailEnabled = opts.input.sickMailEnabled;
   if (opts.input.vacationMailEnabled !== undefined)
     data.vacationMailEnabled = opts.input.vacationMailEnabled;
+  if (opts.input.regeneration !== undefined) data.regeneration = opts.input.regeneration;
   if (opts.input.password) {
     data.passwordHash = await bcrypt.hash(opts.input.password, 12);
     data.mustChangePassword = true;
