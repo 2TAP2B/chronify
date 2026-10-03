@@ -4,8 +4,16 @@ import { db } from "@/lib/db";
 import { audit, getUserContext, type SessionUser } from "@/server/context";
 import { notifyUser } from "@/server/services/notification";
 import { notificationText } from "@/lib/notifications/server-texts";
-import { toCalendarDate, addDaysUtc, isSameCalendarDay } from "@/lib/datetime";
-import { makeHolidayResolver, isWeekend } from "@/lib/vacation/business-days";
+import { toCalendarDate } from "@/lib/datetime";
+import {
+  makeHolidayResolver,
+  businessDaysInRange,
+  modelForDate,
+  splitByWorkTarget,
+  type HolidayResolver,
+} from "@/lib/vacation/business-days";
+import { targetMinutesForDate } from "@/lib/overtime/calculate";
+import type { FederalState } from "@prisma/client";
 
 export class ClosureError extends Error {
   code: string;
@@ -31,15 +39,37 @@ export const createClosureSchema = z.object({
 
 export type CreateClosureInput = z.infer<typeof createClosureSchema>;
 
-function businessDaysInRange(from: Date, to: Date, federalState: string): Date[] {
-  const days: Date[] = [];
-  let cur = toCalendarDate(from, BERLIN);
-  const end = toCalendarDate(to, BERLIN);
-  while (cur.getTime() <= end.getTime()) {
-    if (!isWeekend(cur)) days.push(new Date(cur));
-    cur = addDaysUtc(cur, 1);
-  }
-  return days;
+/** Holidays for all involved federal states in one query; the resolver keys by state. */
+async function buildResolver(from: Date, to: Date, states: string[]): Promise<HolidayResolver> {
+  const unique = [...new Set(states)];
+  const holidays = await db.publicHoliday.findMany({
+    where: { date: { gte: from, lte: to }, federalState: { in: unique as never } },
+  });
+  return makeHolidayResolver(holidays);
+}
+
+export function workingModelsInRange(userId: string, from: Date, to: Date) {
+  return db.workingModel.findMany({
+    where: {
+      userId,
+      validFrom: { lte: to },
+      OR: [{ validTo: null }, { validTo: { gte: from } }],
+    },
+    orderBy: { validFrom: "desc" },
+  });
+}
+
+/** Closure days that actually consume vacation for this user (model target > 0). */
+async function consumableClosureDays(
+  userId: string,
+  state: FederalState,
+  resolver: HolidayResolver,
+  from: Date,
+  to: Date
+): Promise<Date[]> {
+  const candidates = businessDaysInRange(from, to, state, resolver).businessDays;
+  const models = await workingModelsInRange(userId, from, to);
+  return splitByWorkTarget(candidates, models).consumed;
 }
 
 export async function listClosures(actor: SessionUser) {
@@ -61,9 +91,25 @@ export async function createClosure({
   if (input.from > input.to) throw new ClosureError("from must be before to", "INVALID_RANGE");
 
   const settings = await db.orgSettings.findUniqueOrThrow({ where: { id: "singleton" } });
-  const federalState = settings.defaultFederalState;
+  const year = input.from.getUTCFullYear();
 
-  const businessDays = businessDaysInRange(input.from, input.to, federalState);
+  const activeUsers = await db.user.findMany({
+    where: { active: true },
+    select: { id: true, name: true, locale: true, federalState: true },
+  });
+
+  const resolver = await buildResolver(input.from, input.to, [
+    settings.defaultFederalState,
+    ...activeUsers.map((u) => u.federalState),
+  ]);
+
+  const businessDays = businessDaysInRange(
+    input.from,
+    input.to,
+    settings.defaultFederalState,
+    resolver
+  ).businessDays;
+
   if (businessDays.length === 0)
     throw new ClosureError("No business days in range", "NO_BUSINESS_DAYS");
 
@@ -75,37 +121,42 @@ export async function createClosure({
     },
   });
 
-  const activeUsers = await db.user.findMany({
-    where: { active: true },
-    select: { id: true, name: true, locale: true },
-  });
-
-  for (const day of businessDays) {
-    await db.timeEntry.createMany({
-      data: activeUsers.map((u) => ({
-        userId: u.id,
-        date: day,
-        type: "VACATION" as const,
-        source: "ADMIN" as const,
-        note: `Schließtag: ${input.name}`,
-        breakMinutes: 0,
-      })),
-    });
-  }
-
   for (const u of activeUsers) {
-    await db.vacationEntitlement.upsert({
-      where: { userId_year: { userId: u.id, year: input.from.getUTCFullYear() } },
-      create: {
-        userId: u.id,
-        year: input.from.getUTCFullYear(),
-        totalDays: settings.defaultVacationDays,
-        consumedDays: businessDays.length,
-      },
-      update: {
-        consumedDays: { increment: businessDays.length },
-      },
-    });
+    // Days with target = 0 in the user's working model (e.g. 4-day week)
+    // consume no vacation day.
+    const consumedDays = await consumableClosureDays(
+      u.id,
+      u.federalState,
+      resolver,
+      input.from,
+      input.to
+    );
+
+    if (consumedDays.length > 0) {
+      await db.timeEntry.createMany({
+        data: consumedDays.map((day) => ({
+          userId: u.id,
+          date: day,
+          type: "VACATION" as const,
+          source: "ADMIN" as const,
+          note: `Schließtag: ${input.name}`,
+          breakMinutes: 0,
+        })),
+      });
+
+      await db.vacationEntitlement.upsert({
+        where: { userId_year: { userId: u.id, year } },
+        create: {
+          userId: u.id,
+          year,
+          totalDays: settings.defaultVacationDays,
+          consumedDays: consumedDays.length,
+        },
+        update: {
+          consumedDays: { increment: consumedDays.length },
+        },
+      });
+    }
 
     await db.closureChoice
       .create({
@@ -119,12 +170,12 @@ export async function createClosure({
       type: "CLOSURE_CHOICE",
       ...notificationText("closureChoice", locale, {
         closureName: input.name,
-        days: businessDays.length,
+        days: consumedDays.length,
       }),
       payload: {
         closureId: closure.id,
         closureName: input.name,
-        businessDays: businessDays.length,
+        businessDays: consumedDays.length,
       },
       url: "/de/closure-choices",
     });
@@ -159,33 +210,83 @@ export async function deleteClosure({
   const closure = await db.businessClosure.findUnique({ where: { id: closureId } });
   if (!closure) throw new ClosureError("Not found", "NOT_FOUND", 404);
 
-  const businessDays = businessDaysInRange(closure.from, closure.to, "DE_NW");
+  const settings = await db.orgSettings.findUniqueOrThrow({ where: { id: "singleton" } });
+  const year = closure.from.getUTCFullYear();
+  const note = `Schließtag: ${closure.name}`;
 
-  await db.timeEntry.deleteMany({
-    where: {
-      type: "VACATION",
-      source: "ADMIN",
-      note: `Schließtag: ${closure.name}`,
-      date: { gte: closure.from, lte: closure.to },
-    },
-  });
+  // Reverse exactly what was granted: count the created entries per user
+  // (stays correct even if a working model changed since creation).
+  const entryWhere = {
+    type: "VACATION" as const,
+    source: "ADMIN" as const,
+    note,
+    date: { gte: closure.from, lte: closure.to },
+  };
+  const entries = await db.timeEntry.findMany({ where: entryWhere, select: { userId: true } });
+  const consumedByUser = new Map<string, number>();
+  for (const e of entries) {
+    consumedByUser.set(e.userId, (consumedByUser.get(e.userId) ?? 0) + 1);
+  }
+  await db.timeEntry.deleteMany({ where: entryWhere });
 
-  const activeUsers = await db.user.findMany({ where: { active: true }, select: { id: true } });
-  for (const u of activeUsers) {
+  for (const [userId, n] of consumedByUser) {
     await db.vacationEntitlement
       .upsert({
-        where: { userId_year: { userId: u.id, year: closure.from.getUTCFullYear() } },
+        where: { userId_year: { userId, year } },
         create: {
-          userId: u.id,
-          year: closure.from.getUTCFullYear(),
-          totalDays: 30,
-          consumedDays: -businessDays.length,
+          userId,
+          year,
+          totalDays: settings.defaultVacationDays,
+          consumedDays: -n,
         },
         update: {
-          consumedDays: { decrement: businessDays.length },
+          consumedDays: { decrement: n },
         },
       })
       .catch(() => {});
+  }
+
+  // Restore overtime for users who had compensated the closure with overtime.
+  const overtimeChoices = await db.closureChoice.findMany({
+    where: { closureId: closure.id, choice: "OVERTIME" },
+  });
+  if (overtimeChoices.length > 0) {
+    const overtimeUsers = await db.user.findMany({
+      where: { id: { in: overtimeChoices.map((c) => c.userId) } },
+      select: { id: true, federalState: true },
+    });
+    const resolver = await buildResolver(closure.from, closure.to, [
+      settings.defaultFederalState,
+      ...overtimeUsers.map((u) => u.federalState),
+    ]);
+    for (const u of overtimeUsers) {
+      const days = businessDaysInRange(
+        closure.from,
+        closure.to,
+        u.federalState,
+        resolver
+      ).businessDays;
+      const models = await workingModelsInRange(u.id, closure.from, closure.to);
+      const overtimeMinutes = days.reduce((sum, d) => {
+        const m = modelForDate(models, d);
+        return m ? sum + targetMinutesForDate(d, m) : sum;
+      }, 0);
+      if (overtimeMinutes <= 0) continue;
+      await db.overtimeBalance
+        .upsert({
+          where: { userId_year: { userId: u.id, year } },
+          create: {
+            userId: u.id,
+            year,
+            carriedOverMinutes: 0,
+            computedMinutes: overtimeMinutes,
+          },
+          update: {
+            computedMinutes: { increment: overtimeMinutes },
+          },
+        })
+        .catch(() => {});
+    }
   }
 
   await db.businessClosure.delete({ where: { id: closureId } });
@@ -226,7 +327,20 @@ export async function updateChoice({
 
   const closure = existing.closure;
   const settings = await db.orgSettings.findUniqueOrThrow({ where: { id: "singleton" } });
-  const businessDays = businessDaysInRange(closure.from, closure.to, settings.defaultFederalState);
+  const owner = await db.user.findUnique({
+    where: { id: actor.id },
+    select: { federalState: true },
+  });
+  const state = owner?.federalState ?? settings.defaultFederalState;
+  const resolver = await buildResolver(closure.from, closure.to, [state]);
+  const businessDays = businessDaysInRange(closure.from, closure.to, state, resolver).businessDays;
+  // Days with target = 0 in the working model consume no vacation day.
+  const models = await workingModelsInRange(actor.id, closure.from, closure.to);
+  const { consumed } = splitByWorkTarget(businessDays, models);
+  const totalOvertimeMinutes = businessDays.reduce((sum, d) => {
+    const m = modelForDate(models, d);
+    return m ? sum + targetMinutesForDate(d, m) : sum;
+  }, 0);
 
   if (choice === "OVERTIME" && existing.choice === "VACATION") {
     await db.timeEntry.deleteMany({
@@ -245,41 +359,13 @@ export async function updateChoice({
           userId: actor.id,
           year: closure.from.getUTCFullYear(),
           totalDays: settings.defaultVacationDays,
-          consumedDays: -businessDays.length,
+          consumedDays: -consumed.length,
         },
         update: {
-          consumedDays: { decrement: businessDays.length },
+          consumedDays: { decrement: consumed.length },
         },
       })
       .catch(() => {});
-
-    const workingModel = await db.workingModel.findFirst({
-      where: {
-        userId: actor.id,
-        validFrom: { lte: new Date() },
-        OR: [{ validTo: null }, { validTo: { gte: new Date() } }],
-      },
-      orderBy: { validFrom: "desc" },
-    });
-
-    const dayMinutes = workingModel
-      ? [
-          workingModel.mondayMinutes,
-          workingModel.tuesdayMinutes,
-          workingModel.wednesdayMinutes,
-          workingModel.thursdayMinutes,
-          workingModel.fridayMinutes,
-          workingModel.saturdayMinutes,
-          workingModel.sundayMinutes,
-        ]
-      : [0, 0, 0, 0, 0, 0, 0];
-
-    let totalOvertimeMinutes = 0;
-    for (const day of businessDays) {
-      const dow = day.getUTCDay();
-      const idx = dow === 0 ? 6 : dow - 1;
-      totalOvertimeMinutes += dayMinutes[idx];
-    }
 
     await db.overtimeBalance.upsert({
       where: { userId_year: { userId: actor.id, year: closure.from.getUTCFullYear() } },
@@ -295,7 +381,7 @@ export async function updateChoice({
     });
   } else if (choice === "VACATION" && existing.choice === "OVERTIME") {
     await db.timeEntry.createMany({
-      data: businessDays.map((day) => ({
+      data: consumed.map((day) => ({
         userId: actor.id,
         date: day,
         type: "VACATION" as const,
@@ -311,40 +397,12 @@ export async function updateChoice({
         userId: actor.id,
         year: closure.from.getUTCFullYear(),
         totalDays: settings.defaultVacationDays,
-        consumedDays: businessDays.length,
+        consumedDays: consumed.length,
       },
       update: {
-        consumedDays: { increment: businessDays.length },
+        consumedDays: { increment: consumed.length },
       },
     });
-
-    const workingModel = await db.workingModel.findFirst({
-      where: {
-        userId: actor.id,
-        validFrom: { lte: new Date() },
-        OR: [{ validTo: null }, { validTo: { gte: new Date() } }],
-      },
-      orderBy: { validFrom: "desc" },
-    });
-
-    const dayMinutes = workingModel
-      ? [
-          workingModel.mondayMinutes,
-          workingModel.tuesdayMinutes,
-          workingModel.wednesdayMinutes,
-          workingModel.thursdayMinutes,
-          workingModel.fridayMinutes,
-          workingModel.saturdayMinutes,
-          workingModel.sundayMinutes,
-        ]
-      : [0, 0, 0, 0, 0, 0, 0];
-
-    let totalOvertimeMinutes = 0;
-    for (const day of businessDays) {
-      const dow = day.getUTCDay();
-      const idx = dow === 0 ? 6 : dow - 1;
-      totalOvertimeMinutes += dayMinutes[idx];
-    }
 
     await db.overtimeBalance.upsert({
       where: { userId_year: { userId: actor.id, year: closure.from.getUTCFullYear() } },

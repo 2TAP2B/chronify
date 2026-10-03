@@ -1,4 +1,5 @@
 import { addDaysUtc, toCalendarDate } from "@/lib/datetime";
+import { targetMinutesForDate } from "@/lib/overtime/calculate";
 import type { PublicHoliday, FederalState } from "@prisma/client";
 
 export type HolidayResolver = (date: Date, state: FederalState) => PublicHoliday | null;
@@ -113,4 +114,42 @@ export function overlapsExisting(
     }
   }
   return false;
+}
+
+export type ModelRange = {
+  validFrom: Date;
+  validTo: null | Date;
+  mondayMinutes: number;
+  tuesdayMinutes: number;
+  wednesdayMinutes: number;
+  thursdayMinutes: number;
+  fridayMinutes: number;
+  saturdayMinutes: number;
+  sundayMinutes: number;
+  weeklyTargetMinutes: number;
+};
+
+export function modelForDate(models: ModelRange[], date: Date): ModelRange | null {
+  return (
+    models.find((m) => m.validFrom <= date && (m.validTo == null || m.validTo >= date)) ?? null
+  );
+}
+
+/**
+ * Days with target = 0 in the working model (e.g. 4-day week) consume no
+ * vacation day. No models at all -> status quo: all days consume.
+ */
+export function splitByWorkTarget(
+  days: Date[],
+  models: ModelRange[] | null
+): { consumed: Date[]; skipped: Date[] } {
+  if (!models || models.length === 0) return { consumed: days, skipped: [] };
+  const consumed: Date[] = [];
+  const skipped: Date[] = [];
+  for (const d of days) {
+    const m = modelForDate(models, d);
+    if (m && targetMinutesForDate(d, m) === 0) skipped.push(d);
+    else consumed.push(d);
+  }
+  return { consumed, skipped };
 }

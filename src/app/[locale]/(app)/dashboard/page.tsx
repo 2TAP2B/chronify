@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getOrgSettings } from "@/server/context";
 import { computeYearOvertime } from "@/server/services/overtime";
+import { REGENERATION_EXTRA_DAYS } from "@/server/services/vacation";
 import { toCalendarDate, startOfWeekUtc, addDaysUtc, formatInZone } from "@/lib/datetime";
 import { msToHours } from "@/lib/timer-utils";
 import { TimerWidget } from "@/components/timer/timer-widget";
@@ -122,7 +123,9 @@ export default async function DashboardPage({ params }: Props) {
     where: { userId_year: { userId: user.id, year } },
   });
 
-  const vacationTotal = vacationEntitlement?.totalDays ?? settings.defaultVacationDays;
+  const vacationTotal =
+    (vacationEntitlement?.totalDays ?? settings.defaultVacationDays) +
+    (user.regeneration ? REGENERATION_EXTRA_DAYS : 0);
   const vacationConsumed = vacationEntitlement?.consumedDays ?? 0;
   const vacationRemaining = Math.max(0, vacationTotal - vacationConsumed);
 

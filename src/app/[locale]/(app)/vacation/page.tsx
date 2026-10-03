@@ -2,6 +2,7 @@ import { getTranslations, setRequestLocale, getLocale } from "next-intl/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { computeYearOvertime } from "@/server/services/overtime";
+import { getRegenerationStatus } from "@/server/services/vacation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -57,7 +58,10 @@ export default async function VacationPage({ params, searchParams }: Props) {
     }),
   ]);
 
-  const totalDays = entitlement?.totalDays ?? settings.defaultVacationDays;
+  const regen = await getRegenerationStatus(session.user.id, year);
+
+  const totalDays =
+    (entitlement?.totalDays ?? settings.defaultVacationDays) + (regen.enabled ? regen.total : 0);
   const carriedOverDays = entitlement?.carriedOverDays ?? 0;
   const consumedDays = entitlement?.consumedDays ?? 0;
   const availableDays = totalDays + carriedOverDays - consumedDays;
@@ -87,6 +91,16 @@ export default async function VacationPage({ params, searchParams }: Props) {
             </CardTitle>
           </CardHeader>
         </Card>
+        {regen.enabled && (
+          <Card>
+            <CardHeader className="pb-2">
+              <CardDescription>{t("regenDaysLabel")}</CardDescription>
+              <CardTitle className="text-2xl">
+                {regen.available}/{regen.total} {t("days")}
+              </CardTitle>
+            </CardHeader>
+          </Card>
+        )}
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>{t("consumed")}</CardDescription>
@@ -111,7 +125,10 @@ export default async function VacationPage({ params, searchParams }: Props) {
           <CardDescription>{year}</CardDescription>
         </CardHeader>
         <CardContent>
-          <VacationRequestForm overtimeHours={overtimeHours} />
+          <VacationRequestForm
+            overtimeHours={overtimeHours}
+            regeneration={{ total: regen.total, available: regen.available }}
+          />
         </CardContent>
       </Card>
 

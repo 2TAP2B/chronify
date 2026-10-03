@@ -19,6 +19,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 
 type Props = {
   overtimeHours?: number;
+  regeneration?: { total: number; available: number };
 };
 
 function todayISO(): string {
@@ -29,18 +30,19 @@ function todayISO(): string {
   return `${y}-${m}-${day}`;
 }
 
-export function VacationRequestForm({ overtimeHours = 0 }: Props) {
+export function VacationRequestForm({ overtimeHours = 0, regeneration }: Props) {
   const t = useTranslations("vacation");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [note, setNote] = useState("");
-  const [kind, setKind] = useState<"REGULAR" | "SPECIAL">("REGULAR");
+  const [kind, setKind] = useState<"REGULAR" | "SPECIAL" | "REGENERATION">("REGULAR");
   const [useOvertime, setUseOvertime] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
   const overtimeAvailable = overtimeHours > 0;
+  const regenerationAvailable = !!regeneration && regeneration.available > 0;
 
   const handleFromChange = useCallback((value: string) => {
     setFrom(value);
@@ -81,6 +83,7 @@ export function VacationRequestForm({ overtimeHours = 0 }: Props) {
         if (code === "OVERLAP") setError(t("overlapError"));
         else if (code === "INSUFFICIENT_ENTITLEMENT") setError(t("insufficientError"));
         else if (code === "INSUFFICIENT_OVERTIME") setError(t("insufficientOvertimeError"));
+        else if (code === "NO_REGENERATION") setError(t("noRegenerationError"));
         else if (code === "NO_BUSINESS_DAYS") setError(t("noBusinessDaysError"));
         else setError((b as { error?: string }).error ?? "error");
         return;
@@ -133,15 +136,31 @@ export function VacationRequestForm({ overtimeHours = 0 }: Props) {
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div className="space-y-1.5">
           <Label htmlFor="kind">{t("kindLabel")}</Label>
-          <Select value={kind} onValueChange={(v) => setKind(v as "REGULAR" | "SPECIAL")}>
+          <Select
+            value={kind}
+            onValueChange={(v) => {
+              setKind(v as "REGULAR" | "SPECIAL" | "REGENERATION");
+              setUseOvertime(false);
+            }}
+          >
             <SelectTrigger id="kind">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="REGULAR">{t("kindRegular")}</SelectItem>
               <SelectItem value="SPECIAL">{t("kindSpecial")}</SelectItem>
+              {!!regeneration && (
+                <SelectItem value="REGENERATION">
+                  {t("kindRegeneration")} ({regeneration.available}/{regeneration.total})
+                </SelectItem>
+              )}
             </SelectContent>
           </Select>
+          {!!regeneration && (
+            <p className="text-xs text-muted-foreground">
+              {t("regenQuota", { available: regeneration.available, total: regeneration.total })}
+            </p>
+          )}
         </div>
       </div>
       <div className="space-y-1.5">

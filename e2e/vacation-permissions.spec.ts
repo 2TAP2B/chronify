@@ -149,13 +149,15 @@ test("employee has no admin vacation features", async ({ adminPage: page }, test
   expect(cancelForeign.status).toBe(403);
   expect(cancelForeign.json?.code).toBe("FORBIDDEN");
 
+  // Regeneration leave is only available to users with the flag; this
+  // employee does not have it -> quota rejected.
   const createRegeneration = await api(page, "/api/vacation", "POST", {
     from: new Date(isoDate(nextMonday()) + "T00:00:00Z").toISOString(),
     to: new Date(isoDate(nextMonday()) + "T00:00:00Z").toISOString(),
     kind: "REGENERATION",
   });
   expect(createRegeneration.status).toBe(403);
-  expect(createRegeneration.json?.code).toBe("FORBIDDEN");
+  expect(createRegeneration.json?.code).toBe("NO_REGENERATION");
 
   const createForOther = await api(page, "/api/vacation", "POST", {
     from: new Date(isoDate(nextMonday()) + "T00:00:00Z").toISOString(),
