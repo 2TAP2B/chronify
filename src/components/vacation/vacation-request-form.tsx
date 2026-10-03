@@ -42,7 +42,6 @@ export function VacationRequestForm({ overtimeHours = 0, regeneration }: Props) 
   const [success, setSuccess] = useState(false);
 
   const overtimeAvailable = overtimeHours > 0;
-  const regenerationAvailable = !!regeneration && regeneration.available > 0;
 
   const handleFromChange = useCallback((value: string) => {
     setFrom(value);

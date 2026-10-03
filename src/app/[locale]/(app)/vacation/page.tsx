@@ -127,7 +127,9 @@ export default async function VacationPage({ params, searchParams }: Props) {
         <CardContent>
           <VacationRequestForm
             overtimeHours={overtimeHours}
-            regeneration={{ total: regen.total, available: regen.available }}
+            regeneration={
+              regen.enabled ? { total: regen.total, available: regen.available } : undefined
+            }
           />
         </CardContent>
       </Card>

@@ -39,9 +39,11 @@ export function EntitlementDialog({
         .then((d) => {
           const ent = d.entitlement;
           if (ent?.totalDays !== undefined) {
-            setTotalDays(ent.totalDays);
-            if (ent.consumedDays !== undefined && ent.totalDays !== (d.defaultDays ?? 30)) {
-              setCurrentDays(ent.totalDays);
+            // baseTotalDays = stored total (without regeneration +2) to avoid ratcheting
+            const base = ent.baseTotalDays ?? ent.totalDays;
+            setTotalDays(base);
+            if (ent.consumedDays !== undefined && base !== (d.defaultDays ?? 30)) {
+              setCurrentDays(base);
             }
           }
         })

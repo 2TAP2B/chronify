@@ -349,6 +349,7 @@ export async function updateChoice({
         type: "VACATION",
         source: "ADMIN",
         note: `Schließtag: ${closure.name}`,
+        date: { gte: closure.from, lte: closure.to },
       },
     });
 
