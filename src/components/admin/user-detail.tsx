@@ -718,9 +718,12 @@ function RemoteTimerSection({ userId, active }: { userId: string; active: boolea
     try {
       let startAt: string | undefined;
       if (startTime && startDate) {
-        const [y, mo, d] = startDate.toISOString().slice(0, 10).split("-").map(Number);
+        // Local calendar parts (iso string would shift the day in UTC+X) —
+        // 1-based month, same contract the timesheet dialog uses.
+        const dateStr = format(startDate, "yyyy-MM-dd");
+        const [y, mo, d] = dateStr.split("-").map(Number);
         const [h, m] = startTime.split(":").map(Number);
-        startAt = zonedTimeToUtc(y, mo - 1, d, h, m || 0, "Europe/Berlin").toISOString();
+        startAt = zonedTimeToUtc(y, mo, d, h, m || 0, "Europe/Berlin").toISOString();
       }
       const res = await fetch("/api/timer/start", {
         method: "POST",

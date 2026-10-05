@@ -68,8 +68,12 @@ test("admin starts (backdated), inspects and stops another user's timer; employe
   const empId = users.find((u) => u.email === empEmail)?.id;
   expect(empId).toBeTruthy();
 
-  // 1. Backdated admin start for the employee (3 h ago)
-  const backdated = new Date(Date.now() - 3 * 3_600_000).toISOString();
+  // 1. Backdated admin start for the employee (yesterday 08:00 Europe/Berlin)
+  //    — deep backdating is unconditional (admin), must not hit any window.
+  const yesterday = new Date(Date.now() - 24 * 3_600_000);
+  const yIso = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Berlin" }).format(yesterday);
+  const backdated = new Date(`${yIso}T08:00:00+02:00`).toISOString();
+
   const start = await api(page, "/api/timer/start", "POST", { userId: empId, startAt: backdated });
   expect(start.status).toBe(200);
   expect((start.json as { active: boolean }).active).toBe(true);
