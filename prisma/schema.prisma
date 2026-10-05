@@ -113,6 +113,7 @@ model User {
   lastLoginAt   DateTime?
   sickMailEnabled     Boolean @default(true)
   vacationMailEnabled Boolean @default(true)
+  regeneration        Boolean @default(false)
 
   workingModels        WorkingModel[]
   timeEntries          TimeEntry[]

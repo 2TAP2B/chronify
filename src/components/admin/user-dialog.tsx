@@ -24,6 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Pencil, Plus } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 
 type User = {
   id: string;
@@ -39,6 +40,7 @@ type User = {
   active: boolean;
   hireDate: Date | null;
   nfcCardId: string | null;
+  regeneration: boolean;
 };
 
 import { STATE_NAMES, STATE_CODES } from "@/lib/federal-states";
@@ -74,6 +76,7 @@ export function UserDialog({
   const [active, setActive] = useState(user?.active ?? true);
   const [hireDate, setHireDate] = useState(user?.hireDate ?? undefined);
   const [nfcCardId, setNfcCardId] = useState(user?.nfcCardId ?? "");
+  const [regeneration, setRegeneration] = useState(user?.regeneration ?? false);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -93,6 +96,7 @@ export function UserDialog({
         active,
         hireDate: hireDate ? hireDate.toISOString() : null,
         nfcCardId: nfcCardId.trim() || null,
+        regeneration,
       };
       if (password) body.password = password;
       const url = mode === "edit" ? `/api/admin/users/${user!.id}` : "/api/admin/users";
@@ -243,6 +247,17 @@ export function UserDialog({
                 placeholder="—"
                 maxLength={20}
               />
+            </div>
+            <div className="col-span-2 flex items-center gap-2">
+              <Checkbox
+                id="regeneration"
+                checked={regeneration}
+                onCheckedChange={(v) => setRegeneration(v === true)}
+              />
+              <Label htmlFor="regeneration" className="cursor-pointer">
+                {t("regeneration")}
+              </Label>
+              <span className="text-xs text-muted-foreground">{t("regenerationHint")}</span>
             </div>
             {mode === "edit" && (
               <div className="space-y-1.5">

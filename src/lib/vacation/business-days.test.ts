@@ -5,6 +5,8 @@ import {
   isBusinessDay,
   businessDaysInRange,
   overlapsExisting,
+  splitByWorkTarget,
+  type ModelRange,
 } from "@/lib/vacation/business-days";
 import { shouldApplyForState, federalStateToNagerCode } from "@/lib/holidays/nager";
 import type { PublicHoliday, FederalState } from "@prisma/client";
@@ -195,5 +197,57 @@ describe("overlapsExisting", () => {
       { from: new Date("2026-07-06"), to: new Date("2026-07-10"), status: "REJECTED" },
     ];
     expect(overlapsExisting(new Date("2026-07-08"), new Date("2026-07-12"), existing)).toBe(false);
+  });
+});
+
+describe("splitByWorkTarget", () => {
+  const fourDay: ModelRange = {
+    validFrom: new Date(Date.UTC(2026, 0, 1)),
+    validTo: null,
+    mondayMinutes: 480,
+    tuesdayMinutes: 480,
+    wednesdayMinutes: 480,
+    thursdayMinutes: 480,
+    fridayMinutes: 0,
+    saturdayMinutes: 0,
+    sundayMinutes: 0,
+    weeklyTargetMinutes: 1920,
+  };
+  const week = [5, 6, 7, 8, 9].map((d) => new Date(Date.UTC(2026, 9, d))); // Mon–Fri 2026-10-05..09
+
+  it("skips days with 0 target in the working model", () => {
+    const { consumed, skipped } = splitByWorkTarget(week, [fourDay]);
+    expect(consumed).toHaveLength(4);
+    expect(skipped).toHaveLength(1);
+    expect(skipped[0].toISOString()).toBe("2026-10-09T00:00:00.000Z");
+  });
+
+  it("consumes everything without knowing dates when no model exists", () => {
+    const { consumed, skipped } = splitByWorkTarget(week, null);
+    expect(consumed).toHaveLength(5);
+    expect(skipped).toHaveLength(0);
+  });
+
+  it("consumes days outside any model validity when models exist", () => {
+    const limited: ModelRange = {
+      ...fourDay,
+      validFrom: new Date(Date.UTC(2026, 0, 1)),
+      validTo: new Date(Date.UTC(2026, 5, 30)),
+    };
+    const { consumed, skipped } = splitByWorkTarget(week, [limited]);
+    expect(consumed).toHaveLength(5);
+    expect(skipped).toHaveLength(0);
+  });
+
+  it("handles overlapping models (first match wins — pass newest first)", () => {
+    const v2: ModelRange = {
+      ...fourDay,
+      validFrom: new Date(Date.UTC(2026, 9, 1)),
+      validTo: null,
+      fridayMinutes: 240,
+    };
+    const { consumed, skipped } = splitByWorkTarget(week, [v2, fourDay]);
+    expect(consumed).toHaveLength(5);
+    expect(skipped).toHaveLength(0);
   });
 });

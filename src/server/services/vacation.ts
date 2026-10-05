@@ -8,11 +8,17 @@ import {
   businessDaysInRange,
   makeHolidayResolver,
   overlapsExisting,
+  splitByWorkTarget,
+  modelForDate,
 } from "@/lib/vacation/business-days";
 import { toCalendarDate } from "@/lib/datetime";
 import { notificationText } from "@/lib/notifications/server-texts";
 import { targetMinutesForDate } from "@/lib/overtime/calculate";
+import { workingModelsInRange } from "@/server/services/business-closures";
 import type { FederalState, VacationKind, VacationRequest, VacationStatus } from "@prisma/client";
+
+/** Extra vacation days per year for users with regeneration leave enabled. */
+export const REGENERATION_EXTRA_DAYS = 2;
 
 export class VacationError extends Error {
   constructor(
@@ -34,6 +40,20 @@ export type VacationCreateInput = {
   /** Admin-only: assign a leave to another user (regeneration flow). */
   targetUserId?: string;
 };
+
+/** Regeneration quota status: pending + approved REGENERATION leave counts as used. */
+export async function getRegenerationStatus(userId: string, year: number) {
+  const [user, agg] = await Promise.all([
+    db.user.findUnique({ where: { id: userId }, select: { regeneration: true } }),
+    db.vacationRequest.aggregate({
+      where: { userId, year, kind: "REGENERATION", status: { in: ["PENDING", "APPROVED"] } },
+      _sum: { days: true },
+    }),
+  ]);
+  const total = user?.regeneration ? REGENERATION_EXTRA_DAYS : 0;
+  const used = agg._sum.days ?? 0;
+  return { enabled: !!user?.regeneration, total, used, available: Math.max(0, total - used) };
+}
 
 export async function listVacationRequests(opts: {
   actor: SessionUser;
@@ -75,9 +95,6 @@ export async function createVacationRequest(opts: {
   }
 
   const kind = opts.input.kind ?? "REGULAR";
-  if (kind === "REGENERATION" && actor.role !== "ADMIN") {
-    throw new VacationError("Forbidden", "FORBIDDEN", 403);
-  }
   if (opts.input.targetUserId && actor.role !== "ADMIN") {
     throw new VacationError("Forbidden", "FORBIDDEN", 403);
   }
@@ -102,11 +119,23 @@ export async function createVacationRequest(opts: {
     resolver
   );
 
-  if (businessDays.length === 0) {
+  // Days with target = 0 in the working model (e.g. 4-day week) consume no
+  // vacation day.
+  const models = await workingModelsInRange(ownerUserId, from, to);
+  const { consumed: spendableDays } = splitByWorkTarget(businessDays, models);
+
+  if (spendableDays.length === 0) {
     throw new VacationError(
-      `Range has no business days (weekends: ${weekendCount}, holidays: ${holidayCount}, total: ${totalDays})`,
+      `Range has no work days (weekends: ${weekendCount}, holidays: ${holidayCount}, non-working (0 h): ${businessDays.length}, total: ${totalDays})`,
       "NO_BUSINESS_DAYS"
     );
+  }
+
+  if (kind === "REGENERATION") {
+    const regen = await getRegenerationStatus(ownerUserId, year);
+    if (!regen.enabled || regen.available < spendableDays.length) {
+      throw new VacationError("No regeneration days available", "NO_REGENERATION", 403);
+    }
   }
 
   // Check overlap with existing (still active) requests; rejected or
@@ -125,7 +154,9 @@ export async function createVacationRequest(opts: {
     }),
     db.orgSettings.findUniqueOrThrow({ where: { id: "singleton" } }),
   ]);
-  const totalDays_ = entitlement?.totalDays ?? settings.defaultVacationDays;
+  const totalDays_ =
+    (entitlement?.totalDays ?? settings.defaultVacationDays) +
+    (ctx.user.regeneration ? REGENERATION_EXTRA_DAYS : 0);
   const carriedOverDays = entitlement?.carriedOverDays ?? 0;
   const consumedDays = entitlement?.consumedDays ?? 0;
   const available = totalDays_ + carriedOverDays - consumedDays;
@@ -142,9 +173,9 @@ export async function createVacationRequest(opts: {
     if (computation.balanceMs <= 0) {
       throw new VacationError("No overtime balance available", "INSUFFICIENT_OVERTIME", 403);
     }
-  } else if (businessDays.length > available) {
+  } else if (spendableDays.length > available) {
     throw new VacationError(
-      `Insufficient entitlement: requested ${businessDays.length} days, available ${available}`,
+      `Insufficient entitlement: requested ${spendableDays.length} days, available ${available}`,
       "INSUFFICIENT_ENTITLEMENT",
       403
     );
@@ -155,7 +186,7 @@ export async function createVacationRequest(opts: {
       userId: ownerUserId,
       from,
       to,
-      days: businessDays.length,
+      days: spendableDays.length,
       status: "PENDING",
       year,
       note: opts.input.note ?? null,
@@ -176,7 +207,7 @@ export async function createVacationRequest(opts: {
         const requesterName = ctx.user.name ?? ctx.user.email ?? "";
         const text = notificationText("vacationRequested", locale, {
           actorName: requesterName,
-          days: businessDays.length,
+          days: spendableDays.length,
           fromDate: from.toISOString().slice(0, 10),
           toDate: to.toISOString().slice(0, 10),
         });
@@ -189,7 +220,7 @@ export async function createVacationRequest(opts: {
             requestId: created.id,
             userId: ownerUserId,
             actorName: requesterName,
-            days: businessDays.length,
+            days: spendableDays.length,
             fromDate: from.toISOString().slice(0, 10),
             toDate: to.toISOString().slice(0, 10),
           },
@@ -210,7 +241,7 @@ export async function createVacationRequest(opts: {
         requesterName: ctx.user.name ?? ctx.user.email ?? "User",
         fromDate: from.toISOString().slice(0, 10),
         toDate: to.toISOString().slice(0, 10),
-        days: businessDays.length,
+        days: spendableDays.length,
         approvalUrl,
       });
       await sendMail({
@@ -228,7 +259,7 @@ export async function createVacationRequest(opts: {
     action: "vacation_request.create",
     entity: "VacationRequest",
     entityId: created.id,
-    payload: { from: from.toISOString(), to: to.toISOString(), days: businessDays.length, year },
+    payload: { from: from.toISOString(), to: to.toISOString(), days: spendableDays.length, year },
   });
 
   return created;
@@ -266,24 +297,16 @@ export async function approveVacationRequest(opts: {
   });
   const resolver = makeHolidayResolver(holidays);
   const { businessDays } = businessDaysInRange(req.from, req.to, state, resolver);
+  // Days with target = 0 in the working model (e.g. 4-day week) consume no
+  // vacation day — both for entries and entitlement accounting.
+  const models = await workingModelsInRange(req.userId, req.from, req.to);
+  const { consumed: spendableDays } = splitByWorkTarget(businessDays, models);
+  const days = spendableDays.length;
 
   if (req.useOvertime) {
     // Deduct from overtime balance instead of vacation entitlement
-    const workingModels = await db.workingModel.findMany({
-      where: {
-        userId: req.userId,
-        validFrom: { lte: req.to },
-        OR: [{ validTo: null }, { validTo: { gte: req.from } }],
-      },
-      orderBy: { validFrom: "desc" },
-    });
-    function modelForDate(d: Date) {
-      return (
-        workingModels.find((m) => m.validFrom <= d && (m.validTo == null || m.validTo >= d)) ?? null
-      );
-    }
     const consumedMinutes = businessDays.reduce((sum, d) => {
-      const model = modelForDate(d);
+      const model = modelForDate(models, d);
       if (!model) return sum;
       return sum + targetMinutesForDate(d, model);
     }, 0);
@@ -301,7 +324,7 @@ export async function approveVacationRequest(opts: {
         },
       }),
       db.timeEntry.createMany({
-        data: businessDays.map((d) => ({
+        data: spendableDays.map((d) => ({
           userId: req.userId,
           date: toCalendarDate(d, ctx.timeZone),
           startAt: null,
@@ -322,14 +345,14 @@ export async function approveVacationRequest(opts: {
           year: req.year,
           totalDays: (await db.orgSettings.findUniqueOrThrow({ where: { id: "singleton" } }))
             .defaultVacationDays,
-          consumedDays: businessDays.length,
+          consumedDays: days,
         },
         update: {
-          consumedDays: { increment: businessDays.length },
+          consumedDays: { increment: days },
         },
       }),
       db.timeEntry.createMany({
-        data: businessDays.map((d) => ({
+        data: spendableDays.map((d) => ({
           userId: req.userId,
           date: toCalendarDate(d, ctx.timeZone),
           startAt: null,
@@ -364,7 +387,7 @@ export async function approveVacationRequest(opts: {
       vars: {
         fromDate: req.from.toISOString().slice(0, 10),
         toDate: req.to.toISOString().slice(0, 10),
-        days: businessDays.length,
+        days,
       },
     },
   });
@@ -375,7 +398,7 @@ export async function approveVacationRequest(opts: {
     action: "vacation_request.approve",
     entity: "VacationRequest",
     entityId: req.id,
-    payload: { days: businessDays.length, year: req.year },
+    payload: { days, year: req.year },
   });
 
   return req;
@@ -486,22 +509,9 @@ export async function cancelVacationRequest(opts: {
       });
       const resolver2 = makeHolidayResolver(holidays2);
       const { businessDays: bd } = businessDaysInRange(req.from, req.to, state2, resolver2);
-      const workingModels = await db.workingModel.findMany({
-        where: {
-          userId: req.userId,
-          validFrom: { lte: req.to },
-          OR: [{ validTo: null }, { validTo: { gte: req.from } }],
-        },
-        orderBy: { validFrom: "desc" },
-      });
-      function modelForDate(d: Date) {
-        return (
-          workingModels.find((m) => m.validFrom <= d && (m.validTo == null || m.validTo >= d)) ??
-          null
-        );
-      }
+      const models2 = await workingModelsInRange(req.userId, req.from, req.to);
       const consumedMinutes = bd.reduce((sum, d) => {
-        const model = modelForDate(d);
+        const model = modelForDate(models2, d);
         if (!model) return sum;
         return sum + targetMinutesForDate(d, model);
       }, 0);
@@ -547,20 +557,26 @@ export async function getVacationEntitlementView(opts: {
 }) {
   const userId = resolveTarget(opts.actor, opts.targetUserId);
   const year = opts.year ?? new Date().getUTCFullYear();
-  const entitlement = await db.vacationEntitlement.findUnique({
-    where: { userId_year: { userId, year } },
-  });
-  const settings = await db.orgSettings.findUniqueOrThrow({ where: { id: "singleton" } });
-  const totalDays = entitlement?.totalDays ?? settings.defaultVacationDays;
+  const [entitlement, settings, regeneration] = await Promise.all([
+    db.vacationEntitlement.findUnique({
+      where: { userId_year: { userId, year } },
+    }),
+    db.orgSettings.findUniqueOrThrow({ where: { id: "singleton" } }),
+    getRegenerationStatus(userId, year),
+  ]);
+  const baseDays = entitlement?.totalDays ?? settings.defaultVacationDays;
+  const totalDays = baseDays + (regeneration.enabled ? regeneration.total : 0);
   const carriedOverDays = entitlement?.carriedOverDays ?? 0;
   const consumedDays = entitlement?.consumedDays ?? 0;
   return {
     userId,
     year,
     totalDays,
+    baseTotalDays: baseDays,
     carriedOverDays,
     consumedDays,
     availableDays: totalDays + carriedOverDays - consumedDays,
+    regeneration,
   };
 }
 
