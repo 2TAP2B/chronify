@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
@@ -8,7 +8,9 @@ import {
   CalendarDays,
   ChevronLeft,
   Clock,
+  Play,
   Save,
+  Square,
   Timer,
   UserCheck,
   UserX,
@@ -30,6 +32,9 @@ import {
 } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Switch } from "@/components/ui/switch";
+import { TimeInput } from "@/components/timesheet/time-input";
+import { formatDuration } from "@/lib/timer-utils";
+import { zonedTimeToUtc } from "@/lib/datetime";
 import { format } from "date-fns";
 import { STATE_CODES, STATE_NAMES } from "@/lib/federal-states";
 import { useConfirm } from "@/components/ui/confirm-dialog";
@@ -664,6 +669,167 @@ function OvertimeSection({ userId }: { userId: string }) {
   );
 }
 
+/**--------------- remote timer (admin only) */
+type RemoteTimerStatus = {
+  active: boolean;
+  onBreak: boolean;
+  startedAt: string | null;
+  breakStartedAt: string | null;
+  elapsedMs: number;
+  todayWorkedMs: number;
+};
+
+function RemoteTimerSection({ userId, active }: { userId: string; active: boolean }) {
+  const t = useTranslations("adminUsers");
+  const [status, setStatus] = useState<RemoteTimerStatus | null>(null);
+  const [running, setRunning] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [showStart, setShowStart] = useState(false);
+  const [startDate, setStartDate] = useState<Date>(new Date());
+  const [startTime, setStartTime] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    fetch(`/api/timer?userId=${userId}`)
+      .then((r) => r.json())
+      .then((d) => {
+        if (typeof d.active === "boolean") {
+          setStatus(d);
+          setRunning(d.active);
+        }
+      })
+      .catch(() => {});
+  }, [userId]);
+
+  useEffect(() => {
+    if (!active) return;
+    void load();
+    const id = setInterval(() => void load(), 30_000);
+    return () => clearInterval(id);
+  }, [active, load]);
+
+  const now = new Date();
+  const hh = String(now.getHours()).padStart(2, "0");
+  const mm = String(now.getMinutes()).padStart(2, "0");
+
+  async function start() {
+    setBusy(true);
+    setError(null);
+    try {
+      let startAt: string | undefined;
+      if (startTime && startDate) {
+        const [y, mo, d] = startDate.toISOString().slice(0, 10).split("-").map(Number);
+        const [h, m] = startTime.split(":").map(Number);
+        startAt = zonedTimeToUtc(y, mo - 1, d, h, m || 0, "Europe/Berlin").toISOString();
+      }
+      const res = await fetch("/api/timer/start", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, startAt }),
+      });
+      if (!res.ok) {
+        const b = await res.json().catch(() => ({}));
+        throw new Error(
+          (b as { code?: string }).code === "OVERLAP"
+            ? t("timerOverlap")
+            : ((b as { error?: string }).error ?? `HTTP ${res.status}`)
+        );
+      }
+      setShowStart(false);
+      setStartTime("");
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "error");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function stop() {
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/timer/stop", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId }),
+      });
+      if (!res.ok) {
+        const b = await res.json().catch(() => ({}));
+        throw new Error((b as { error?: string }).error ?? `HTTP ${res.status}`);
+      }
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "error");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Timer className="size-4" /> {t("remoteTimer")}
+        </CardTitle>
+        <p className="text-xs text-muted-foreground">{t("remoteTimerHint")}</p>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <Badge variant={running ? "default" : "outline"}>
+            {running
+              ? `${t("timerRunningSince")} ${
+                  status?.startedAt ? format(new Date(status.startedAt), "dd.MM. HH:mm") : "—"
+                }`
+              : t("timerNotRunning")}
+          </Badge>
+          {status && (
+            <span className="text-sm text-muted-foreground">
+              {t("todayRecorded")}:{" "}
+              <span className="font-mono tabular-nums">{formatDuration(status.todayWorkedMs)}</span>
+            </span>
+          )}
+          <div className="ml-auto flex gap-2">
+            {!running && showStart && active && (
+              <Button variant="ghost" size="sm" onClick={() => setShowStart(false)} disabled={busy}>
+                {t("cancel")}
+              </Button>
+            )}
+            {!running && active && (
+              <Button size="sm" onClick={() => setShowStart(true)} disabled={busy}>
+                <Play className="mr-1 size-4" /> {t("timerStartBtn")}
+              </Button>
+            )}
+            {running && (
+              <Button size="sm" variant="destructive" onClick={stop} disabled={busy}>
+                <Square className="mr-1 size-4" /> {t("timerStopBtn")}
+              </Button>
+            )}
+          </div>
+        </div>
+
+        {showStart && (
+          <div className="flex flex-wrap items-end gap-2 rounded-lg border bg-muted/30 p-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="timerStartDate">{t("timerStartDate")}</Label>
+              <DatePicker value={startDate} onChange={(d) => d && setStartDate(d)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="timerStartTime">{t("timerStartTime")}</Label>
+              <TimeInput value={startTime} onChange={setStartTime} placeholder={`${hh}:${mm}`} />
+            </div>
+            <Button size="sm" onClick={start} disabled={busy}>
+              <Play className="mr-1 size-4" /> {t("timerStartBtn")}
+            </Button>
+            <p className="text-xs text-muted-foreground">{t("timerStartTimeHint")}</p>
+          </div>
+        )}
+        {error && <p className="text-sm text-destructive">{error}</p>}
+      </CardContent>
+    </Card>
+  );
+}
+
 /**--------------- account actions */
 function AccountSection({
   user,
@@ -808,6 +974,7 @@ export function UserDetail({
 
       <div className="space-y-4">
         <ProfileSection user={user} />
+        <RemoteTimerSection userId={user.id} active={user.active} />
         <WorkingModelSection userId={user.id} workingModel={workingModel} />
         <EntitlementSection userId={user.id} />
         <OvertimeSection userId={user.id} />

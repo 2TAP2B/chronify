@@ -104,7 +104,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             </div>
           </div>
         </div>
-        <MobileNav />
+        <MobileNav isAdmin={user?.role === "ADMIN"} />
       </SidebarInset>
     </SidebarProvider>
   );

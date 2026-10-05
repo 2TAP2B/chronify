@@ -260,7 +260,7 @@ async function assertNoOverlap(
   }
 }
 
-export { createTimeEntrySchema, updateTimeEntrySchema };
+export { createTimeEntrySchema, updateTimeEntrySchema, assertNoOverlap };
 export function weekRangeUtc(reference: Date, timeZone: string) {
   const start = weekStartUtc(reference, timeZone);
   return { start, end: addDaysUtc(start, 7) };
