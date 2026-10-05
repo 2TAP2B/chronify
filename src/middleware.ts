@@ -72,10 +72,16 @@ export async function middleware(request: NextRequest) {
   // dedicated kiosk host (LAN-only in production). On the public app domain
   // these routes are closed to prevent card-id brute force.
   const isKioskRoute = pathname.startsWith("/api/kiosk") || pathname.includes("/kiosk");
-  const kioskHost = process.env.KIOSK_HOST;
-  const requestHost = request.headers.get("host");
-  const isKioskHost = !!kioskHost && requestHost === kioskHost;
-  if (isKioskRoute && !isKioskHost) {
+  const kioskHost = process.env.KIOSK_DOMAIN ?? process.env.KIOSK_HOST ?? "";
+  const requestHost = request.headers.get("host") ?? "";
+
+  // Dev fallback: without a kiosk domain, localhost is treated as the kiosk
+  // host so the flow is testable locally. Production always sets KIOSK_DOMAIN
+  // (first-install script) and never runs on localhost.
+  const isLocalhost = /^(localhost|127\.0\.0\.1|::1)(:\d+)?$/.test(requestHost);
+  const isKioskDedicatedHost = !!kioskHost && requestHost === kioskHost;
+  const isKioskGateOpen = isKioskDedicatedHost || (!kioskHost && isLocalhost);
+  if (isKioskRoute && !isKioskGateOpen) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 
@@ -83,8 +89,8 @@ export async function middleware(request: NextRequest) {
     return checkApiCsrf(request) ?? NextResponse.next();
   }
 
-  // Kiosk subdomain: serve only the kiosk page, no auth
-  if (isKioskHost) {
+  // Dedicated kiosk host: serve only the kiosk page, no auth
+  if (isKioskDedicatedHost) {
     const locale = pathname.split("/")[1] || routing.defaultLocale || "de";
     if (!pathname.endsWith("/kiosk")) {
       return NextResponse.redirect(redirectUrl(request, `/${locale}/kiosk`));
