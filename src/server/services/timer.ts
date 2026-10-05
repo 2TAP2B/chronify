@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
-import { getUserContext } from "@/server/context";
+import { audit, getUserContext, type SessionUser } from "@/server/context";
 import { toCalendarDate, addDaysUtc } from "@/lib/datetime";
+import { assertNoOverlap, TimeEntryError } from "@/server/services/time-entry";
 import {
   toTimerState,
   computeElapsedMs,
@@ -193,4 +194,86 @@ export async function stopTimer(userId: string, now: Date = new Date()) {
   await db.timerSession.delete({ where: { userId } });
 
   return { timeEntry, breakMinutes, autoApplied, workedMinutes: msToMinutes(workedMs) };
+}
+
+/** Max age of a backdated (remote) start; anything older needs manual entries. */
+const REMOTE_START_MAX_AGE_MS = 48 * 3_600_000;
+
+/**
+ * Admin remote control: start (or stop) another user's timer.
+ * Backdating is limited to the last 48h and must not overlap completed
+ * WORK entries — otherwise stopTimer would produce duplicates.
+ */
+export async function remoteStartTimer(opts: {
+  actor: SessionUser;
+  userId: string;
+  startAt?: Date;
+  now?: Date;
+}): Promise<TimerSession> {
+  if (opts.actor.role !== "ADMIN") {
+    throw new TimerError("Forbidden", "FORBIDDEN");
+  }
+  const now = opts.now ?? new Date();
+  const startAt = opts.startAt ?? now;
+
+  if (startAt.getTime() > now.getTime()) {
+    throw new TimerError("Start time is in the future", "INVALID_START");
+  }
+  if (now.getTime() - startAt.getTime() > REMOTE_START_MAX_AGE_MS) {
+    throw new TimerError("Start time is too far in the past", "INVALID_START");
+  }
+
+  const targetUser = await db.user.findUnique({
+    where: { id: opts.userId },
+    select: { id: true, active: true },
+  });
+  if (!targetUser || !targetUser.active) {
+    throw new TimerError("User not found", "NOT_FOUND");
+  }
+
+  try {
+    const ctx = await getUserContext(opts.userId);
+    if (startAt.getTime() < now.getTime()) {
+      await assertNoOverlap(opts.userId, startAt, now, ctx.timeZone);
+    }
+    await startTimer(opts.userId, startAt);
+  } catch (e) {
+    if (e instanceof TimeEntryError) {
+      throw new TimerError(e.message, e.code);
+    }
+    if (e instanceof TimerError && e.code === "ALREADY_RUNNING") throw e;
+    throw e;
+  }
+
+  await audit({
+    actorId: opts.actor.id,
+    targetId: opts.userId,
+    action: "timer.remoteStart",
+    entity: "TimerSession",
+    entityId: opts.userId,
+    payload: { startAt: startAt.toISOString(), backdated: startAt.getTime() < now.getTime() },
+  });
+
+  const session = await db.timerSession.findUniqueOrThrow({ where: { userId: opts.userId } });
+  return session;
+}
+
+export async function remoteStopTimer(opts: { actor: SessionUser; userId: string; now?: Date }) {
+  if (opts.actor.role !== "ADMIN") {
+    throw new TimerError("Forbidden", "FORBIDDEN");
+  }
+  const existing = await db.timerSession.findUnique({ where: { userId: opts.userId } });
+  if (!existing) {
+    throw new TimerError("No active timer", "NO_TIMER");
+  }
+  const result = await stopTimer(opts.userId, opts.now ?? new Date());
+  await audit({
+    actorId: opts.actor.id,
+    targetId: opts.userId,
+    action: "timer.remoteStop",
+    entity: "TimeEntry",
+    entityId: result.timeEntry.id,
+    payload: { workedMinutes: result.workedMinutes },
+  });
+  return result;
 }

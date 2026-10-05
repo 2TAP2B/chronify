@@ -54,7 +54,7 @@ function isActive(pathname: string, locale: string, path: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export function MobileNav() {
+export function MobileNav({ isAdmin }: { isAdmin?: boolean }) {
   const pathname = usePathname();
   const locale = useLocale();
   const tNav = useTranslations("nav");
@@ -124,6 +124,7 @@ export function MobileNav() {
           }}
           onClose={() => setAddOpen(false)}
           onSaved={() => router.refresh()}
+          isAdmin={isAdmin}
         />
       )}
     </>

@@ -112,6 +112,7 @@ export function TimeEntryDialog({
   initial,
   adminUserId,
   breakMode,
+  isAdmin = false,
   onClose,
   onSaved,
 }: {
@@ -128,6 +129,9 @@ export function TimeEntryDialog({
   };
   adminUserId?: string;
   breakMode?: "AUTO" | "MANUAL";
+  /** Admin-only: submitting with only a start time starts the timer instead
+   *  of creating an open-ended entry. */
+  isAdmin?: boolean;
   onClose: () => void;
   onSaved: () => void;
 }) {
@@ -235,6 +239,35 @@ export function TimeEntryDialog({
     try {
       const startIso = combine(date, startAt);
       const endIso = combine(date, endAt);
+
+      // Admin convenience: submitting with only a start time starts the
+      // timer (also backdated), not a dead open-ended entry. Break input is
+      // ignored — auto-break rules apply to the running timer instead.
+      if (isCreate && isAdmin && startIso && !endIso) {
+        const qs = adminUserId ? `?userId=${adminUserId}` : "";
+        const res = await fetch(`/api/timer/start${qs}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ startAt: startIso }),
+        });
+        if (!res.ok) {
+          const b = await res.json().catch(() => ({}));
+          const code = (b as { code?: string }).code;
+          throw new Error(
+            code === "ALREADY_RUNNING"
+              ? t("timerAlreadyRunning")
+              : code === "INVALID_START"
+                ? t("invalidTimerStart")
+                : code === "OVERLAP"
+                  ? t("overlapError")
+                  : ((b as { error?: string }).error ?? `HTTP ${res.status}`)
+          );
+        }
+        onSaved();
+        onClose();
+        return;
+      }
+
       const body: Record<string, unknown> = {
         date: new Date(date + "T00:00:00Z").toISOString(),
         startAt: startIso,
@@ -359,6 +392,9 @@ export function TimeEntryDialog({
             <Input id="note" value={note} onChange={(e) => setNote(e.target.value)} />
           </div>
           {/* Hint: AUTO break, small at the bottom */}
+          {isCreate && isAdmin && (
+            <p className="text-[11px] text-muted-foreground">{t("adminStartTimerHint")}</p>
+          )}
           {breakMode === "AUTO" && (
             <p className="text-[11px] text-muted-foreground">{t("autoBreakHint")}</p>
           )}

@@ -136,6 +136,7 @@ export default async function TimesheetPage({ params, searchParams }: Props) {
         lockWindowDays={lockWindowDays}
         adminUserId={isAdmin ? targetUserId : undefined}
         breakMode={user.breakMode}
+        isAdmin={isAdmin}
       />
     </div>
   );
