@@ -597,7 +597,6 @@
     "runningLabel": "Time tracking running",
     "idleLabel": "Not clocked in",
     "todayLabel": "Recorded today",
-    "stoppedSummary": "Time recorded: {hours}h {minutes}min",
     "logoutBtn": "Log out",
     "themeToggle": "Toggle theme",
     "loading": "Processing…",

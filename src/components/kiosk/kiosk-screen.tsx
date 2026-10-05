@@ -6,6 +6,12 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useTheme } from "next-themes";
 import { useTranslations } from "next-intl";
 import { Play, Square, Coffee, LogOut, Sun, Moon, CreditCard, Download } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
+import { formatDuration } from "@/lib/timer-utils";
 
 type TimerStatus = {
   active: boolean;
@@ -51,7 +57,6 @@ export function KioskScreen({ locale }: { locale: string }) {
   const [session, setSession] = useState<KioskSession | null>(null);
   const [busy, setBusy] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
-  const [stoppedMinutes, setStoppedMinutes] = useState<number | null>(null);
   const [now, setNow] = useState(() => new Date());
   const [showManual, setShowManual] = useState(false);
   const [manualCardId, setManualCardId] = useState("");
@@ -102,7 +107,6 @@ export function KioskScreen({ locale }: { locale: string }) {
     if (logoutTimerRef.current) clearTimeout(logoutTimerRef.current);
     logoutTimerRef.current = setTimeout(() => {
       setSession(null);
-      setStoppedMinutes(null);
       setErrorMsg("");
     }, AUTO_LOGOUT_S * 1000);
   }, []);
@@ -110,7 +114,6 @@ export function KioskScreen({ locale }: { locale: string }) {
   const logout = useCallback(() => {
     if (logoutTimerRef.current) clearTimeout(logoutTimerRef.current);
     setSession(null);
-    setStoppedMinutes(null);
     setErrorMsg("");
   }, []);
 
@@ -141,9 +144,6 @@ export function KioskScreen({ locale }: { locale: string }) {
             fetchedAtMs: Date.now(),
           });
           armLogoutTimer();
-          if (action === "stop" || tap.workedMinutes !== undefined) {
-            setStoppedMinutes(tap.workedMinutes ?? null);
-          }
         }
       } catch {
         setErrorMsg(t("scanError"));
@@ -239,10 +239,6 @@ export function KioskScreen({ locale }: { locale: string }) {
       : 0
     : 0;
   const totalTodayMs = (s?.todayWorkedMs ?? 0) + currentWorkMs;
-  const todayH = Math.floor(totalTodayMs / 3_600_000);
-  const todayM = Math.floor((totalTodayMs % 3_600_000) / 60_000);
-  const stoppedH = stoppedMinutes != null ? Math.floor(stoppedMinutes / 60) : 0;
-  const stoppedM = stoppedMinutes != null ? stoppedMinutes % 60 : 0;
 
   const localeStr = locale === "en" ? "en-US" : "de-DE";
   const timeStr = now.toLocaleTimeString(localeStr, {
@@ -267,106 +263,102 @@ export function KioskScreen({ locale }: { locale: string }) {
       <div className="absolute left-0 right-0 top-0 flex items-center justify-between p-4">
         <div>
           {s && (
-            <button
+            <Button
+              variant="outline"
+              size="default"
               onClick={logout}
-              className="flex items-center gap-2 rounded-lg border bg-card px-4 py-2 text-base text-foreground shadow-sm transition hover:bg-accent"
+              className="h-12 gap-2 px-5 text-lg"
             >
               <LogOut className="h-5 w-5" />
               {t("logoutBtn")}
-            </button>
+            </Button>
           )}
         </div>
-        <button
+        <Button
+          variant="ghost"
+          size="icon"
           onClick={toggleTheme}
-          className="flex h-10 w-10 items-center justify-center rounded-lg border bg-card text-foreground shadow-sm transition hover:bg-accent"
           aria-label={t("themeToggle")}
+          className="h-12 w-12 rounded-full border bg-card shadow-sm"
         >
           {mounted && resolvedTheme === "dark" ? (
-            <Sun className="h-5 w-5" />
+            <Sun className="h-6 w-6" />
           ) : (
-            <Moon className="h-5 w-5" />
+            <Moon className="h-6 w-6" />
           )}
-        </button>
+        </Button>
       </div>
 
-      {/* ---- logged-out / tap prompt ---- */}
+      {/* ---- logged-out tap prompt ---- */}
       {!s && (
-        <div className="flex flex-col items-center gap-8">
-          <div className="flex flex-col items-center gap-2">
-            <p className="font-mono text-5xl font-bold tabular-nums tracking-tight">{timeStr}</p>
-            <p className="text-lg text-muted-foreground capitalize">{dateStr}</p>
-          </div>
-          <div className="flex flex-col items-center gap-4">
-            <div className="flex h-24 w-24 items-center justify-center rounded-full bg-primary/10">
-              {busy ? (
-                <div className="h-10 w-10 animate-pulse rounded-full bg-primary/30" />
-              ) : (
-                <CreditCard className="h-12 w-12 text-primary" />
-              )}
+        <Card className="w-full max-w-md border-2 py-10">
+          <CardContent className="flex flex-col items-center gap-8">
+            <div className="flex flex-col items-center gap-2">
+              <p className="font-mono text-5xl font-bold tabular-nums tracking-tight">{timeStr}</p>
+              <p className="text-lg capitalize text-muted-foreground">{dateStr}</p>
             </div>
-            {busy ? (
-              <p className="text-2xl font-semibold">{t("loading")}</p>
-            ) : nfcSupported && nfcActive ? (
-              <p className="text-2xl font-semibold">{t("tapPrompt")}</p>
-            ) : (
-              <div className="flex flex-col items-center gap-3">
-                {nfcSupported ? (
-                  <button
-                    onClick={armNfc}
-                    className="rounded-xl bg-primary px-8 py-4 text-xl font-semibold text-primary-foreground shadow-lg transition hover:bg-primary/90 active:scale-95"
-                  >
-                    {t("enableNfc")}
-                  </button>
+            <div className="flex flex-col items-center gap-4">
+              <div className="flex h-24 w-24 items-center justify-center rounded-full bg-primary/10">
+                {busy ? (
+                  <div className="h-10 w-10 animate-pulse rounded-full bg-primary/30" />
                 ) : (
-                  <p className="text-lg text-muted-foreground">{t("nfcNotSupported")}</p>
-                )}
-                {nfcError === "permission_denied" && (
-                  <p className="text-sm text-destructive">{t("nfcPermissionDenied")}</p>
-                )}
-                {nfcError === "scan_error" && (
-                  <p className="text-sm text-destructive">{t("scanError")}</p>
+                  <CreditCard className="h-12 w-12 text-primary" />
                 )}
               </div>
-            )}
-          </div>
-          <button
-            onClick={() => setShowManual(!showManual)}
-            className="text-sm text-muted-foreground underline hover:text-foreground"
-          >
-            {t("manualEntry")}
-          </button>
-          {showManual && (
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                if (manualCardId.trim()) {
-                  void handleTap(manualCardId.trim());
-                  setManualCardId("");
-                  setShowManual(false);
-                }
-              }}
-              className="flex gap-2"
-            >
-              <input
-                type="text"
-                value={manualCardId}
-                onChange={(e) => setManualCardId(e.target.value)}
-                placeholder={t("cardIdPlaceholder")}
-                className="rounded-lg border px-4 py-2 text-lg"
-                maxLength={20}
-                autoFocus
-              />
-              <button
-                type="submit"
-                className="rounded-lg bg-primary px-4 py-2 text-lg font-semibold text-primary-foreground"
+              {busy ? (
+                <p className="text-2xl font-semibold">{t("loading")}</p>
+              ) : nfcSupported && nfcActive ? (
+                <p className="text-2xl font-semibold">{t("tapPrompt")}</p>
+              ) : (
+                <div className="flex flex-col items-center gap-3">
+                  {nfcSupported ? (
+                    <Button onClick={armNfc} className="h-14 rounded-xl px-8 text-xl shadow-md">
+                      {t("enableNfc")}
+                    </Button>
+                  ) : (
+                    <p className="text-lg text-muted-foreground">{t("nfcNotSupported")}</p>
+                  )}
+                  {nfcError === "permission_denied" && (
+                    <p className="text-sm text-destructive">{t("nfcPermissionDenied")}</p>
+                  )}
+                  {nfcError === "scan_error" && (
+                    <p className="text-sm text-destructive">{t("scanError")}</p>
+                  )}
+                </div>
+              )}
+            </div>
+            <Button variant="link" onClick={() => setShowManual(!showManual)} className="text-sm">
+              {t("manualEntry")}
+            </Button>
+            {showManual && (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (manualCardId.trim()) {
+                    void handleTap(manualCardId.trim());
+                    setManualCardId("");
+                    setShowManual(false);
+                  }
+                }}
+                className="flex w-full max-w-sm gap-2"
               >
-                OK
-              </button>
-            </form>
-          )}
-          {errorMsg && !showManual && <p className="text-lg text-destructive">{errorMsg}</p>}
-          {installPrompt && !isStandalone && (
-            <button
+                <Input
+                  type="text"
+                  value={manualCardId}
+                  onChange={(e) => setManualCardId(e.target.value)}
+                  placeholder={t("cardIdPlaceholder")}
+                  className="h-12 text-lg"
+                  maxLength={20}
+                  autoFocus
+                />
+                <Button type="submit" className="h-12 text-lg">
+                  OK
+                </Button>
+              </form>
+            )}
+            {errorMsg && !showManual && <p className="text-lg text-destructive">{errorMsg}</p>}
+            <Button
+              variant="outline"
               onClick={async () => {
                 if (!installPrompt) return;
                 await installPrompt.prompt();
@@ -376,60 +368,67 @@ export function KioskScreen({ locale }: { locale: string }) {
                   setIsStandalone(true);
                 }
               }}
-              className="flex items-center gap-2 rounded-xl border-2 border-primary px-6 py-3 text-base font-semibold text-primary transition hover:bg-primary/5 active:scale-95"
+              className={`h-12 gap-2 rounded-xl px-6 text-base ${
+                installPrompt && !isStandalone ? "border-primary text-primary" : "hidden"
+              }`}
             >
               <Download className="h-5 w-5" />
               {t("installApp")}
-            </button>
-          )}
-        </div>
+            </Button>
+          </CardContent>
+        </Card>
       )}
 
       {/* ---- logged in: employee session ---- */}
       {s && (
-        <div className="flex flex-col items-center gap-6">
-          <h1 className="text-4xl font-bold">{t(greetingKey, { name: s.firstName })}</h1>
+        <Card className="w-full max-w-lg border-2 py-10">
+          <CardContent className="flex flex-col items-center gap-6">
+            <h1 className="text-3xl font-bold tracking-tight">
+              {t(greetingKey, { name: s.firstName })}
+            </h1>
 
-          <div className="flex flex-col items-center gap-1">
-            <p
-              className={`text-xl font-semibold ${s.onBreak ? "text-yellow-600" : s.active ? "text-emerald-600" : "text-muted-foreground"}`}
-            >
-              {s.onBreak ? t("breakLabel") : s.active ? t("runningLabel") : t("idleLabel")}
-            </p>
-            <p className="font-mono text-5xl font-bold tabular-nums tracking-tight">
-              {todayH}h {String(todayM).padStart(2, "0")}min
-            </p>
-            <p className="text-sm text-muted-foreground">{t("todayLabel")}</p>
-          </div>
+            <div className="flex flex-col items-center gap-2">
+              <Badge
+                variant={s.onBreak ? "secondary" : s.active ? "default" : "outline"}
+                className={cn(
+                  "px-4 py-1 text-base",
+                  s.active && !s.onBreak && "bg-emerald-600 text-white hover:bg-emerald-600"
+                )}
+              >
+                {s.onBreak ? t("breakLabel") : s.active ? t("runningLabel") : t("idleLabel")}
+              </Badge>
+              <p className="mt-2 font-mono text-6xl font-bold tabular-nums tracking-tight">
+                {formatDuration(totalTodayMs)}
+              </p>
+              <p className="text-sm text-muted-foreground">{t("todayLabel")}</p>
+            </div>
 
-          <div className="mt-2 flex flex-col items-center gap-3">
-            <button
-              onClick={() => void handleTap(s.cardId, s.active ? "stop" : "start")}
-              disabled={busy}
-              className={`flex h-44 w-44 flex-col items-center justify-center gap-2 rounded-3xl text-2xl font-bold text-primary-foreground shadow-xl transition active:scale-95 disabled:opacity-50 ${
-                s.active ? "bg-red-600 hover:bg-red-700" : "bg-emerald-600 hover:bg-emerald-700"
-              }`}
-            >
-              {s.active ? <Square className="h-12 w-12" /> : <Play className="h-12 w-12" />}
-              {s.active ? t("stopBtn") : t("startBtn")}
-            </button>
-            <button
-              onClick={() => void handleTap(s.cardId, s.onBreak ? "endbreak" : "break")}
-              disabled={busy || !s.active}
-              className="flex items-center gap-3 rounded-2xl bg-secondary px-10 py-5 text-xl font-semibold text-secondary-foreground shadow-md transition hover:bg-secondary/80 active:scale-95 disabled:opacity-40"
-            >
-              <Coffee className="h-7 w-7" />
-              {s.onBreak ? t("breakEndBtn") : t("breakBtn")}
-            </button>
-          </div>
+            <div className="mt-2 flex flex-col items-center gap-4">
+              <Button
+                onClick={() => void handleTap(s.cardId, s.active ? "stop" : "start")}
+                disabled={busy}
+                className={cn(
+                  "flex h-44 w-44 flex-col gap-2 rounded-3xl text-2xl font-bold shadow-xl active:scale-95",
+                  s.active ? "bg-red-600 hover:bg-red-700" : "bg-emerald-600 hover:bg-emerald-700"
+                )}
+              >
+                {s.active ? <Square className="h-12 w-12" /> : <Play className="h-12 w-12" />}
+                {s.active ? t("stopBtn") : t("startBtn")}
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={() => void handleTap(s.cardId, s.onBreak ? "endbreak" : "break")}
+                disabled={busy || !s.active}
+                className="h-14 gap-3 rounded-2xl px-10 text-xl active:scale-95"
+              >
+                <Coffee className="h-7 w-7" />
+                {s.onBreak ? t("breakEndBtn") : t("breakBtn")}
+              </Button>
+            </div>
 
-          {stoppedMinutes != null && !s.active && (
-            <p className="text-lg text-emerald-600">
-              {t("stoppedSummary", { hours: stoppedH, minutes: String(stoppedM).padStart(2, "0") })}
-            </p>
-          )}
-          {errorMsg && <p className="text-destructive">{errorMsg}</p>}
-        </div>
+            {errorMsg && <p className="text-destructive">{errorMsg}</p>}
+          </CardContent>
+        </Card>
       )}
     </div>
   );
