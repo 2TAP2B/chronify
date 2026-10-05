@@ -50,10 +50,31 @@ pg_dump \
 
 # --- verify the artifact before declaring success ---------------------------
 echo "Verifying backup integrity..."
+# Stage 1: full integrity pass. gunzip -t consumes its entire input, so there
+# is no early-exiting consumer and no SIGPIPE ambiguity — any non-zero rc
+# here (bad decrypt, corruption, truncation) is a hard error.
+integrity_rc=0
+openssl enc -d -aes-256-cbc -pbkdf2 -pass env:BACKUP_ENCRYPTION_PASSPHRASE \
+  -in "${OUTPUT_PATH}" | gunzip -t || integrity_rc=$?
+if [ "${integrity_rc}" -ne 0 ]; then
+  echo "ERROR: backup failed integrity check (rc=${integrity_rc}) — removing ${OUTPUT_PATH}" >&2
+  rm -f "${OUTPUT_PATH}"
+  exit 1
+fi
+
+# Stage 2: TOC check. pg_restore --list stops reading before EOF, so the
+# producer can die of SIGPIPE (rc 141) under pipefail even on success —
+# tolerate it; any other non-zero rc is a hard error.
+verify_rc=0
 {
   openssl enc -d -aes-256-cbc -pbkdf2 -pass env:BACKUP_ENCRYPTION_PASSPHRASE \
     -in "${OUTPUT_PATH}" | gunzip | pg_restore --list
-} > /dev/null
+} > /dev/null || verify_rc=$?
+if [ "${verify_rc}" -ne 0 ] && [ "${verify_rc}" -ne 141 ]; then
+  echo "ERROR: backup failed TOC verification (rc=${verify_rc}) — removing ${OUTPUT_PATH}" >&2
+  rm -f "${OUTPUT_PATH}"
+  exit 1
+fi
 
 sha256sum "${OUTPUT_PATH}" > "${OUTPUT_PATH}.sha256"
 
