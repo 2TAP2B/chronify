@@ -172,7 +172,7 @@ never directly on `main` (see §1a):
 2. **Verification is local only:** run the app in the dev shell (`dev-db start`,
    `npm run dev` on :3001, or `npm run test:e2e`'s production server on :3100).
    Never build Docker images, start the production compose stack, or test against
-   `chronify.h0melab.cc` — the user runs deployment/production checks themselves.
+   the production domain — the user runs deployment/production checks themselves.
    If a fix needs production evidence, state what to test and hand it over.
 3. Quality pass: before yielding non-trivial work, spawn one subagent (`task`
    tool) with this brief:
