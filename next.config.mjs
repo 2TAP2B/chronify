@@ -5,12 +5,7 @@ const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
 const nextConfig = {
   reactStrictMode: true,
-  allowedDevOrigins: [
-    "http://192.168.178.166:3001",
-    "http://localhost:3001",
-    "http://127.0.0.1:3001",
-    "http://*.h0melab.cc",
-  ],
+  allowedDevOrigins: ["http://localhost:3001", "http://127.0.0.1:3001"],
   experimental: {
     optimizePackageImports: ["lucide-react", "recharts"],
   },
