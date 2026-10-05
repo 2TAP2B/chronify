@@ -150,19 +150,15 @@ esac
 
 # --- report automation ------------------------------------------------------------
 echo
-echo "${BOLD}6. Report automation (PDF exports)${RESET}"
+echo "${BOLD}7. Report automation (PDF exports)${RESET}"
 ask "Reports output dir inside the app container (must match compose mount ./reports:/data/reports)" "/data/reports"; REPORTS_EXPORT_DIR="$out"
 
 # --- backups ----------------------------------------------------------------
 echo
-echo "${BOLD}7. Backups${RESET}"
+echo "${BOLD}8. Backups${RESET}"
 ask "Backup retention in days" "14"; BACKUP_RETENTION_DAYS="$out"
 
-# --- article-9 encryption -----------------------------------------------------------------
 echo
-echo "${BOLD}8. AU certificate encryption (ArbZG/Art.9)${RESET}"
-warn "Key is generated automatically (openssl rand -hex 32). IMPORTANT: without this key AU PDF uploads cannot be re-read!"
-
 info "Summary"
 echo "--- fundamentals --------------------------------------------------"
 echo "  APP_DOMAIN         : $APP_DOMAIN"
@@ -245,7 +241,6 @@ apply_overrides "$ovr" .env.example > .env.new && mv .env.new .env
 info "Generating secrets with openssl"
 sec="$(mktemp)"
 printf 'NEXTAUTH_SECRET|%s\n' "$(openssl rand -base64 32)" >> "$sec"
-printf 'AU_CERT_ENCRYPTION_KEY|%s\n' "$(openssl rand -hex 32)" >> "$sec"
 printf 'BACKUP_ENCRYPTION_PASSPHRASE|%s\n' "$(openssl rand -base64 32)" >> "$sec"
 apply_overrides "$sec" .env > .env.new && mv .env.new .env
 rm -f "$sec"

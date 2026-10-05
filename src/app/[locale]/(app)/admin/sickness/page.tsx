@@ -12,7 +12,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { CertificateUpload } from "@/components/sickness/certificate-upload";
 import { SickNoteRowActions } from "@/components/sickness/sick-note-row-actions";
 import { formatInZone } from "@/lib/datetime";
 
@@ -63,7 +62,6 @@ export default async function AdminSicknessPage({ params }: Props) {
                     <TableHead>{t("to")}</TableHead>
                     <TableHead>{t("days")}</TableHead>
                     <TableHead>{t("aubUntil")}</TableHead>
-                    <TableHead>{t("certificate")}</TableHead>
                     <TableHead>{t("note")}</TableHead>
                     <TableHead className="w-[60px]"></TableHead>
                   </TableRow>
@@ -86,9 +84,6 @@ export default async function AdminSicknessPage({ params }: Props) {
                         {n.aubUntil
                           ? formatInZone(n.aubUntil, "Europe/Berlin", "dd.MM.yyyy", appLocale)
                           : "—"}
-                      </TableCell>
-                      <TableCell>
-                        <CertificateUpload noteId={n.id} hasCertificate={!!n.certificateUrl} />
                       </TableCell>
                       <TableCell className="max-w-[200px] truncate">
                         {n.note ?? <span className="text-muted-foreground">—</span>}

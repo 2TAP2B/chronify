@@ -50,6 +50,7 @@ export function SickNoteForm() {
         <div className="space-y-1.5">
           <Label htmlFor="from">{t("from")}</Label>
           <DatePicker
+            id="from"
             value={from ? new Date(from + "T00:00:00") : undefined}
             onChange={(d) => d && setFrom(format(d, "yyyy-MM-dd"))}
           />
@@ -57,6 +58,7 @@ export function SickNoteForm() {
         <div className="space-y-1.5">
           <Label htmlFor="to">{t("to")}</Label>
           <DatePicker
+            id="to"
             value={to ? new Date(to + "T00:00:00") : undefined}
             onChange={(d) => d && setTo(format(d, "yyyy-MM-dd"))}
           />

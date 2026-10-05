@@ -66,7 +66,6 @@ export type GdprExportData = {
     from: string;
     to: string;
     days: number;
-    hasCertificate: boolean;
     aubUntil: string | null;
     note: string | null;
     createdAt: string;
@@ -120,7 +119,6 @@ export async function exportUserData(actor: SessionUser): Promise<GdprExportData
         from: true,
         to: true,
         days: true,
-        certificateUrl: true,
         aubUntil: true,
         note: true,
         createdAt: true,
@@ -214,7 +212,6 @@ export async function exportUserData(actor: SessionUser): Promise<GdprExportData
       from: s.from.toISOString(),
       to: s.to.toISOString(),
       days: s.days,
-      hasCertificate: !!s.certificateUrl,
       aubUntil: s.aubUntil?.toISOString() ?? null,
       note: s.note,
       createdAt: s.createdAt.toISOString(),

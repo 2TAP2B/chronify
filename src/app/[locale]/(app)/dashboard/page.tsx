@@ -43,7 +43,7 @@ export default async function DashboardPage({ params }: Props) {
 
   const chartStart = addDaysUtc(todayStart, -90);
 
-  const [todayEntries, weekEntries, recentEntries, chartEntries, overtimeResult] =
+  const [todayEntries, weekEntries, recentEntries, absenceEntries, chartEntries, overtimeResult] =
     await Promise.all([
       db.timeEntry.findMany({
         where: {
@@ -59,6 +59,13 @@ export default async function DashboardPage({ params }: Props) {
       }),
       db.timeEntry.findMany({
         where: { userId: user.id },
+        orderBy: { date: "desc" },
+        take: 20,
+      }),
+      // Sick/vacation entries should never be pushed out of the bottom table
+      // by a burst of recent WORK entries.
+      db.timeEntry.findMany({
+        where: { userId: user.id, type: { in: ["SICK", "VACATION"] } },
         orderBy: { date: "desc" },
         take: 20,
       }),
@@ -156,7 +163,11 @@ export default async function DashboardPage({ params }: Props) {
     });
   }
 
-  const tableRows: TimeEntryRow[] = recentEntries.map((e) => {
+  const mergedEntries = Array.from(
+    new Map([...recentEntries, ...absenceEntries].map((e) => [e.id, e])).values()
+  ).sort((a, b) => b.date.getTime() - a.date.getTime());
+
+  const tableRows: TimeEntryRow[] = mergedEntries.map((e) => {
     const durationMs =
       e.type === "WORK" && e.startAt && e.endAt
         ? Math.max(0, e.endAt.getTime() - e.startAt.getTime() - e.breakMinutes * 60_000)

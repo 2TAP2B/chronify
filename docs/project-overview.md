@@ -48,7 +48,7 @@ prisma/
 
 - Live timer + weekly timesheet (7-day lock window)
 - Vacation with approval workflow + balance display
-- Sickness reporting with AU certificate upload (encrypted at rest)
+- Sickness reporting with AU tracking
 - Public holidays (nager.date, NRW default, manual overrides)
 - Overtime balance with configurable carryover
 - Team calendar ("who is off?")

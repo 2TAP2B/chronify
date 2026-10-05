@@ -4,12 +4,7 @@ import { sendMail } from "@/server/services/mail";
 import { sickNoteReminderEmail } from "@/lib/email-templates";
 import { businessDaysInRange, makeHolidayResolver } from "@/lib/vacation/business-days";
 import { toCalendarDate } from "@/lib/datetime";
-import { writeFile, mkdir, readFile, unlink } from "node:fs/promises";
-import { existsSync } from "node:fs";
-import { join, extname } from "node:path";
-import { randomUUID } from "node:crypto";
-import { encryptFile, decryptFile } from "@/lib/file-crypto";
-import type { SickNote, FederalState } from "@prisma/client";
+import type { SickNote } from "@prisma/client";
 
 export class SicknessError extends Error {
   constructor(
@@ -20,8 +15,6 @@ export class SicknessError extends Error {
     super(message);
   }
 }
-
-const UPLOAD_DIR = process.env.AU_CERTIFICATE_DIR ?? join(process.cwd(), "data", "au-certificates");
 
 export type SickNoteCreateInput = {
   from: Date;
@@ -75,9 +68,6 @@ export async function createSickNote(opts: {
   if (from.getTime() > to.getTime()) {
     throw new SicknessError("from > to", "INVALID_RANGE");
   }
-  if (opts.input.aubUntil && opts.input.aubUntil.getTime() < to.getTime()) {
-    // AU certificate covers at least up to "to"; if aubUntil is before end, it's odd but allowed
-  }
 
   const ctx = await getUserContext(userId);
   const state = ctx.user.federalState;
@@ -95,7 +85,6 @@ export async function createSickNote(opts: {
       days: businessDays.length,
       aubUntil: opts.input.aubUntil ?? null,
       note: opts.input.note ?? null,
-      certificateUrl: null,
     },
   });
 
@@ -227,18 +216,6 @@ export async function deleteSickNote(opts: {
     },
   });
 
-  // Delete certificate file if exists
-  if (existing.certificateUrl) {
-    const filePath = existing.certificateUrl.replace(/^file:/, "");
-    if (existsSync(filePath)) {
-      try {
-        await unlink(filePath);
-      } catch {
-        /* ignore */
-      }
-    }
-  }
-
   await db.sickNote.delete({ where: { id: opts.noteId } });
 
   await audit({
@@ -250,104 +227,6 @@ export async function deleteSickNote(opts: {
   });
 
   return { id: existing.id };
-}
-
-export async function attachCertificate(opts: {
-  actor: SessionUser;
-  noteId: string;
-  filename: string;
-  buffer: Buffer;
-}): Promise<SickNote> {
-  const existing = await db.sickNote.findUnique({ where: { id: opts.noteId } });
-  if (!existing) throw new SicknessError("Not found", "NOT_FOUND", 404);
-  assertCanWrite(opts.actor, existing.userId);
-
-  await mkdir(UPLOAD_DIR, { recursive: true });
-  const ext = extname(opts.filename) || ".pdf";
-  const storedName = `${existing.userId}-${existing.id}-${randomUUID()}${ext}`;
-  const fullPath = join(UPLOAD_DIR, storedName);
-
-  await writeFile(fullPath, encryptFile(opts.buffer));
-
-  // Remove old certificate if exists
-  if (existing.certificateUrl) {
-    const oldPath = existing.certificateUrl.replace(/^file:/, "");
-    if (existsSync(oldPath)) {
-      try {
-        await unlink(oldPath);
-      } catch {
-        /* ignore */
-      }
-    }
-  }
-
-  const updated = await db.sickNote.update({
-    where: { id: opts.noteId },
-    data: { certificateUrl: `file:${fullPath}` },
-  });
-
-  await audit({
-    actorId: opts.actor.id,
-    targetId: existing.userId,
-    action: "sick_note.attach_certificate",
-    entity: "SickNote",
-    entityId: existing.id,
-    payload: { filename: opts.filename },
-  });
-
-  return updated;
-}
-
-export async function readCertificate(opts: {
-  actor: SessionUser;
-  noteId: string;
-}): Promise<{ buffer: Buffer; filename: string; contentType: string } | null> {
-  const existing = await db.sickNote.findUnique({ where: { id: opts.noteId } });
-  if (!existing) throw new SicknessError("Not found", "NOT_FOUND", 404);
-  assertCanWrite(opts.actor, existing.userId);
-  if (!existing.certificateUrl) return null;
-
-  const filePath = existing.certificateUrl.replace(/^file:/, "");
-  if (!existsSync(filePath)) return null;
-  const buffer = await readFile(filePath);
-  const decrypted = decryptFile(buffer);
-
-  let contentType = "application/octet-stream";
-  if (
-    decrypted.length >= 4 &&
-    decrypted[0] === 0x25 &&
-    decrypted[1] === 0x50 &&
-    decrypted[2] === 0x44 &&
-    decrypted[3] === 0x46
-  ) {
-    contentType = "application/pdf";
-  } else if (
-    decrypted.length >= 4 &&
-    decrypted[0] === 0x89 &&
-    decrypted[1] === 0x50 &&
-    decrypted[2] === 0x4e &&
-    decrypted[3] === 0x47
-  ) {
-    contentType = "image/png";
-  } else if (
-    decrypted.length >= 3 &&
-    decrypted[0] === 0xff &&
-    decrypted[1] === 0xd8 &&
-    decrypted[2] === 0xff
-  ) {
-    contentType = "image/jpeg";
-  }
-
-  const ext =
-    contentType === "application/pdf"
-      ? ".pdf"
-      : contentType === "image/png"
-        ? ".png"
-        : contentType === "image/jpeg"
-          ? ".jpeg"
-          : extname(filePath).toLowerCase();
-  const filename = `au-certificate${ext}`;
-  return { buffer: decrypted, filename, contentType };
 }
 
 function resolveTarget(actor: SessionUser, targetUserId?: string): string {

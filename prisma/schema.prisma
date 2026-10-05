@@ -233,7 +233,6 @@ model SickNote {
   from           DateTime
   to             DateTime
   days           Float
-  certificateUrl String?
   aubUntil       DateTime?
   note           String?
   createdAt      DateTime @default(now())

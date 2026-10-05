@@ -7,7 +7,7 @@ the source of truth for commands, conventions, and definition of done.
 
 Chronify is a PWA time-tracking webapp for a German SME (~20 employees):
 live timer, weekly timesheet, breaks per ArbZG §4, overtime balances, vacation
-workflow, sickness/AU certificates, admin backend, GDPR tooling, reports, PWA.
+workflow, sickness notes, admin backend, GDPR tooling, reports, PWA.
 German is the default locale (`de`), English (`en`) is a placeholder.
 Production runs as a Docker image; this repo is also the dev environment.
 
@@ -89,8 +89,7 @@ specs; stop `npm run dev` while it runs (both write `.next`). Set
 build/serve step).
 
 Other useful scripts: `npm run prisma:studio`, `npm run prisma:migrate`,
-`npm run db:push` (dev only), `npm run retention:dry-run`,
-`npm run migrate:au-encryption`, `bash scripts/backup-db.sh`.
+`npm run db:push` (dev only), `npm run retention:dry-run`, `bash scripts/backup-db.sh`.
 
 ## 4. Layout & where code goes
 
@@ -143,10 +142,9 @@ e2e/                          Playwright specs + fixtures (login, timer, vacatio
 ## 7. Security boundaries
 
 - Secrets live only in `.env` (gitignored; template in `.env.example`):
-  `NEXTAUTH_SECRET`, `AU_CERT_ENCRYPTION_KEY`, `BACKUP_ENCRYPTION_PASSPHRASE`,
+  `NEXTAUTH_SECRET`, `BACKUP_ENCRYPTION_PASSPHRASE`,
   SMTP, VAPID, OIDC. Never commit or print real values; never commit `.env`.
-- GDPR-relevant (Art. 9) data: sickness records and AU certificates, plus
-  encryption (`src/lib/file-crypto.ts`) and retention
+- GDPR-relevant (Art. 9) data: sickness records and retention
   (`scripts/retention-cleanup.ts`) — changes there need human review.
 - Auth/session (`src/lib/auth.ts`, `src/middleware.ts`), CSRF (`src/lib/csrf.ts`),
   rate limiting (`src/lib/rate-limit.ts`), RBAC checks in services, backups, and
@@ -196,5 +194,5 @@ never directly on `main` (see §1a):
 - **`OrgSettings`** is a singleton — always query `where: { id: "singleton" }`.
 - **`tsx` scripts** run outside Next, so the `server-only` guard needs
   `--tsconfig tsconfig.scripts.json` (aliased to an empty module like Vitest
-  does) — that is why the `retention:*` / `migrate:au-encryption` npm scripts
+  does) — that is why the `retention:*` npm scripts
   exist; use them instead of raw `tsx`.
