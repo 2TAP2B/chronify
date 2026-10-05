@@ -43,7 +43,7 @@ or the kiosk routes.
   DNS record for `kiosk.*` (e.g. no Cloudflare record) and/or add a Traefik
   `ClientIP` allowlist middleware on the kiosk router.
 - `AUTH_SECURE_COOKIE=true` (compose default) and HTTPS-only via Traefik.
-- `NEXTAUTH_SECRET`, `AU_CERT_ENCRYPTION_KEY`, `BACKUP_ENCRYPTION_PASSPHRASE`
+- `NEXTAUTH_SECRET`, `BACKUP_ENCRYPTION_PASSPHRASE`
   generated via the first-install wizard; never commit `.env`.
 - SMTP preference: `.env` (`SMTP_HOST`) wins over dashboard settings — keep
   the secret in the environment when possible.

@@ -1,7 +1,5 @@
 import { db } from "@/lib/db";
 import { getOrgSettings, audit, type SessionUser } from "@/server/context";
-import { unlink } from "node:fs/promises";
-import { existsSync } from "node:fs";
 
 export type RetentionStats = {
   timeEntries: number;
@@ -82,23 +80,11 @@ export async function runRetentionCleanup(
   const vr = await db.vacationRequest.deleteMany({ where: { createdAt: { lt: retentionCutoff } } });
   stats.vacationRequests = vr.count;
 
-  // Delete old sick notes + certificate files
+  // Delete old sick notes
   const oldSickNotes = await db.sickNote.findMany({
     where: { createdAt: { lt: sickNoteCutoff } },
-    select: { id: true, certificateUrl: true },
+    select: { id: true },
   });
-  for (const sn of oldSickNotes) {
-    if (sn.certificateUrl) {
-      const filePath = sn.certificateUrl.replace(/^file:/, "");
-      if (existsSync(filePath)) {
-        try {
-          await unlink(filePath);
-        } catch {
-          /* ignore */
-        }
-      }
-    }
-  }
   if (oldSickNotes.length > 0) {
     const sn = await db.sickNote.deleteMany({ where: { createdAt: { lt: sickNoteCutoff } } });
     stats.sickNotes = sn.count;
@@ -156,24 +142,6 @@ export async function anonymizeUser(actor: SessionUser, userId: string): Promise
   const user = await db.user.findUniqueOrThrow({ where: { id: userId } });
   if (user.active) {
     throw new Error("Cannot anonymize an active user. Deactivate first.");
-  }
-
-  // Delete certificate files
-  const sickNotes = await db.sickNote.findMany({
-    where: { userId },
-    select: { certificateUrl: true },
-  });
-  for (const sn of sickNotes) {
-    if (sn.certificateUrl) {
-      const filePath = sn.certificateUrl.replace(/^file:/, "");
-      if (existsSync(filePath)) {
-        try {
-          await unlink(filePath);
-        } catch {
-          /* ignore */
-        }
-      }
-    }
   }
 
   await db.user.update({

@@ -15,14 +15,13 @@ This document covers everything required to deploy, configure, and operate Chron
 7. [OIDC / Single Sign-On (Pocket-ID)](#7-oidc--single-sign-on-pocket-id)
 8. [Email (SMTP)](#8-email-smtp)
 9. [Push Notifications (VAPID)](#9-push-notifications-vapid)
-10. [AU Certificate Encryption](#10-au-certificate-encryption)
-11. [Backups](#11-backups)
-12. [Restore](#12-restore)
-13. [GDPR / Data Retention](#13-gdpr--data-retention)
-14. [Kiosk Subdomain](#14-kiosk-subdomain)
-15. [Updates](#15-updates)
-16. [Local Development](#16-local-development)
-17. [Troubleshooting](#17-troubleshooting)
+10. [Backups](#10-backups)
+11. [Restore](#11-restore)
+12. [GDPR / Data Retention](#12-gdpr--data-retention)
+13. [Kiosk Subdomain](#13-kiosk-subdomain)
+14. [Updates](#14-updates)
+15. [Local Development](#15-local-development)
+16. [Troubleshooting](#16-troubleshooting)
 
 ---
 
@@ -57,7 +56,6 @@ cp .env.example .env
 # 3. Generate required secrets
 openssl rand -base64 32  # → NEXTAUTH_SECRET
 openssl rand -base64 32  # → BACKUP_ENCRYPTION_PASSPHRASE
-openssl rand -hex 32     # → AU_CERT_ENCRYPTION_KEY
 
 # 4. Edit .env (see section 3)
 nano .env
@@ -88,7 +86,6 @@ All variables live in `.env` (gitignored). The compose file reads them via `${VA
 | `APP_DOMAIN`                   | Main app domain (e.g. `chronify.example.com`)       | Your DNS record           |
 | `KIOSK_DOMAIN`                 | Kiosk subdomain (e.g. `kiosk.chronify.example.com`) | Your DNS record           |
 | `BACKUP_ENCRYPTION_PASSPHRASE` | OpenSSL passphrase for encrypted backups            | `openssl rand -base64 32` |
-| `AU_CERT_ENCRYPTION_KEY`       | AES-256 key for encrypting sick note certificates   | `openssl rand -hex 32`    |
 
 ### Optional (with defaults)
 
@@ -267,7 +264,7 @@ Email is used for:
 - Password reset links
 - Vacation request notifications (to admins)
 - Vacation approved/rejected (to employee)
-- Sick note reminders (AU certificate missing after 3 days)
+- Sick note reminders (AU missing after 3 days)
 - Welcome email (new user created by admin)
 
 ### Setup
@@ -320,41 +317,7 @@ NEXT_PUBLIC_PUSH_VAPID_PUBLIC_KEY="<same public key>"
 
 ---
 
-## 10. AU Certificate Encryption
-
-Sick note certificates (AU-Bescheinigungen) are health data under Art. 9 GDPR. They are stored encrypted on disk using AES-256-GCM.
-
-### Setup
-
-```bash
-openssl rand -hex 32
-# → e.g. "a1b2c3d4e5f6..."
-```
-
-```env
-AU_CERT_ENCRYPTION_KEY="a1b2c3d4e5f6..."
-```
-
-**Important:**
-
-- Do NOT lose this key — encrypted files cannot be recovered without it
-- Do NOT change this key after files are encrypted
-- New uploads are automatically encrypted
-- Files are stored in `data/au-certificates/` (inside the container)
-
-### Migrating existing unencrypted files
-
-If you already have uploaded certificates before setting the encryption key, run this **once**:
-
-```bash
-docker exec chronify-app npm run migrate:au-encryption
-```
-
-This reads all existing certificate files, encrypts them, and overwrites the originals. If no certificates exist yet, skip this step.
-
----
-
-## 11. Backups
+## 10. Backups
 
 Backups are encrypted with OpenSSL AES-256-CBC + PBKDF2.
 
@@ -412,7 +375,7 @@ The files are encrypted — they can be stored anywhere without exposing data.
 
 ---
 
-## 12. Restore
+## 11. Restore
 
 ```bash
 source .env
@@ -431,7 +394,7 @@ The script:
 
 ---
 
-## 13. GDPR / Data Retention
+## 12. GDPR / Data Retention
 
 ### Retention Configuration
 
@@ -470,7 +433,7 @@ docker exec chronify-app tsx scripts/retention-cleanup.ts --dry-run
 | ----------------- | ------------------------------ | -------------------------------------------------- |
 | Time entries      | `retentionYears` (2)           | Deleted                                            |
 | Vacation requests | `retentionYears` (2)           | Deleted                                            |
-| Sick notes        | `sickNoteRetentionMonths` (12) | Deleted + certificate files removed                |
+| Sick notes        | `sickNoteRetentionMonths` (12) | Deleted                                            |
 | Audit logs        | `auditLogRetentionMonths` (6)  | Deleted                                            |
 | Notifications     | 90 days                        | Deleted                                            |
 | Inactive users    | `retentionYears` (2)           | Anonymized (name, email, NFC card, password wiped) |
@@ -487,7 +450,6 @@ This:
 
 - Sets name to "Gelöscht", clears first/last name, email, NFC card ID, password hash
 - Deletes their notifications, push subscriptions, timer sessions
-- Deletes their AU certificate files
 - **Keeps** their time entries (anonymized, for statistics)
 
 ### GDPR data export (Art. 15/20)
@@ -495,7 +457,7 @@ This:
 Users can download all their personal data:
 
 - **Profile → My data → Export my data**
-- Downloads a JSON file with: profile, working models, time entries, vacation requests, sick notes (metadata only, not certificate files), overtime balances, notifications, audit logs
+- Downloads a JSON file with: profile, working models, time entries, vacation requests, sick notes, overtime balances, notifications, audit logs
 - API: `GET /api/gdpr/export`
 - Each export is logged in the audit trail
 
@@ -508,7 +470,7 @@ Users can download all their personal data:
 
 ---
 
-## 14. Kiosk Subdomain
+## 13. Kiosk Subdomain
 
 The kiosk is a public, fullscreen PWA for NFC-based time tracking at a terminal.
 
@@ -536,7 +498,7 @@ The kiosk is a public, fullscreen PWA for NFC-based time tracking at a terminal.
 
 ---
 
-## 15. Updates
+## 14. Updates
 
 ```bash
 cd /opt/chronify
@@ -562,7 +524,7 @@ docker compose logs -f app
 
 ---
 
-## 16. Local Development
+## 15. Local Development
 
 ### Prerequisites
 
@@ -610,7 +572,6 @@ NEXTAUTH_SECRET="dev-secret-not-secure"
 SMTP_HOST="localhost"
 SMTP_PORT="1025"
 SMTP_TLS="false"
-AU_CERT_ENCRYPTION_KEY=""  # optional in dev, encryption still works if set
 ```
 
 ### Useful commands
@@ -629,7 +590,7 @@ AU_CERT_ENCRYPTION_KEY=""  # optional in dev, encryption still works if set
 
 ---
 
-## 17. Troubleshooting
+## 16. Troubleshooting
 
 ### Docker build fails with `npm ci` peer dependency error
 
@@ -670,14 +631,6 @@ docker exec chronify-app npx prisma migrate deploy
 - If `SMTP_HOST` is empty, emails go to console log only
 - Test with Mailpit in dev: `http://localhost:8025`
 - Check logs: `docker compose logs app | grep -i mail`
-
-### Certificate decryption fails
-
-If you see errors when downloading AU certificates:
-
-- `AU_CERT_ENCRYPTION_KEY` must be exactly 64 hex characters (32 bytes)
-- The key must match the one used when the file was encrypted
-- If the key was changed, old files cannot be decrypted — they must be re-uploaded
 
 ### Backup restore fails
 

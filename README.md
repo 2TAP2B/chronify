@@ -1,8 +1,8 @@
 # Chronify
 
 Time-tracking PWA for a German SME. Live timer, weekly timesheet, breaks
-per ArbZG §4, overtime balancing, vacation workflow, sickness/AU certificates
-(encrypted at rest), admin backend, GDPR tooling, reports, NFC kiosk for
+per ArbZG §4, overtime balancing, vacation workflow, sickness notes,
+admin backend, GDPR tooling, reports, NFC kiosk for
 clocking in via terminals.
 
 Stack: Next.js 15 (App Router) · React 19 · TypeScript · PostgreSQL 16 +

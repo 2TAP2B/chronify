@@ -215,11 +215,11 @@ export function sickNoteReminderEmail(opts: {
   const greeting = t(locale, "Hallo", "Hello");
   const intro = t(
     locale,
-    "Sie sind seit dem {date} krankgemeldet. Bitte laden Sie ggf. eine Arbeitsunfähigkeitsbescheinigung (AU) hoch, falls die Krankheit länger als 3 Tage dauert.".replace(
+    "Sie sind seit dem {date} krankgemeldet. Falls die Krankheit länger als 3 Tage dauert, bitten wir Sie, das Ende der Arbeitsunfähigkeit (AU) zu melden.".replace(
       "{date}",
       sickFrom
     ),
-    "You have been on sick leave since {date}. Please upload a sick certificate (AU) if your illness lasts longer than 3 days.".replace(
+    "You have been on sick leave since {date}. If the illness lasts longer than 3 days, please report the end of your incapacity for work (AU).".replace(
       "{date}",
       sickFrom
     )
@@ -227,8 +227,8 @@ export function sickNoteReminderEmail(opts: {
   const linkText = t(locale, "Krankmeldung ansehen", "View sick note");
   const subject = t(
     locale,
-    "Erinnerung: AU-Bescheinigung hochladen",
-    "Reminder: Upload sick certificate"
+    "Erinnerung: Meldung des AU-Endes",
+    "Reminder: Report end of sick leave"
   );
 
   const bodyHtml = `

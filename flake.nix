@@ -95,9 +95,8 @@
                 sed -i "s|^$key=.*|$key=\"$value\"|" .env
               }
               set_secret NEXTAUTH_SECRET "$(openssl rand -base64 32)"
-              set_secret AU_CERT_ENCRYPTION_KEY "$(openssl rand -hex 32)"
               set_secret BACKUP_ENCRYPTION_PASSPHRASE "$(openssl rand -base64 32)"
-              echo "wrote .env with generated NEXTAUTH_SECRET, AU_CERT_ENCRYPTION_KEY, BACKUP_ENCRYPTION_PASSPHRASE"
+              echo "wrote .env with generated NEXTAUTH_SECRET, BACKUP_ENCRYPTION_PASSPHRASE"
             '';
           };
         in

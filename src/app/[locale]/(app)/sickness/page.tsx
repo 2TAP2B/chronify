@@ -12,7 +12,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { SickNoteForm } from "@/components/sickness/sick-note-form";
-import { CertificateUpload } from "@/components/sickness/certificate-upload";
 import { YearPicker } from "@/components/shared/year-picker";
 import { formatInZone } from "@/lib/datetime";
 
@@ -89,7 +88,6 @@ export default async function SicknessPage({ params, searchParams }: Props) {
                   <TableHead>{t("from")}</TableHead>
                   <TableHead>{t("to")}</TableHead>
                   <TableHead>{t("days")}</TableHead>
-                  <TableHead>{t("certificate")}</TableHead>
                   <TableHead>{t("note")}</TableHead>
                 </TableRow>
               </TableHeader>
@@ -103,9 +101,6 @@ export default async function SicknessPage({ params, searchParams }: Props) {
                       {formatInZone(n.to, "Europe/Berlin", "dd.MM.yyyy", appLocale)}
                     </TableCell>
                     <TableCell>{n.days}</TableCell>
-                    <TableCell>
-                      <CertificateUpload noteId={n.id} hasCertificate={!!n.certificateUrl} />
-                    </TableCell>
                     <TableCell className="max-w-[200px] truncate">
                       {n.note ?? <span className="text-muted-foreground">—</span>}
                     </TableCell>
