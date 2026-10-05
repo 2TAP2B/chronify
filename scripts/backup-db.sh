@@ -3,6 +3,10 @@
 # Usage: ./scripts/backup-db.sh [output-dir]
 # Env: DATABASE_URL (required), BACKUP_RETENTION_DAYS (default 14),
 #      BACKUP_ENCRYPTION_PASSPHRASE (required for encryption)
+#
+# Verify semantics: a backup file is only reported complete after it
+# round-trips (decrypt → gzip integrity → pg_restore TOC). A checksum
+# file (.sha256) is written next to the archive for off-host tamper checks.
 
 set -euo pipefail
 
@@ -11,8 +15,6 @@ RETENTION_DAYS="${BACKUP_RETENTION_DAYS:-14}"
 TIMESTAMP="$(date +%Y%m%d-%H%M%S)"
 FILENAME="chronify-backup-${TIMESTAMP}.sql.gz.enc"
 OUTPUT_PATH="${OUTPUT_DIR}/${FILENAME}"
-
-mkdir -p "${OUTPUT_DIR}"
 
 if [ -z "${DATABASE_URL:-}" ]; then
   echo "ERROR: DATABASE_URL is not set" >&2
@@ -26,22 +28,19 @@ if [ -z "${BACKUP_ENCRYPTION_PASSPHRASE:-}" ]; then
   exit 1
 fi
 
-# Extract connection parts from DATABASE_URL
-DB_HOST="$(echo "${DATABASE_URL}" | sed -E 's|.*@([^:@/]+).*|\1|')"
-DB_PORT="$(echo "${DATABASE_URL}" | sed -E 's|.*:([0-9]+)/.*|\1|')"
-DB_NAME="$(echo "${DATABASE_URL}" | sed -E 's|.*/([^?]+)(\?.*)?|\1|')"
-DB_USER="$(echo "${DATABASE_URL}" | sed -E 's|.*://([^:]+):.*|\1|')"
-DB_PASS="$(echo "${DATABASE_URL}" | sed -E 's|.*://[^:]+:([^@]+)@.*|\1|')"
+mkdir -p "${OUTPUT_DIR}"
 
-export PGPASSWORD="${DB_PASS}"
+# Prevent overlapping runs (cron catch-up, manual + cron collision).
+exec 9>"${OUTPUT_DIR}/backup.lock"
+flock -n 9 || { echo "ERROR: Another backup run is already in progress." >&2; exit 1; }
 
-echo "Backing up database '${DB_NAME}' on ${DB_HOST}:${DB_PORT} → ${OUTPUT_PATH} (OpenSSL encrypted)"
+# pg tools reject unknown URI options; strip any query string (e.g./schema=public).
+CONN="${DATABASE_URL%%\?*}"
+
+echo "Backing up database → ${OUTPUT_PATH} (OpenSSL encrypted)"
 
 pg_dump \
-  --host="${DB_HOST}" \
-  --port="${DB_PORT}" \
-  --username="${DB_USER}" \
-  --dbname="${DB_NAME}" \
+  --dbname="${CONN}" \
   --no-owner \
   --no-privileges \
   --format=custom \
@@ -49,11 +48,21 @@ pg_dump \
   | openssl enc -aes-256-cbc -pbkdf2 -salt -pass env:BACKUP_ENCRYPTION_PASSPHRASE \
   > "${OUTPUT_PATH}"
 
-echo "Backup complete: ${OUTPUT_PATH} ($(du -h "${OUTPUT_PATH}" | cut -f1))"
+# --- verify the artifact before declaring success ---------------------------
+echo "Verifying backup integrity..."
+{
+  openssl enc -d -aes-256-cbc -pbkdf2 -pass env:BACKUP_ENCRYPTION_PASSPHRASE \
+    -in "${OUTPUT_PATH}" | gunzip | pg_restore --list
+} > /dev/null
+
+sha256sum "${OUTPUT_PATH}" > "${OUTPUT_PATH}.sha256"
+
+echo "Backup complete: ${OUTPUT_PATH} ($(du -h "${OUTPUT_PATH}" | cut -f1)) [verified]"
 
 # Prune old backups
 if [ "${RETENTION_DAYS}" -gt 0 ]; then
   echo "Pruning backups older than ${RETENTION_DAYS} days..."
   find "${OUTPUT_DIR}" -name "chronify-backup-*.sql.gz.enc" -type f -mtime "+${RETENTION_DAYS}" -delete
+  find "${OUTPUT_DIR}" -name "chronify-backup-*.sql.gz.enc.sha256" -type f -mtime "+${RETENTION_DAYS}" -delete
   echo "Pruned."
 fi
