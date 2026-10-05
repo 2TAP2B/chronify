@@ -39,7 +39,7 @@ or the kiosk routes.
 
 ## Production checklist (operator)
 
-- Keep `KIOSK_HOST` resolvable only inside the LAN: do NOT create a public
+- Keep `KIOSK_DOMAIN` resolvable only inside the LAN: do NOT create a public
   DNS record for `kiosk.*` (e.g. no Cloudflare record) and/or add a Traefik
   `ClientIP` allowlist middleware on the kiosk router.
 - `AUTH_SECURE_COOKIE=true` (compose default) and HTTPS-only via Traefik.
