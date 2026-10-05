@@ -196,13 +196,11 @@ export async function stopTimer(userId: string, now: Date = new Date()) {
   return { timeEntry, breakMinutes, autoApplied, workedMinutes: msToMinutes(workedMs) };
 }
 
-/** Max age of a backdated (remote) start; anything older needs manual entries. */
-const REMOTE_START_MAX_AGE_MS = 48 * 3_600_000;
-
 /**
  * Admin remote control: start (or stop) another user's timer.
- * Backdating is limited to the last 48h and must not overlap completed
- * WORK entries — otherwise stopTimer would produce duplicates.
+ * Backdating is unrestricted for admins; a backdated start still must not
+ * overlap completed WORK entries — otherwise stopTimer would produce
+ * duplicates.
  */
 export async function remoteStartTimer(opts: {
   actor: SessionUser;
@@ -218,9 +216,6 @@ export async function remoteStartTimer(opts: {
 
   if (startAt.getTime() > now.getTime()) {
     throw new TimerError("Start time is in the future", "INVALID_START");
-  }
-  if (now.getTime() - startAt.getTime() > REMOTE_START_MAX_AGE_MS) {
-    throw new TimerError("Start time is too far in the past", "INVALID_START");
   }
 
   const targetUser = await db.user.findUnique({
