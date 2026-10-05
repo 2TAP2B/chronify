@@ -239,6 +239,8 @@ export function KioskScreen({ locale }: { locale: string }) {
       : 0
     : 0;
   const totalTodayMs = (s?.todayWorkedMs ?? 0) + currentWorkMs;
+  const currentBreakMs =
+    s && s.onBreak ? s.breakMs + Math.max(0, now.getTime() - s.fetchedAtMs) : 0;
 
   const localeStr = locale === "en" ? "en-US" : "de-DE";
   const timeStr = now.toLocaleTimeString(localeStr, {
@@ -401,6 +403,14 @@ export function KioskScreen({ locale }: { locale: string }) {
                 {formatDuration(totalTodayMs)}
               </p>
               <p className="text-sm text-muted-foreground">{t("todayLabel")}</p>
+              {s.onBreak && (
+                <div className="mt-2 flex items-center gap-2 rounded-lg border bg-muted/40 px-4 py-2 text-base">
+                  <Coffee className="h-5 w-5 text-yellow-600" />
+                  <span className="text-muted-foreground">
+                    {t("breakRunningSince", { time: formatDuration(currentBreakMs) })}
+                  </span>
+                </div>
+              )}
             </div>
 
             <div className="mt-2 flex flex-col items-center gap-4">

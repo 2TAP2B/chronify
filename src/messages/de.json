@@ -594,6 +594,7 @@
     "breakBtn": "Pause",
     "breakEndBtn": "Pause beenden",
     "breakLabel": "In Pause",
+    "breakRunningSince": "Pause läuft seit {time}",
     "runningLabel": "Zeiterfassung läuft",
     "idleLabel": "Nicht gebucht",
     "todayLabel": "Heute erfasst",

@@ -594,6 +594,7 @@
     "breakBtn": "Break",
     "breakEndBtn": "End break",
     "breakLabel": "On break",
+    "breakRunningSince": "Break running for {time}",
     "runningLabel": "Time tracking running",
     "idleLabel": "Not clocked in",
     "todayLabel": "Recorded today",
