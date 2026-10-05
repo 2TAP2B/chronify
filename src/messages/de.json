@@ -597,7 +597,6 @@
     "runningLabel": "Zeiterfassung läuft",
     "idleLabel": "Nicht gebucht",
     "todayLabel": "Heute erfasst",
-    "stoppedSummary": "Zeit erfasst: {hours}h {minutes}min",
     "logoutBtn": "Abmelden",
     "themeToggle": "Design wechseln",
     "loading": "Wird verarbeitet…",
