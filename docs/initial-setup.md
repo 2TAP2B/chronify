@@ -621,7 +621,7 @@ docker exec chronify-app npx prisma migrate deploy
 ### Kiosk not working
 
 - Verify `KIOSK_DOMAIN` DNS record points to the server
-- Check `KIOSK_HOST` env var is set in the container: `docker exec chronify-app printenv KIOSK_HOST`
+- Check `KIOSK_DOMAIN` env var is set in the container: `docker exec chronify-app printenv KIOSK_DOMAIN`
 - The kiosk page is at `https://<KIOSK_DOMAIN>/de/kiosk`
 - NFC requires HTTPS and Chrome on Android (or Safari on iOS 16+)
 
