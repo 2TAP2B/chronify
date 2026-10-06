@@ -1,0 +1,42 @@
+---
+title: Kiosk
+description: NFC-Terminal-Kiosk auf eigener Subdomain
+---
+
+Der Kiosk ist eine öffentliche Vollbild-PWA für NFC-basierte Zeiterfassung
+am Terminal (Stempelwand). Vorbereitung:
+[`docs/initial-setup.md` §13](https://github.com/2TAP2B/chronify/blob/main/docs/initial-setup.md).
+
+## Funktionsweise
+
+- `KIOSK_DOMAIN` routet **denselben** Container über Traefik
+- Die Middleware erkennt den Kiosk-Host und leitet alles auf `/de/kiosk` um
+- Keine Authentifizierung — Zugangsflow: NFC-Karte → „Guten Morgen, _Vorname_"
+  → Start/Stop-Button, Pause-Button, Logout oben, Auto-Logout nach 5 s
+  Inaktivität (jede Interaktion resetet das Fenster), Theme-Toggle hell/dunkel
+- Eigene PWA-Definition (`display: fullscreen`, eigener Scope)
+
+## Setup
+
+1. DNS: `kiosk.<APP_DOMAIN>` → Server-IP (dieselbe wie App)
+2. `.env`: `KIOSK_DOMAIN="kiosk.<APP_DOMAIN>"`
+3. Traefik-Labels in `compose.yaml` routen automatisch
+4. `https://kiosk.<APP_DOMAIN>` am Tablet/Terminal öffnen
+5. Als PWA installieren (Vollbild)
+6. Einmal „NFC aktivieren" drücken (Browser-Berechtigung) — danach bleibt
+   der Scan dauerhaft scharf (localStorage-Flag), Re-Arm bei Visibility-Wechsel
+
+## NFC-Karten
+
+1. Karten-IDs zuweisen: **Admin → Benutzer → Bearbeiten → NFC-Karten-ID**
+2. Die ID ist der Text-Inhalt des NDEF-Records (NFC-Tag schreiben)
+3. Karte anhalten → Timer-Toggle (Start/Stop), Pausen- und Logout-Buttons
+   erscheinen in der Anmeldung
+4. Manuelle Eingabe der Karten-ID als Fallback, falls das Endgerät kein NFC
+   hat
+
+## Sicherheitsmodell
+
+Kiosk-Tap ist unauthentifiziert und rate-limit-frei (bewusste Entscheidung:
+Hardware-Stempelwand). Absicherung siehe [Security](/chronify/security):
+Kiosk-Routen sind auf den Kiosk-Host begrenzt, kein öffentlicher DNS-Eintrag.

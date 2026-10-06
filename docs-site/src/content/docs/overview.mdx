@@ -1,0 +1,33 @@
+---
+title: Überblick
+description: Chronify — Zeiterfassungs-PWA für kleine Teams
+---
+
+Chronify ist eine selbstgehostete Zeiterfassungs-PWA für kleine Teams:
+Live-Timer, wöchentlicher Stundenzettel, Pausen-Regeln nach ArbZG §4,
+Überstunden-Tracking, Urlaubs-Workflow mit Genehmigung, Krankmeldungen,
+Admin-Backend, DSGVO-Tooling, Reports und ein NFC-Kiosk für Terminals.
+
+## Features
+
+- Live-Timer + wöchentlicher Stundenzettel (7-Tage-Sperrfrist)
+- Urlaub mit Genehmigungs-Workflow und Kontostand
+- Krankmeldungen mit AU-Verfolgung
+- Feiertage (nager.date, NRW-Default, manuelle Overrides)
+- Überstunden mit konfigurierbarer Übertragung
+- Team-Kalender („wer ist weg?")
+- Reports (PDF / CSV / Excel), geplanter PDF-Export
+- PWA (offline-fähig, Web-Push)
+- NFC-Kiosk auf eigener Subdomain
+- Admin: Benutzerverwaltung, Arbeitszeitmodelle, Jahreswechsel, Schließtage, DSGVO
+
+## Stack
+
+Next.js 15 (App Router) · React 19 · TypeScript · PostgreSQL 16 + Prisma 6 ·
+Auth.js v5 · Tailwind + shadcn/ui · next-intl · Vitest + Playwright.
+Dev-Umgebung als Nix-Flake.
+
+## Image
+
+`ghcr.io/2tap2b/chronify` — gebaut von GitHub Actions bei Push auf `main`,
+getaggt bei `v*`-Releases.

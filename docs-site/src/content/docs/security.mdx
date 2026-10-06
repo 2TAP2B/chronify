@@ -1,0 +1,50 @@
+---
+title: Security
+description: Security-Layout und Operationale Entscheidungen
+---
+
+Original:
+
+[`docs/security.md`](https://github.com/2TAP2B/chronify/blob/main/docs/security.md).
+Liest sich vor jedem Umbau an Auth, Rate-Limits oder Kiosk-Routen.
+
+## Deployment-Grenze
+
+- **App-Domain (`APP_DOMAIN`)** — öffentlich. Alles hinter Auth.js-Sessions;
+  unauthentifizierte Requests → Redirect auf `/login`.
+- **Kiosk-Domain (`KIOSK_DOMAIN`)** — LAN-only. Die Kiosk-Seite und die
+  Tap-API laufen bewusst unauthentifiziert (NFC-Hardware), die Middleware
+  gate-t aber jeden `/kiosk`-Pfad und `/api/kiosk/*`-Request fest auf den
+  Kiosk-Host — vom öffentlichen App-Domain kommt 403.
+
+## Aktive Schutzmaßnahmen
+
+| Bereich        | Maßnahme                                                             |
+| -------------- | -------------------------------------------------------------------- |
+| Session        | Auth.js v5 JWT, httpOnly Cookies; `AUTH_SECURE_COOKIE=true` in prod  |
+| Passwort-Login | bcrypt + rate limit 10/min/IP; org-weit abschaltbar                  |
+| Passwort-Reset | Tokens `randomBytes(32)`, 1 h TTL, single-use                        |
+| CSRF           | jede Mutation verlangt `Origin` ∈ `CSRF_ALLOWED_ORIGINS`             |
+| Headers        | CSP `default-src 'self'`, X-Frame-Options DENY, nosniff, …           |
+| RBAC           | `requireAdmin` in jedem Admin-Service                                |
+| Input          | zod-Schemas auf allen API-Routen; NFC-Karten nach 20 Zeichen gecappt |
+| Audit          | `AuditLog` auf allen Admin-Mutationen, Kiosk-Taps, Profil-Änderungen |
+
+## Akzeptierte Trade-offs
+
+Explizit am Owner entschiedene Kompromisse
+(vgl. [`docs/security.md`](https://github.com/2TAP2B/chronify/blob/main/docs/security.md)):
+Kiosk-Tap ohne Rate-Limit/ohne Auth (Hardware-Stempelwand, LAN-only
+gebunden; Karten-IDs sind physische Payloads, keine user-geprägten Secrets).
+
+## Operator-Checkliste
+
+- `KIOSK_DOMAIN` bleibt LAN-only: kein öffentlicher DNS-Eintrag für `kiosk.*`
+  und/oder Traefik-`ClientIP`-Allowlist auf dem Kiosk-Router.
+- `AUTH_SECURE_COOKIE=true`, HTTPS-only via Traefik.
+- `NEXTAUTH_SECRET` + `BACKUP_ENCRYPTION_PASSPHRASE` kommen aus dem
+  first-install-Wizard; `.env` never ins Repo.
+- Bei SMTP ist `.env` (`SMTP_HOST`) bevorzugt vor Dashboard-Settings
+  (Secrets bleiben in der Umgebung).
+- Backups: verschlüsselt (AES-256-CBC + PBKDF2); die Passphrase ist der
+  einzige Restore-Schlüssel.
