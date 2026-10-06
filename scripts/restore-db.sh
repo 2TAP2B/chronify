@@ -42,16 +42,32 @@ fi
 
 # --- verify BEFORE any destructive step ------------------------------------
 echo "Verifying backup integrity (decrypt → gzip → TOC)..."
-if {
-  openssl enc -d -aes-256-cbc -pbkdf2 -pass env:BACKUP_ENCRYPTION_PASSPHRASE \
-    -in "${BACKUP_FILE}" | gunzip | pg_restore --list
-} > /dev/null 2>&1; then
-  echo "Backup verified."
-else
-  echo "ERROR: Backup failed verification (wrong passphrase or corrupt file)." >&2
+# Stage 1: full integrity pass. gunzip -t consumes its entire input, so there
+# is no early-exiting consumer and no SIGPIPE ambiguity — any non-zero rc
+# here (bad decrypt, corruption, truncation) is a hard error.
+integrity_rc=0
+openssl enc -d -aes-256-cbc -pbkdf2 -pass env:BACKUP_ENCRYPTION_PASSPHRASE \
+  -in "${BACKUP_FILE}" | gunzip -t || integrity_rc=$?
+if [ "${integrity_rc}" -ne 0 ]; then
+  echo "ERROR: Backup failed integrity check (rc=${integrity_rc}; wrong passphrase or corrupt file)." >&2
   echo "Nothing was modified. Check BACKUP_ENCRYPTION_PASSPHRASE / file integrity." >&2
   exit 1
 fi
+
+# Stage 2: TOC check. pg_restore --list stops reading before EOF, so the
+# producer can die of SIGPIPE (rc 141) under pipefail even on success —
+# tolerate it; any other non-zero rc is a hard error.
+verify_rc=0
+{
+  openssl enc -d -aes-256-cbc -pbkdf2 -pass env:BACKUP_ENCRYPTION_PASSPHRASE \
+    -in "${BACKUP_FILE}" | gunzip | pg_restore --list
+} > /dev/null 2>&1 || verify_rc=$?
+if [ "${verify_rc}" -ne 0 ] && [ "${verify_rc}" -ne 141 ]; then
+  echo "ERROR: Backup failed TOC verification (rc=${verify_rc}; wrong passphrase or corrupt file)." >&2
+  echo "Nothing was modified. Check BACKUP_ENCRYPTION_PASSPHRASE / file integrity." >&2
+  exit 1
+fi
+echo "Backup verified."
 
 echo "Dropping existing schema..."
 psql \
@@ -59,6 +75,9 @@ psql \
   --command="DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
 
 echo "Decrypting and restoring from backup..."
+# Tolerate rc 141 (producer SIGPIPE if pg_restore stops before EOF); any
+# other non-zero rc is a failed restore.
+restore_rc=0
 openssl enc -d -aes-256-cbc -pbkdf2 -pass env:BACKUP_ENCRYPTION_PASSPHRASE -in "${BACKUP_FILE}" \
   | gunzip \
   | pg_restore \
@@ -67,6 +86,10 @@ openssl enc -d -aes-256-cbc -pbkdf2 -pass env:BACKUP_ENCRYPTION_PASSPHRASE -in "
   --no-privileges \
   --clean \
   --if-exists \
-  --exit-on-error
+  --exit-on-error || restore_rc=$?
+if [ "${restore_rc}" -ne 0 ] && [ "${restore_rc}" -ne 141 ]; then
+  echo "ERROR: pg_restore failed (rc=${restore_rc})." >&2
+  exit 1
+fi
 
 echo "Restore complete."

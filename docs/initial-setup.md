@@ -352,6 +352,14 @@ source .env
 bash scripts/backup-db.sh ./backups
 ```
 
+Or from the host **without** postgres client tools (pg_dump runs inside the
+`db` container, gzip/encryption on the host — works for both encrypted and
+plain mode, see the script header):
+
+```bash
+bash scripts/backup-db-docker.sh ./backups
+```
+
 ### Automated backup (cron)
 
 ```bash
@@ -382,6 +390,13 @@ source .env
 bash scripts/restore-db.sh backups/chronify-backup-YYYYMMDD-HHMMSS.sql.gz.enc
 ```
 
+Or from the host without postgres client tools (also accepts plain
+`*.sql.gz` backups):
+
+```bash
+bash scripts/restore-db-docker.sh backups/chronify-backup-YYYYMMDD-HHMMSS.sql.gz
+```
+
 You will be prompted to type `CONFIRM` — this **overwrites the entire database**.
 
 The script:
@@ -390,7 +405,10 @@ The script:
 2. Decrypts the backup with OpenSSL
 3. Restores via `pg_restore`
 
-**Note:** Restore requires both `DATABASE_URL` and `BACKUP_ENCRYPTION_PASSPHRASE` to be set.
+**Note:** `scripts/restore-db.sh` requires both `DATABASE_URL` and
+`BACKUP_ENCRYPTION_PASSPHRASE` to be set. The docker variant
+(`scripts/restore-db-docker.sh`) needs neither for plain `*.sql.gz` backups
+(the passphrase is only required for `*.enc` files).
 
 ---
 
