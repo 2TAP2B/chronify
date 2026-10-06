@@ -4,7 +4,7 @@
  * Outputs: src/content/docs/reference/{schema,api,env}.mdx
  * Run on every docs build (CI + local) — never commits to the repo.
  */
-import { readFileSync, writeFileSync, readdirSync, statSync } from "node:fs";
+import { readFileSync, writeFileSync, readdirSync, statSync, mkdirSync } from "node:fs";
 import { join, relative, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -27,6 +27,7 @@ function collectRouteFiles(dir) {
 }
 
 function writePage(name, title, md) {
+  mkdirSync(OUT, { recursive: true }); // exists locally via build, not in CI (gitignored dir)
   writeFileSync(join(OUT, `${name}.mdx`), `---\ntitle: ${title}\n---\n\n` + md);
 }
 
