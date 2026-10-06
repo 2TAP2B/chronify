@@ -1,0 +1,39 @@
+---
+title: Schnellstart (Entwicklung)
+description: Lokale Entwicklung mit Nix-Dev-Shell in fünf Befehlen
+---
+
+Das komplette Tooling kommt aus der Nix-Dev-Shell (Node 22,
+Prisma-Engines, Playwright-Browser, gh-CLI, Postgres-Tooling) — keine
+globalen Installationen nötig.
+
+```bash
+nix develop          # oder: direnv allow
+npm ci
+dev-env-init         # .env aus .env.example + generierte Secrets
+dev-db start         # lokale PostgreSQL-16-Instanz in ./.dev-db (kein Docker)
+npm run db:setup     # Migrationen + Seed
+npm run dev          # http://localhost:3001
+```
+
+## Quality-Gates
+
+```bash
+npm run typecheck      # tsc --noEmit
+npm run lint           # next lint
+npm test               # vitest run (Unit-Tests)
+npm run build          # next build
+npm run format:check   # prettier --check .
+npm run test:e2e       # Playwright — baut einen Prod-Server auf :3100
+```
+
+## Standard-Login (nach Seed)
+
+- E-Mail: `admin@puku.local`
+- Passwort: `admin123` — beim ersten Login ändern (Profil → Passwort).
+
+## Weiterführend
+
+- [Installation & Produktion](/chronify/install)
+- [Betrieb & Backups](/chronify/operations)
+- [Referenz](/chronify/reference/env)

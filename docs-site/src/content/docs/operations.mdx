@@ -1,0 +1,62 @@
+---
+title: Betrieb (Backups, Cron, Wartung)
+description: Verschlüsselte Backups, Restore, DSGVO-Retention, Report-Automatisierung
+---
+
+Dokumentiert die alltäglichen Betriebsaufgaben. Volltext (mit allen Schritten
+und Cron-Fallstricken) im Repo:
+[`docs/initial-setup.md`](https://github.com/2TAP2B/chronify/blob/main/docs/initial-setup.md).
+
+## Backups
+
+Verschlüsselung: OpenSSL AES-256-CBC + PBKDF2.
+Die `BACKUP_ENCRYPTION_PASSPHRASE` ist der **einzige** Restore-Schlüssel —
+Passwort-Manager oder Offline-Sicherungsverwahrung.
+
+### Backup-Varianten
+
+| Aufruf                             | Wo läuft pg_dump?                 | Voraussetzung                     |
+| ---------------------------------- | --------------------------------- | --------------------------------- |
+| `bash scripts/backup-db.sh`        | Host (bzw. im App-Container)      | `psql`/`pg_dump` + `DATABASE_URL` |
+| `bash scripts/backup-db-docker.sh` | im `db`-Container (`docker exec`) | `docker compose`                  |
+
+- Output: `chronify-backup-YYYYMMDD-HHMMSS.sql.gz.enc`
+- Retention: `BACKUP_RETENTION_DAYS` (Default 14)
+- Jede Datei bekommt ein `.sha256`-Checksum
+- Verify-Steps verhindern, dass ein korruptes Artifact als „fertig" durchgeht
+
+### Cron
+
+```bash
+# /etc/cron.d/chronify-backup
+0 2 * * * root cd /opt/chronify && source .env && bash scripts/backup-db.sh ./backups >> /var/log/chronify-backup.log 2>&1
+```
+
+## Restore
+
+```bash
+source .env
+bash scripts/restore-db.sh backups/chronify-backup-YYYYMMDD-HHMMSS.sql.gz.enc
+# oder ohne Postgres-Client-Tools auf dem Host:
+bash scripts/restore-db-docker.sh backups/chronify-backup-YYYYMMDD-HHMMSS.sql.gz
+```
+
+Kein destructive Schritt läuft, bevor das Backup-File verifiziert ist
+(decrypt → gunzip → TOC). Falsche Passphrase oder Corruption = blockierte
+Operation, Datenbank unangetastet.
+
+## DSGVO / Retention
+
+- Konfiguration: Admin → Settings (Retention-Tage pro Kategorie)
+- Automatische Bereinigung: `/etc/cron.d/chronify-retention` ruft
+  `npm run retention:run` im App-Container auf
+- Dry-Run: `npm run retention:dry-run`
+- Anonymisierung bei Austritt (Admin → GDPR)
+- Export per Nutzer (Art. 15/20): Admin → GDPR → Export
+
+## Report-Automatisierung
+
+Geplanter PDF-Export (Team-Reports) läuft im App-Prozess; Scheduler startet
+beim ersten authentifizierten Request. Abschaltbar via
+`REPORT_AUTOMATION_SCHEDULER="off"`. Output-Verzeichnis:
+`REPORTS_EXPORT_DIR` (im Compose-Volume `./reports`).

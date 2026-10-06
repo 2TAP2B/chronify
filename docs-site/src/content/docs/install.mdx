@@ -1,0 +1,91 @@
+---
+title: Installation & Produktion
+description: Vollständige Setup- und Betriebsanleitung
+---
+
+Der komplette Einrichtungs- und Betriebsleitfaden lebt im Repo unter
+[`docs/initial-setup.md`](https://github.com/2TAP2B/chronify/blob/main/docs/initial-setup.md)
+(657 Zeilen, gepflegt und getestet). Diese Seite fasst die Kernabläufe zusammen.
+
+## Voraussetzungen
+
+- Linux-Server mit Docker + Docker-Compose
+- Domain mit DNS-Kontrolle (zwei Subdomains: App + Kiosk)
+- Reverse-Proxy (Traefik-Labels liegen bei)
+
+## Quick-Start (5 Befehle)
+
+```bash
+git clone https://github.com/2TAP2B/chronify.git chronify && cd chronify
+cp .env.example .env
+# Secrets generieren (openssl rand -base64 32) und .env ausfüllen
+docker compose up -d
+```
+
+Oder der interaktive Helfer:
+
+```bash
+bash scripts/first-install.sh
+```
+
+Der Wizard fragt Domains, Locale, SMTP, Push und Backup-Retention ab und
+schreibt ein vollständiges `.env` samt generierter Secrets.
+
+## Environment-Variablen
+
+Vollständige Liste mit Beschreibung und Defaults:
+[Env-Referenz](/chronify/reference/env) (automatisch generiert).
+
+Kern-Set:
+
+| Variable                       | Zweck                                                         |
+| ------------------------------ | ------------------------------------------------------------- |
+| `DATABASE_URL`                 | Postgres-Verbindung                                           |
+| `NEXTAUTH_SECRET`              | Session-Secret (`openssl rand -base64 32`)                    |
+| `APP_DOMAIN`                   | Öffentliche App-Domain                                        |
+| `KIOSK_DOMAIN`                 | Kiosk-Subdomain (LAN-only, s. [Security](/chronify/security)) |
+| `BACKUP_ENCRYPTION_PASSPHRASE` | Backup-Schlüssel (einziger Restore-Schlüssel)                 |
+
+## Compose + Traefik
+
+`compose.yaml` bringt App + Postgres mit. Traefik-Labels routen:
+`APP_DOMAIN` → App, `KIOSK_DOMAIN` → dieselbe App (Middleware leitet auf
+`/de/kiosk` um). Der Entry-Point führt beim Start automatisch
+`prisma migrate deploy` aus.
+
+## Erst-Login
+
+1. `https://<APP_DOMAIN>/de/login` — Standard-Seed-Login
+   `admin@puku.local` / `admin123`.
+2. Passwort sofort ändern (Profil → Passwort).
+3. Admin → Settings: App-Name, Branding, Org-Defaults.
+
+## Updates
+
+```bash
+cd /pfad/zu/chronify
+git pull
+docker compose pull
+docker compose up -d
+curl https://<APP_DOMAIN>/api/health    # → {"status":"ok"}
+docker compose logs -f app
+```
+
+## OIDC / SSO (optional, Pocket-ID)
+
+`docs/initial-setup.md` §7: `OIDC_ISSUER`, `OIDC_CLIENT_ID`,
+`OIDC_CLIENT_SECRET` in `.env` setzen; `NEXT_PUBLIC_OIDC_ENABLED=true`.
+Zum Abschalten die drei Variablen leeren.
+
+## SMTP (optional)
+
+Ohne `SMTP_HOST` laufen Mail-Features still. Dev-Ersatz: Mailpit
+(`localhost:1025`, über Compose-Profile). Test-Relay: Admin → Settings →
+Test-Mail (nur Admins).
+
+## Push (optional)
+
+`npx web-push generate-vapid-keys` und die drei Keys in `.env` eintragen
+(siehe [Env-Referenz](/chronify/reference/env)), `NEXT_PUBLIC_PUSH_VAPID_PUBLIC_KEY`
+muss derselbe Public Key sein wie `PUSH_VAPID_PUBLIC_KEY`. Ohne Keys bleibt
+der Subscribe-Button verborgen.
