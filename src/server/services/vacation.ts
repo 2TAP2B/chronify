@@ -10,11 +10,15 @@ import {
   overlapsExisting,
   splitByWorkTarget,
   modelForDate,
+  halfDayDateSet,
+  consumedDaysOf,
+  halfDayMinutesFor,
+  vacationWeight,
 } from "@/lib/vacation/business-days";
-import { toCalendarDate } from "@/lib/datetime";
+import { toCalendarDate, isSameCalendarDay } from "@/lib/datetime";
 import { notificationText } from "@/lib/notifications/server-texts";
-import { targetMinutesForDate } from "@/lib/overtime/calculate";
 import { workingModelsInRange } from "@/server/services/business-closures";
+import { targetMinutesForDate } from "@/lib/overtime/calculate";
 import type { FederalState, VacationKind, VacationRequest, VacationStatus } from "@prisma/client";
 
 /** Extra vacation days per year for users with regeneration leave enabled. */
@@ -37,6 +41,8 @@ export type VacationCreateInput = {
   year?: number;
   useOvertime?: boolean;
   kind?: VacationKind;
+  /** Half-day request: only valid for single-day ranges; consumes 0.5. */
+  halfDay?: boolean;
   /** Admin-only: assign a leave to another user (regeneration flow). */
   targetUserId?: string;
 };
@@ -95,12 +101,16 @@ export async function createVacationRequest(opts: {
   }
 
   const kind = opts.input.kind ?? "REGULAR";
+  const halfDay = opts.input.halfDay ?? false;
   if (opts.input.targetUserId && actor.role !== "ADMIN") {
     throw new VacationError("Forbidden", "FORBIDDEN", 403);
   }
   const ownerUserId =
     opts.input.targetUserId && actor.role === "ADMIN" ? opts.input.targetUserId : actor.id;
   const ctx = await getUserContext(ownerUserId);
+  if (halfDay && !isSameCalendarDay(from, to, ctx.timeZone)) {
+    throw new VacationError("Half-day requests must cover a single day", "INVALID_RANGE");
+  }
   const state = ctx.user.federalState;
   const year = opts.input.year ?? from.getUTCFullYear();
 
@@ -154,6 +164,11 @@ export async function createVacationRequest(opts: {
     }),
     db.orgSettings.findUniqueOrThrow({ where: { id: "singleton" } }),
   ]);
+
+  // Half-day accounting: a halfDay request charges 0.5; otherwise 0.5 for
+  // configured half days (24.12/31.12) in any year.
+  const halfDays = halfDayDateSet(settings);
+  const vacationDays = halfDay ? 0.5 : consumedDaysOf(spendableDays, halfDays);
   const totalDays_ =
     (entitlement?.totalDays ?? settings.defaultVacationDays) +
     (ctx.user.regeneration ? REGENERATION_EXTRA_DAYS : 0);
@@ -173,9 +188,9 @@ export async function createVacationRequest(opts: {
     if (computation.balanceMs <= 0) {
       throw new VacationError("No overtime balance available", "INSUFFICIENT_OVERTIME", 403);
     }
-  } else if (spendableDays.length > available) {
+  } else if (vacationDays > available) {
     throw new VacationError(
-      `Insufficient entitlement: requested ${spendableDays.length} days, available ${available}`,
+      `Insufficient entitlement: requested ${vacationDays} days, available ${available}`,
       "INSUFFICIENT_ENTITLEMENT",
       403
     );
@@ -186,11 +201,12 @@ export async function createVacationRequest(opts: {
       userId: ownerUserId,
       from,
       to,
-      days: spendableDays.length,
+      days: vacationDays,
       status: "PENDING",
       year,
       note: opts.input.note ?? null,
       kind,
+      halfDay,
       useOvertime,
     },
   });
@@ -207,7 +223,7 @@ export async function createVacationRequest(opts: {
         const requesterName = ctx.user.name ?? ctx.user.email ?? "";
         const text = notificationText("vacationRequested", locale, {
           actorName: requesterName,
-          days: spendableDays.length,
+          days: vacationDays,
           fromDate: from.toISOString().slice(0, 10),
           toDate: to.toISOString().slice(0, 10),
         });
@@ -220,7 +236,7 @@ export async function createVacationRequest(opts: {
             requestId: created.id,
             userId: ownerUserId,
             actorName: requesterName,
-            days: spendableDays.length,
+            days: vacationDays,
             fromDate: from.toISOString().slice(0, 10),
             toDate: to.toISOString().slice(0, 10),
           },
@@ -241,7 +257,7 @@ export async function createVacationRequest(opts: {
         requesterName: ctx.user.name ?? ctx.user.email ?? "User",
         fromDate: from.toISOString().slice(0, 10),
         toDate: to.toISOString().slice(0, 10),
-        days: spendableDays.length,
+        days: vacationDays,
         approvalUrl,
       });
       await sendMail({
@@ -259,7 +275,7 @@ export async function createVacationRequest(opts: {
     action: "vacation_request.create",
     entity: "VacationRequest",
     entityId: created.id,
-    payload: { from: from.toISOString(), to: to.toISOString(), days: spendableDays.length, year },
+    payload: { from: from.toISOString(), to: to.toISOString(), days: vacationDays, year },
   });
 
   return created;
@@ -301,14 +317,28 @@ export async function approveVacationRequest(opts: {
   // vacation day — both for entries and entitlement accounting.
   const models = await workingModelsInRange(req.userId, req.from, req.to);
   const { consumed: spendableDays } = splitByWorkTarget(businessDays, models);
-  const days = spendableDays.length;
+
+  // Half-day accounting: 0.5 for the requested day on halfDay requests and
+  // for configured half days (24.12/31.12) in any year.
+  const settings = await db.orgSettings.findUniqueOrThrow({ where: { id: "singleton" } });
+  const halfDays = halfDayDateSet(settings);
+  const neighbor = (a: Date, b: Date) => isSameCalendarDay(a, b, ctx.timeZone);
+  const halfDayRequest = req.halfDay && neighbor(req.from, req.to);
+  const weightOf = (d: Date) => {
+    if (halfDayRequest && neighbor(req.from, d)) return 0.5;
+    return vacationWeight(d, halfDays);
+  };
+  const days = spendableDays.reduce((sum, d) => sum + weightOf(d), 0);
 
   if (req.useOvertime) {
     // Deduct from overtime balance instead of vacation entitlement
+    // Half days charge the model's half-day value instead of the full target.
     const consumedMinutes = businessDays.reduce((sum, d) => {
       const model = modelForDate(models, d);
       if (!model) return sum;
-      return sum + targetMinutesForDate(d, model);
+      return (
+        sum + (weightOf(d) === 0.5 ? halfDayMinutesFor(model, d) : targetMinutesForDate(d, model))
+      );
     }, 0);
 
     await db.$transaction([
@@ -510,10 +540,20 @@ export async function cancelVacationRequest(opts: {
       const resolver2 = makeHolidayResolver(holidays2);
       const { businessDays: bd } = businessDaysInRange(req.from, req.to, state2, resolver2);
       const models2 = await workingModelsInRange(req.userId, req.from, req.to);
+      // Mirror the approve-time half-day charging (same weightOf rules).
+      const settings2 = await db.orgSettings.findUniqueOrThrow({ where: { id: "singleton" } });
+      const halfDays2 = halfDayDateSet(settings2);
+      const halfDayReq = req.halfDay && isSameCalendarDay(req.from, req.to, ctx2.timeZone);
       const consumedMinutes = bd.reduce((sum, d) => {
         const model = modelForDate(models2, d);
         if (!model) return sum;
-        return sum + targetMinutesForDate(d, model);
+        const weight =
+          halfDayReq && isSameCalendarDay(req.from, d, ctx2.timeZone)
+            ? 0.5
+            : vacationWeight(d, halfDays2);
+        return (
+          sum + (weight === 0.5 ? halfDayMinutesFor(model, d) : targetMinutesForDate(d, model))
+        );
       }, 0);
       await db.overtimeBalance.update({
         where: { userId_year: { userId: req.userId, year: req.year } },

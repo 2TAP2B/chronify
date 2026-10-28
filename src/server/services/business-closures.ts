@@ -10,10 +10,13 @@ import {
   businessDaysInRange,
   modelForDate,
   splitByWorkTarget,
+  halfDayDateSet,
+  vacationWeight,
+  halfDayMinutesFor,
   type HolidayResolver,
 } from "@/lib/vacation/business-days";
-import { targetMinutesForDate } from "@/lib/overtime/calculate";
 import type { FederalState } from "@prisma/client";
+import { targetMinutesForDate } from "@/lib/overtime/calculate";
 
 export class ClosureError extends Error {
   code: string;
@@ -123,13 +126,18 @@ export async function createClosure({
 
   for (const u of activeUsers) {
     // Days with target = 0 in the user's working model (e.g. 4-day week)
-    // consume no vacation day.
+    // consume no vacation day; configured half days (24.12/31.12) charge 0.5.
     const consumedDays = await consumableClosureDays(
       u.id,
       u.federalState,
       resolver,
       input.from,
       input.to
+    );
+    const halfDaySet = halfDayDateSet(settings);
+    const consumedDaysTotal = consumedDays.reduce(
+      (sum, day) => sum + vacationWeight(day, halfDaySet),
+      0
     );
 
     if (consumedDays.length > 0) {
@@ -150,10 +158,10 @@ export async function createClosure({
           userId: u.id,
           year,
           totalDays: settings.defaultVacationDays,
-          consumedDays: consumedDays.length,
+          consumedDays: consumedDaysTotal,
         },
         update: {
-          consumedDays: { increment: consumedDays.length },
+          consumedDays: { increment: consumedDaysTotal },
         },
       });
     }
@@ -170,7 +178,7 @@ export async function createClosure({
       type: "CLOSURE_CHOICE",
       ...notificationText("closureChoice", locale, {
         closureName: input.name,
-        days: consumedDays.length,
+        days: consumedDaysTotal,
       }),
       payload: {
         closureId: closure.id,
@@ -222,10 +230,17 @@ export async function deleteClosure({
     note,
     date: { gte: closure.from, lte: closure.to },
   };
-  const entries = await db.timeEntry.findMany({ where: entryWhere, select: { userId: true } });
+  const entries = await db.timeEntry.findMany({
+    where: entryWhere,
+    select: { userId: true, date: true },
+  });
+  const halfDaySet = halfDayDateSet(settings);
   const consumedByUser = new Map<string, number>();
   for (const e of entries) {
-    consumedByUser.set(e.userId, (consumedByUser.get(e.userId) ?? 0) + 1);
+    consumedByUser.set(
+      e.userId,
+      (consumedByUser.get(e.userId) ?? 0) + vacationWeight(e.date, halfDaySet)
+    );
   }
   await db.timeEntry.deleteMany({ where: entryWhere });
 
@@ -269,7 +284,12 @@ export async function deleteClosure({
       const models = await workingModelsInRange(u.id, closure.from, closure.to);
       const overtimeMinutes = days.reduce((sum, d) => {
         const m = modelForDate(models, d);
-        return m ? sum + targetMinutesForDate(d, m) : sum;
+        return m
+          ? sum +
+              (vacationWeight(d, halfDaySet) === 0.5
+                ? halfDayMinutesFor(m, d)
+                : targetMinutesForDate(d, m))
+          : sum;
       }, 0);
       if (overtimeMinutes <= 0) continue;
       await db.overtimeBalance
@@ -334,12 +354,20 @@ export async function updateChoice({
   const state = owner?.federalState ?? settings.defaultFederalState;
   const resolver = await buildResolver(closure.from, closure.to, [state]);
   const businessDays = businessDaysInRange(closure.from, closure.to, state, resolver).businessDays;
-  // Days with target = 0 in the working model consume no vacation day.
+  // Days with target = 0 in the working model consume no vacation day;
+  // configured half days (24.12/31.12) charge 0.5 days / half-day minutes.
   const models = await workingModelsInRange(actor.id, closure.from, closure.to);
   const { consumed } = splitByWorkTarget(businessDays, models);
+  const halfDaySet = halfDayDateSet(settings);
+  const consumedDaysTotal = consumed.reduce((sum, d) => sum + vacationWeight(d, halfDaySet), 0);
   const totalOvertimeMinutes = businessDays.reduce((sum, d) => {
     const m = modelForDate(models, d);
-    return m ? sum + targetMinutesForDate(d, m) : sum;
+    return m
+      ? sum +
+          (vacationWeight(d, halfDaySet) === 0.5
+            ? halfDayMinutesFor(m, d)
+            : targetMinutesForDate(d, m))
+      : sum;
   }, 0);
 
   if (choice === "OVERTIME" && existing.choice === "VACATION") {
@@ -360,10 +388,10 @@ export async function updateChoice({
           userId: actor.id,
           year: closure.from.getUTCFullYear(),
           totalDays: settings.defaultVacationDays,
-          consumedDays: -consumed.length,
+          consumedDays: -consumedDaysTotal,
         },
         update: {
-          consumedDays: { decrement: consumed.length },
+          consumedDays: { decrement: consumedDaysTotal },
         },
       })
       .catch(() => {});
@@ -398,10 +426,10 @@ export async function updateChoice({
         userId: actor.id,
         year: closure.from.getUTCFullYear(),
         totalDays: settings.defaultVacationDays,
-        consumedDays: consumed.length,
+        consumedDays: consumedDaysTotal,
       },
       update: {
-        consumedDays: { increment: consumed.length },
+        consumedDays: { increment: consumedDaysTotal },
       },
     });
 

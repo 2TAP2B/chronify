@@ -37,6 +37,7 @@ export function VacationRequestForm({ overtimeHours = 0, regeneration }: Props) 
   const [note, setNote] = useState("");
   const [kind, setKind] = useState<"REGULAR" | "SPECIAL" | "REGENERATION">("REGULAR");
   const [useOvertime, setUseOvertime] = useState(false);
+  const [halfDay, setHalfDay] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -65,15 +66,19 @@ export function VacationRequestForm({ overtimeHours = 0, regeneration }: Props) 
     setError(null);
     setSuccess(false);
     try {
+      // Fiscal half-day: only possible for single-day ranges.
+      const same = from === to;
+      const payloadHalfDay = same ? halfDay : false;
       const res = await fetch("/api/vacation", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           from: new Date(from + "T00:00:00Z").toISOString(),
           to: new Date(to + "T00:00:00Z").toISOString(),
-          note: kind === "SPECIAL" && !note.trim() ? undefined : note || null,
+          note: note || null,
           useOvertime,
           kind,
+          halfDay: payloadHalfDay,
         }),
       });
       if (!res.ok) {
@@ -192,6 +197,25 @@ export function VacationRequestForm({ overtimeHours = 0, regeneration }: Props) 
           </div>
         </div>
       )}
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="space-y-1.5">
+          <Label htmlFor="halfDay">{t("scopeLabel")}</Label>
+          <Select
+            value={from === to && halfDay ? "HALF" : "FULL"}
+            onValueChange={(v) => setHalfDay(v === "HALF")}
+            disabled={from !== to}
+          >
+            <SelectTrigger id="halfDay">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="FULL">{t("fullDay")}</SelectItem>
+              <SelectItem value="HALF">{t("halfDayLabel")}</SelectItem>
+            </SelectContent>
+          </Select>
+          {from !== to && <p className="text-xs text-muted-foreground">{t("halfDayRangeHint")}</p>}
+        </div>
+      </div>
       {error && <p className="text-sm text-destructive">{error}</p>}
       {success && <p className="text-sm text-emerald-600">✓</p>}
       <Button type="submit" disabled={loading}>

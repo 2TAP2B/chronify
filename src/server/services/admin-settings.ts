@@ -43,6 +43,8 @@ export const updateSettingsSchema = z.object({
   loginQuote: z.string().max(200).nullable().optional(),
   loginQuoteAuthor: z.string().max(50).nullable().optional(),
   passwordLoginDisabled: z.boolean().optional(),
+  heiligabendHalfDay: z.boolean().optional(),
+  silvesterHalfDay: z.boolean().optional(),
   smtpHost: z.string().max(255).nullable().optional(),
   smtpPort: z.number().int().min(1).max(65535).nullable().optional(),
   smtpUser: z.string().max(255).nullable().optional(),

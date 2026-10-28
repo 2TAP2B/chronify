@@ -34,6 +34,8 @@ export const createWorkingModelSchema = z.object({
   autoBreakMinutes6h: z.number().int().min(0).max(480).default(30),
   autoBreakThreshold9h: z.boolean().default(true),
   autoBreakMinutes9h: z.number().int().min(0).max(480).default(45),
+  /** Overtime/vacation minutes for a half day; null = auto (target/2). */
+  halfDayMinutes: z.number().int().min(0).max(720).nullish(),
 });
 
 export const updateWorkingModelSchema = createWorkingModelSchema.partial().omit({ userId: true });
