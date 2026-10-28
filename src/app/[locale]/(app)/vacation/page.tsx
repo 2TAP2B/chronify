@@ -185,6 +185,11 @@ export default async function VacationPage({ params, searchParams }: Props) {
                           {t("regenBadge")}
                         </Badge>
                       )}
+                      {r.halfDay && (
+                        <Badge variant="outline" className="ml-2 text-xs">
+                          {t("halfDayLabel")}
+                        </Badge>
+                      )}
                     </TableCell>
                     <TableCell className="max-w-[200px] truncate">
                       {r.note ?? r.approverNote ?? <span className="text-muted-foreground">—</span>}

@@ -122,6 +122,11 @@ export default async function VacationApprovalsPage({ params }: Props) {
                             {t("regenBadge")}
                           </Badge>
                         )}
+                        {r.halfDay && (
+                          <Badge variant="outline" className="ml-2 text-xs">
+                            {t("halfDayLabel")}
+                          </Badge>
+                        )}
                       </TableCell>
                       <TableCell>
                         <VacationApprovalActions requestId={r.id} />
