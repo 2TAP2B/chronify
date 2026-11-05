@@ -14,6 +14,10 @@ import { getOvertimeView } from "@/server/services/overtime";
 import { formatSignedDuration } from "@/lib/overtime/calculate";
 import { formatInZone } from "@/lib/datetime";
 import { OvertimeBarChart } from "@/components/overtime/overtime-bar-chart";
+import {
+  OvertimeDayOverview,
+  type DayOverviewDay,
+} from "@/components/overtime/overtime-day-overview";
 import { YearPicker } from "@/components/shared/year-picker";
 
 type Props = {
@@ -137,6 +141,26 @@ export default async function OvertimePage({ params, searchParams }: Props) {
         labels={{
           title: t("monthlyChart"),
           description: String(view.year),
+        }}
+      />
+
+      <OvertimeDayOverview
+        days={view.days.map((d) => ({
+          date: d.date.toISOString().slice(0, 10),
+          deltaMinutes: Math.round(d.deltaMs / 60_000),
+          workedMinutes: Math.round(d.workedMs / 60_000),
+          targetMinutes: d.targetMinutes,
+          breakMinutes: d.breakMinutes,
+        }))}
+        monthNames={monthNames}
+        labels={{
+          title: t("dailyOverview"),
+          chartTitle: t("dailyChart"),
+          listTitle: t("dailyList"),
+          noData: t("noDailyData"),
+          workedLabel: t("dailyWorked"),
+          targetLabel: t("dailyTarget"),
+          breakLabel: t("dailyBreak"),
         }}
       />
 
