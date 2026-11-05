@@ -276,6 +276,7 @@
     "insufficientOvertimeError": "Not enough overtime available",
     "overtimeBadge": "Overtime",
     "kindLabel": "Type",
+    "scopeLabel": "Scope",
     "fullDay": "Full day",
     "halfDayLabel": "Half day (0.5)",
     "halfDayRangeHint": "Half days are only possible for single-day requests.",
