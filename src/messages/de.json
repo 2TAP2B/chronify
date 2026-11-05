@@ -276,6 +276,7 @@
     "insufficientOvertimeError": "Nicht genug Überstunden verfügbar",
     "overtimeBadge": "Überstunden",
     "kindLabel": "Art",
+    "scopeLabel": "Zeitraum",
     "fullDay": "Ganzer Tag",
     "halfDayLabel": "Halbtag (0,5)",
     "halfDayRangeHint": "Halbtag nur bei Einzel-Tagsanträgen möglich.",
