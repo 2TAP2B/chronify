@@ -303,3 +303,60 @@ describe("half days", () => {
     expect(halfDayMinutesFor({ ...model, halfDayMinutes: null }, tuesday)).toBe(120); // 240/2
   });
 });
+
+describe("halfDayMinutesFor — 0-target days never charge", () => {
+  const fourDay: ModelRange = {
+    validFrom: new Date(Date.UTC(2020, 0, 1)),
+    validTo: null,
+    mondayMinutes: 480,
+    tuesdayMinutes: 480,
+    wednesdayMinutes: 480,
+    thursdayMinutes: 480,
+    fridayMinutes: 0,
+    saturdayMinutes: 0,
+    sundayMinutes: 0,
+    weeklyTargetMinutes: 1920,
+    halfDayMinutes: 150,
+  };
+  const friday = new Date(Date.UTC(2027, 11, 24)); // 2027-12-24 is a Friday
+
+  it("0h weekday charges 0 even with explicit halfDayMinutes", () => {
+    expect(halfDayMinutesFor(fourDay, friday)).toBe(0);
+  });
+
+  it("0h weekday stays 0 without the toggle date (plain Friday)", () => {
+    expect(halfDayMinutesFor(fourDay, new Date(Date.UTC(2027, 11, 10)))).toBe(0);
+  });
+
+  it("working day still charges the explicit value", () => {
+    // 2027-12-27 is a Monday (480 target) → explicit value wins
+    expect(halfDayMinutesFor(fourDay, new Date(Date.UTC(2027, 11, 27)))).toBe(150);
+  });
+
+  it("working day with auto fallback = target/2", () => {
+    expect(
+      halfDayMinutesFor({ ...fourDay, halfDayMinutes: null }, new Date(Date.UTC(2027, 11, 27)))
+    ).toBe(240);
+  });
+
+  it("3-day week (two 0 days): explicit wins on working day, 0h days charge 0", () => {
+    const threeDay: ModelRange = {
+      ...fourDay,
+      mondayMinutes: 480,
+      tuesdayMinutes: 480,
+      wednesdayMinutes: 0,
+      thursdayMinutes: 0,
+      weeklyTargetMinutes: 960,
+    };
+    // 2027-12-28 Tuesday (480) → explicit value wins
+    expect(halfDayMinutesFor(threeDay, new Date(Date.UTC(2027, 11, 28)))).toBe(150);
+    // auto fallback → 240
+    expect(
+      halfDayMinutesFor({ ...threeDay, halfDayMinutes: null }, new Date(Date.UTC(2027, 11, 28)))
+    ).toBe(240);
+    // 2027-12-29 Wednesday (0h) → 0 even with explicit halfDayMinutes
+    expect(halfDayMinutesFor(threeDay, new Date(Date.UTC(2027, 11, 29)))).toBe(0);
+    // plain 0h Saturday → 0
+    expect(halfDayMinutesFor(threeDay, new Date(Date.UTC(2027, 11, 25)))).toBe(0);
+  });
+});

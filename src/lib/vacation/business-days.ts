@@ -179,9 +179,11 @@ export function consumedDaysOf(days: Date[], halfDays: Set<string>): number {
 
 /**
  * Overtime minutes charged for a half vacation day: explicit model value or
- * half of that weekday's target.
+ * half of that weekday's target. Never charges minutes on 0-target days —
+ * regardless of configured half days (24.12/31.12) or the field value.
  */
 export function halfDayMinutesFor(model: ModelRange, date: Date): number {
   const target = targetMinutesForDate(date, model);
+  if (target === 0) return 0;
   return model.halfDayMinutes ?? Math.floor(target / 2);
 }
