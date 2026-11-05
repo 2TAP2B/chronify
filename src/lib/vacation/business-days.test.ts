@@ -251,3 +251,55 @@ describe("splitByWorkTarget", () => {
     expect(skipped).toHaveLength(0);
   });
 });
+
+import { halfDayDateSet, vacationWeight, halfDayMinutesFor } from "@/lib/vacation/business-days";
+
+describe("half days", () => {
+  const set = halfDayDateSet({ heiligabendHalfDay: true, silvesterHalfDay: true });
+
+  it("weights Christmas Eve and New Year's Eve 0.5", () => {
+    expect(vacationWeight(new Date(Date.UTC(2027, 11, 24)), set)).toBe(0.5);
+    expect(vacationWeight(new Date(Date.UTC(2031, 11, 31)), set)).toBe(0.5);
+  });
+
+  it("weights every other day 1", () => {
+    expect(vacationWeight(new Date(Date.UTC(2027, 11, 23)), set)).toBe(1);
+    expect(vacationWeight(new Date(Date.UTC(2027, 0, 24)), set)).toBe(1);
+  });
+
+  it("respects the org toggles", () => {
+    const off = halfDayDateSet({ heiligabendHalfDay: false, silvesterHalfDay: true });
+    expect(vacationWeight(new Date(Date.UTC(2027, 11, 24)), off)).toBe(1);
+    expect(vacationWeight(new Date(Date.UTC(2027, 11, 31)), off)).toBe(0.5);
+  });
+
+  it("sums weighted consumption", () => {
+    const days = [
+      new Date(Date.UTC(2027, 11, 23)),
+      new Date(Date.UTC(2027, 11, 24)),
+      new Date(Date.UTC(2027, 11, 26)),
+    ];
+    expect(days.reduce((s, d) => s + vacationWeight(d, set), 0)).toBeCloseTo(2.5, 10);
+  });
+
+  it("halfDayMinutesFor: explicit value wins, fallback = target/2", () => {
+    const model = {
+      validFrom: new Date(Date.UTC(2020, 0, 1)),
+      validTo: null,
+      mondayMinutes: 480,
+      tuesdayMinutes: 240,
+      wednesdayMinutes: 480,
+      thursdayMinutes: 480,
+      fridayMinutes: 0,
+      saturdayMinutes: 0,
+      sundayMinutes: 0,
+      weeklyTargetMinutes: 2160,
+      halfDayMinutes: 150,
+    };
+    const monday = new Date(Date.UTC(2027, 11, 27)); // 2027-12-27 is a Monday
+    const tuesday = new Date(Date.UTC(2027, 11, 28));
+    expect(halfDayMinutesFor(model, monday)).toBe(150); // explicit
+    expect(halfDayMinutesFor({ ...model, halfDayMinutes: null }, monday)).toBe(240); // auto 480/2
+    expect(halfDayMinutesFor({ ...model, halfDayMinutes: null }, tuesday)).toBe(120); // 240/2
+  });
+});

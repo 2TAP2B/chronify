@@ -29,6 +29,8 @@ export function SettingsForm({ settings }: { settings: SettingsView }) {
     autoBreakDefault: settings.autoBreakDefault,
     defaultVacationDays: String(settings.defaultVacationDays),
     passwordLoginDisabled: settings.passwordLoginDisabled,
+    heiligabendHalfDay: settings.heiligabendHalfDay,
+    silvesterHalfDay: settings.silvesterHalfDay,
     smtpHost: settings.smtpHost ?? "",
     smtpPort: settings.smtpPort != null ? String(settings.smtpPort) : "",
     smtpUser: settings.smtpUser ?? "",
@@ -62,6 +64,8 @@ export function SettingsForm({ settings }: { settings: SettingsView }) {
         autoBreakDefault: form.autoBreakDefault,
         defaultVacationDays: Number(form.defaultVacationDays),
         passwordLoginDisabled: form.passwordLoginDisabled,
+        heiligabendHalfDay: form.heiligabendHalfDay,
+        silvesterHalfDay: form.silvesterHalfDay,
         ...(form.smtpSource !== "env" && {
           smtpHost: form.smtpHost || null,
           smtpPort: form.smtpPort ? Number(form.smtpPort) : null,
@@ -112,6 +116,31 @@ export function SettingsForm({ settings }: { settings: SettingsView }) {
               checked={form.passwordLoginDisabled}
               onCheckedChange={(v) => setForm((f) => ({ ...f, passwordLoginDisabled: v }))}
             />
+          </div>
+          <div className="mt-3 space-y-3">
+            <p className="text-sm font-medium">{t("halfDaysSection")}</p>
+            <div className="flex items-center justify-between rounded-lg border p-3">
+              <div className="space-y-0.5">
+                <Label htmlFor="heiligabendHalfDay">{t("heiligabendHalfDay")}</Label>
+                <p className="text-xs text-muted-foreground">{t("heiligabendHalfDayHint")}</p>
+              </div>
+              <Switch
+                id="heiligabendHalfDay"
+                checked={form.heiligabendHalfDay}
+                onCheckedChange={(v) => setForm((f) => ({ ...f, heiligabendHalfDay: v }))}
+              />
+            </div>
+            <div className="flex items-center justify-between rounded-lg border p-3">
+              <div className="space-y-0.5">
+                <Label htmlFor="silvesterHalfDay">{t("silvesterHalfDay")}</Label>
+                <p className="text-xs text-muted-foreground">{t("silvesterHalfDayHint")}</p>
+              </div>
+              <Switch
+                id="silvesterHalfDay"
+                checked={form.silvesterHalfDay}
+                onCheckedChange={(v) => setForm((f) => ({ ...f, silvesterHalfDay: v }))}
+              />
+            </div>
           </div>
         </CardContent>
       </Card>

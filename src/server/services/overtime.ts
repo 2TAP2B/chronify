@@ -12,7 +12,14 @@ import {
   type DaySummary,
 } from "@/lib/overtime/calculate";
 import { toCalendarDate, addDaysUtc } from "@/lib/datetime";
+import { DAY_KEYS, type DayKey } from "@/lib/overtime/calculate";
+import { halfDayMinutesFor } from "@/lib/vacation/business-days";
 import type { WorkingModel } from "@prisma/client";
+
+/** Field key (e.g. "mondayMinutes") for a UTC date. */
+function dayKeyForDate(date: Date): (typeof DAY_KEYS)[number] {
+  return DAY_KEYS[date.getUTCDay()];
+}
 
 export type DaySummaryWithMeta = DaySummary & {
   hasTimerEntry: boolean;
@@ -86,10 +93,13 @@ export async function computeDaysForRange(opts: {
     byDay.set(day, existing);
   }
 
-  const excusedDays = new Set<number>();
+  const absenceByDay = new Map<number, string[]>();
   for (const e of absenceEntries) {
-    excusedDays.add(toCalendarDate(e.date, opts.timeZone).getTime());
+    const day = toCalendarDate(e.date, opts.timeZone).getTime();
+    absenceByDay.set(day, [...(absenceByDay.get(day) ?? []), e.type]);
   }
+
+  const excusedDays = new Set<number>();
   if (user) {
     for (const h of holidays) {
       const hDate = toCalendarDate(h.date, "UTC");
@@ -120,11 +130,21 @@ export async function computeDaysForRange(opts: {
     if (targetMin === 0 && !agg) continue;
 
     if (agg) {
+      // Half vacation day (work in one half + VACATION entry, e.g. a halfDay
+      // request or 24.12/31.12): the target for that day is the model's
+      // half-day value instead of the full target.
+      const absenceTypes = absenceByDay.get(dayMs);
+      const modelForSummary = absenceTypes?.includes("VACATION")
+        ? {
+            ...model,
+            [dayKeyForDate(date)]: halfDayMinutesFor(model, date),
+          }
+        : model;
       const summary = summarizeDay({
         date,
         workedMs: agg.workedMs,
         breakMinutes: agg.breakMinutes,
-        model,
+        model: modelForSummary,
       });
       out.push({ ...summary, hasTimerEntry: agg.hasTimer });
     } else {

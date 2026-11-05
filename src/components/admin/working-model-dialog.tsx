@@ -65,6 +65,10 @@ export function WorkingModelDialog({
   );
   const [ab6, setAb6] = useState(String(model?.autoBreakMinutes6h ?? 30));
   const [ab9, setAb9] = useState(String(model?.autoBreakMinutes9h ?? 45));
+  // Empty = auto (half of the weekday target)
+  const [halfDayHours, setHalfDayHours] = useState(
+    model?.halfDayMinutes != null ? formatMinutesHMM(model.halfDayMinutes) : ""
+  );
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -80,6 +84,7 @@ export function WorkingModelDialog({
         autoBreakMinutes9h: Number(ab9) || 0,
         autoBreakThreshold6h: true,
         autoBreakThreshold9h: true,
+        halfDayMinutes: halfDayHours.trim() ? (parseHMM(halfDayHours) ?? null) : null,
       };
       for (const d of DAYS) {
         body[`${d}Minutes`] = parseHMM(dayHours[d]) ?? 0;
@@ -184,6 +189,18 @@ export function WorkingModelDialog({
                 value={ab9}
                 onChange={(e) => setAb9(e.target.value)}
               />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="halfDay">{t("halfDayHours")} (h:mm)</Label>
+              <Input
+                id="halfDay"
+                type="text"
+                inputMode="numeric"
+                placeholder={t("halfDayAuto")}
+                value={halfDayHours}
+                onChange={(e) => setHalfDayHours(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">{t("halfDayHint")}</p>
             </div>
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}

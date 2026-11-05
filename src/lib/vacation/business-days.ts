@@ -127,6 +127,7 @@ export type ModelRange = {
   saturdayMinutes: number;
   sundayMinutes: number;
   weeklyTargetMinutes: number;
+  halfDayMinutes?: number | null;
 };
 
 export function modelForDate(models: ModelRange[], date: Date): ModelRange | null {
@@ -152,4 +153,35 @@ export function splitByWorkTarget(
     else consumed.push(d);
   }
   return { consumed, skipped };
+}
+
+/** Org toggle today: 24.12 and/or 31.12 count as half vacation days, every year. */
+export function halfDayDateSet(settings: {
+  heiligabendHalfDay?: boolean;
+  silvesterHalfDay?: boolean;
+}): Set<string> {
+  const set = new Set<string>();
+  if (settings.heiligabendHalfDay) set.add("12-24");
+  if (settings.silvesterHalfDay) set.add("12-31");
+  return set;
+}
+
+/** Weight of a vacation day: 0.5 on configured half days (MM-DD), else 1. */
+export function vacationWeight(date: Date, halfDays: Set<string>): number {
+  const iso = toCalendarDate(date, "UTC").toISOString().slice(0, 10);
+  return halfDays.has(iso.slice(5)) ? 0.5 : 1;
+}
+
+/** Sum of vacation weights over consumed days. */
+export function consumedDaysOf(days: Date[], halfDays: Set<string>): number {
+  return days.reduce((sum, d) => sum + vacationWeight(d, halfDays), 0);
+}
+
+/**
+ * Overtime minutes charged for a half vacation day: explicit model value or
+ * half of that weekday's target.
+ */
+export function halfDayMinutesFor(model: ModelRange, date: Date): number {
+  const target = targetMinutesForDate(date, model);
+  return model.halfDayMinutes ?? Math.floor(target / 2);
 }

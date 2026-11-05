@@ -15,6 +15,7 @@ const createSchema = z.object({
   year: z.number().int().optional(),
   useOvertime: z.boolean().optional(),
   kind: z.enum(["REGULAR", "SPECIAL", "REGENERATION"]).optional(),
+  halfDay: z.boolean().optional(),
   userId: z.string().min(1).optional(),
 });
 
