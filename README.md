@@ -41,6 +41,13 @@ All changes go through GitHub: open an issue, create a branch (`feat/…`,
 `fix/…`), open a PR, squash-merge. Direct commits to `main` are not allowed.
 Agent-facing conventions live in [`AGENTS.md`](./AGENTS.md).
 
+## Release policy
+
+Base version is **v1.0.0**. **Every new feature ships as its own patch
+release `v1.0.x`** (v1.0.1, v1.0.2, …) **until the owner opens the next
+minor version (v1.1.0) explicitly**. Bugfixes usually ride along with the
+next patch release; critical fixes may cut a patch immediately.
+
 ## License
 
 MIT — see [`LICENSE`](./LICENSE).
