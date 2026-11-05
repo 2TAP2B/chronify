@@ -141,9 +141,16 @@ export async function createVacationRequest(opts: {
     );
   }
 
+  // Half-day accounting: a halfDay request charges 0.5; otherwise 0.5 for
+  // configured half days (24.12/31.12) in any year. Needed before the green
+  // guards below (regeneration + entitlement) — both check weighted days.
+  const settings = await db.orgSettings.findUniqueOrThrow({ where: { id: "singleton" } });
+  const halfDays = halfDayDateSet(settings);
+  const vacationDays = halfDay ? 0.5 : consumedDaysOf(spendableDays, halfDays);
+
   if (kind === "REGENERATION") {
     const regen = await getRegenerationStatus(ownerUserId, year);
-    if (!regen.enabled || regen.available < spendableDays.length) {
+    if (!regen.enabled || regen.available < vacationDays) {
       throw new VacationError("No regeneration days available", "NO_REGENERATION", 403);
     }
   }
@@ -158,17 +165,10 @@ export async function createVacationRequest(opts: {
   }
 
   // Entitlement check (falls back to org default when no row exists yet)
-  const [entitlement, settings] = await Promise.all([
-    db.vacationEntitlement.findUnique({
-      where: { userId_year: { userId: ownerUserId, year } },
-    }),
-    db.orgSettings.findUniqueOrThrow({ where: { id: "singleton" } }),
-  ]);
+  const entitlement = await db.vacationEntitlement.findUnique({
+    where: { userId_year: { userId: ownerUserId, year } },
+  });
 
-  // Half-day accounting: a halfDay request charges 0.5; otherwise 0.5 for
-  // configured half days (24.12/31.12) in any year.
-  const halfDays = halfDayDateSet(settings);
-  const vacationDays = halfDay ? 0.5 : consumedDaysOf(spendableDays, halfDays);
   const totalDays_ =
     (entitlement?.totalDays ?? settings.defaultVacationDays) +
     (ctx.user.regeneration ? REGENERATION_EXTRA_DAYS : 0);
