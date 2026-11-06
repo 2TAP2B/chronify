@@ -13,12 +13,12 @@ import {
 } from "@/lib/overtime/calculate";
 import { toCalendarDate, addDaysUtc } from "@/lib/datetime";
 import { DAY_KEYS, type DayKey } from "@/lib/overtime/calculate";
-import { halfDayMinutesFor } from "@/lib/vacation/business-days";
+import { halfDayMinutesFor, halfDayDateSet } from "@/lib/vacation/business-days";
 import type { WorkingModel } from "@prisma/client";
 
-/** Field key (e.g. "mondayMinutes") for a UTC date. */
-function dayKeyForDate(date: Date): (typeof DAY_KEYS)[number] {
-  return DAY_KEYS[date.getUTCDay()];
+/** Working-model field key (e.g. "mondayMinutes") for a UTC date. */
+function dayKeyForDate(date: Date): `${(typeof DAY_KEYS)[number]}Minutes` {
+  return `${DAY_KEYS[date.getUTCDay()]}Minutes`;
 }
 
 export type DaySummaryWithMeta = DaySummary & {
@@ -46,42 +46,47 @@ export async function computeDaysForRange(opts: {
   const now = opts.now ?? new Date();
   const todayCalendar = toCalendarDate(now, opts.timeZone).getTime();
 
-  const [workEntries, absenceEntries, holidays, workingModels, user] = await Promise.all([
-    db.timeEntry.findMany({
-      where: {
-        userId: opts.userId,
-        date: { gte: opts.from, lt: opts.to },
-        type: "WORK",
-      },
-      orderBy: { date: "asc" },
-    }),
-    db.timeEntry.findMany({
-      where: {
-        userId: opts.userId,
-        date: { gte: opts.from, lt: opts.to },
-        type: { in: ["VACATION", "SICK", "PUBLIC_HOLIDAY"] },
-      },
-      select: { date: true, type: true },
-    }),
-    db.publicHoliday.findMany({
-      where: {
-        date: { gte: opts.from, lt: opts.to },
-      },
-      select: { date: true },
-    }),
-    db.workingModel.findMany({
-      where: {
-        userId: opts.userId,
-        validFrom: { lte: opts.to },
-        OR: [{ validTo: null }, { validTo: { gte: opts.from } }],
-      },
-      orderBy: { validFrom: "desc" },
-    }),
-    db.user.findUnique({
-      where: { id: opts.userId },
-      select: { federalState: true },
-    }),
-  ]);
+  const [workEntries, absenceEntries, holidays, workingModels, user, halfDayRequests] =
+    await Promise.all([
+      db.timeEntry.findMany({
+        where: {
+          userId: opts.userId,
+          date: { gte: opts.from, lt: opts.to },
+          type: "WORK",
+        },
+        orderBy: { date: "asc" },
+      }),
+      db.timeEntry.findMany({
+        where: {
+          userId: opts.userId,
+          date: { gte: opts.from, lt: opts.to },
+          type: { in: ["VACATION", "SICK", "PUBLIC_HOLIDAY"] },
+        },
+        select: { date: true, type: true },
+      }),
+      db.publicHoliday.findMany({
+        where: {
+          date: { gte: opts.from, lt: opts.to },
+        },
+        select: { date: true },
+      }),
+      db.workingModel.findMany({
+        where: {
+          userId: opts.userId,
+          validFrom: { lte: opts.to },
+          OR: [{ validTo: null }, { validTo: { gte: opts.from } }],
+        },
+        orderBy: { validFrom: "desc" },
+      }),
+      db.user.findUnique({
+        where: { id: opts.userId },
+        select: { federalState: true },
+      }),
+      db.vacationRequest.findMany({
+        where: { userId: opts.userId, halfDay: true, status: { in: ["PENDING", "APPROVED"] } },
+        select: { from: true },
+      }),
+    ]);
 
   const byDay = new Map<number, { workedMs: number; breakMinutes: number; hasTimer: boolean }>();
   for (const e of workEntries) {
@@ -100,10 +105,31 @@ export async function computeDaysForRange(opts: {
   }
 
   const excusedDays = new Set<number>();
+  for (const day of absenceByDay.keys()) {
+    if (!byDay.has(day)) excusedDays.add(day);
+  }
   if (user) {
     for (const h of holidays) {
       const hDate = toCalendarDate(h.date, "UTC");
       excusedDays.add(hDate.getTime());
+    }
+  }
+
+  // Genuine half days: halfDay vacation requests (single day) plus the
+  // configured 24.12/31.12 toggles. Everything else — e.g. a full-day
+  // vacation with a stray WORK entry — keeps the full target.
+  const settings = await db.orgSettings.findUniqueOrThrow({ where: { id: "singleton" } });
+  const halfAbsenceDays = new Set<number>();
+  for (const r of halfDayRequests) {
+    halfAbsenceDays.add(toCalendarDate(r.from, opts.timeZone).getTime());
+  }
+  for (const halfDayIso of halfDayDateSet(settings)) {
+    const [m, d] = halfDayIso.split("-").map(Number);
+    // Mark every occurrence of the MM-DD date within the range's years.
+    const fromYear = toCalendarDate(opts.from, "UTC").getUTCFullYear();
+    const toYear = toCalendarDate(opts.to, "UTC").getUTCFullYear();
+    for (let y = fromYear; y <= toYear; y++) {
+      halfAbsenceDays.add(toCalendarDate(new Date(Date.UTC(y, m - 1, d)), opts.timeZone).getTime());
     }
   }
 
@@ -130,16 +156,26 @@ export async function computeDaysForRange(opts: {
     if (targetMin === 0 && !agg) continue;
 
     if (agg) {
-      // Half vacation day (work in one half + VACATION entry, e.g. a halfDay
-      // request or 24.12/31.12): the target for that day is the model's
-      // half-day value instead of the full target.
-      const absenceTypes = absenceByDay.get(dayMs);
-      const modelForSummary = absenceTypes?.includes("VACATION")
-        ? {
-            ...model,
-            [dayKeyForDate(date)]: halfDayMinutesFor(model, date),
-          }
+      // Half vacation day applies only on genuine half dates — a halfDay
+      // request's single day or the toggled 24.12/31.12 (structurally a half
+      // working day for the org). Everything else keeps the full target
+      // (e.g. a full-day vacation with a stray work entry — legacy data must
+      // not inflate).
+      const genuineHalf = halfAbsenceDays.has(dayMs);
+      const modelForSummary = genuineHalf
+        ? { ...model, [dayKeyForDate(date)]: halfDayMinutesFor(model, date) }
         : model;
+      // eslint-disable-next-line no-console
+      console.log(
+        "[dbg-sum]",
+        genuineHalf,
+        "smonday:",
+        (modelForSummary as { mondayMinutes?: number }).mondayMinutes,
+        "dateKey:",
+        dayKeyForDate(date),
+        "hdmin:",
+        halfDayMinutesFor(model, date)
+      );
       const summary = summarizeDay({
         date,
         workedMs: agg.workedMs,
