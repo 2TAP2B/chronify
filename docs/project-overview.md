@@ -59,28 +59,30 @@ prisma/
 
 ## Scripts
 
-| Command                             | What                    |
-| ----------------------------------- | ----------------------- |
-| `npm run dev`                       | Dev server (:3001)      |
-| `npm run build`                     | Production build        |
-| `npm run start`                     | Production server       |
-| `npm run typecheck`                 | TypeScript strict       |
-| `npm run lint`                      | ESLint                  |
-| `npm run prisma:migrate`            | Create a migration      |
-| `npm run prisma:deploy`             | Apply migrations (prod) |
-| `npm run prisma:seed`               | Run seed                |
-| `npm run prisma:studio`             | Prisma Studio           |
-| `npm test`                          | Vitest (unit)           |
-| `npm run test:e2e`                  | Playwright (e2e, :3100) |
-| `npm run test:e2e -- --ui`          | Playwright interactive  |
-| `npm run format`                    | Prettier (write)        |
-| `npm run format:check`              | Prettier (check)        |
-| `dev-db start\|stop\|status\|reset` | Local Postgres cluster  |
-| `bash scripts/backup-db.sh`         | Encrypted DB backup     |
-| `bash scripts/restore-db.sh <file>` | Restore DB              |
-| `bash scripts/first-install.sh`     | Interactive prod setup  |
-| `npm run reports:run`               | One-shot report run     |
-| `npm run retention:run`             | GDPR retention cleanup  |
+| Command                             | What                                          |
+| ----------------------------------- | --------------------------------------------- |
+| `npm run dev`                       | Dev server (:3001)                            |
+| `npm run build`                     | Production build                              |
+| `npm run start`                     | Production server                             |
+| `npm run typecheck`                 | TypeScript strict                             |
+| `npm run lint`                      | ESLint                                        |
+| `npm run prisma:migrate`            | Create a migration                            |
+| `npm run prisma:deploy`             | Apply migrations (prod)                       |
+| `npm run prisma:seed`               | Run seed                                      |
+| `npm run prisma:studio`             | Prisma Studio                                 |
+| `npm test`                          | Vitest (unit)                                 |
+| `npm run test:e2e`                  | Playwright (e2e, :3100)                       |
+| `npm run test:e2e -- --ui`          | Playwright interactive                        |
+| `npm run format`                    | Prettier (write)                              |
+| `npm run format:check`              | Prettier (check)                              |
+| `dev-db start\|stop\|status\|reset` | Local Postgres cluster                        |
+| `bash scripts/backup-db.sh`         | Encrypted DB backup                           |
+| `bash scripts/restore-db.sh <file>` | Restore DB                                    |
+| `bash scripts/first-install.sh`     | Interactive prod setup                        |
+| `npm run reports:run`               | One-shot report run                           |
+| `npm run retention:run`             | GDPR retention cleanup                        |
+| `npm run scenarios:seed`            | Dev-only: overtime/vacation test users + data |
+| `npm run scenarios:check`           | Dev-only: verify balances against expected    |
 
 ## Web Push (VAPID keys)
 

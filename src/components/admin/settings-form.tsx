@@ -226,10 +226,10 @@ export function SettingsForm({ settings }: { settings: SettingsView }) {
                   const res = await fetch("/api/admin/settings/test-smtp", { method: "POST" });
                   const b = (await res.json().catch(() => ({}))) as {
                     error?: string;
-                    message?: string;
+                    to?: string;
                   };
                   if (!res.ok) throw new Error(b.error ?? `HTTP ${res.status}`);
-                  setMsg(b.message ?? t("smtpTestSent"));
+                  setMsg(t("smtpTestSent", { email: b.to ?? "" }));
                 } catch (e) {
                   setError(e instanceof Error ? e.message : "error");
                 } finally {

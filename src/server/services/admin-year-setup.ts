@@ -67,7 +67,8 @@ export async function runYearSetup(opts: {
     });
     if (ent) entitlementsCreated++;
 
-    // OvertimeBalance: compute carriedOverMinutes from prev year's totalDeltaMs
+    // OvertimeBalance: carry over the previous year's closing balance
+    // (its own carryover + worked delta − overtime taken off).
     let carriedOverMinutes = 0;
     if (opts.carriedOverFromPrev) {
       const prevCompute = await computeYearOvertime({
@@ -75,7 +76,8 @@ export async function runYearSetup(opts: {
         year: year - 1,
         timeZone: u.timezone || "Europe/Berlin",
       });
-      carriedOverMinutes = Math.round(prevCompute.computation.totalDeltaMs / 60_000);
+      carriedOverMinutes = Math.round(prevCompute.computation.balanceMs / 60_000);
+      const prevComputedMinutes = Math.round(prevCompute.computation.totalDeltaMs / 60_000);
       // Also persist previous year's computedMinutes
       await db.overtimeBalance.upsert({
         where: { userId_year: { userId: u.id, year: year - 1 } },
@@ -83,11 +85,11 @@ export async function runYearSetup(opts: {
           userId: u.id,
           year: year - 1,
           carriedOverMinutes: prevCompute.carriedOverMinutes,
-          computedMinutes: carriedOverMinutes,
+          computedMinutes: prevComputedMinutes,
           lockedAt: new Date(),
         },
         update: {
-          computedMinutes: carriedOverMinutes,
+          computedMinutes: prevComputedMinutes,
           lockedAt: new Date(),
         },
       });

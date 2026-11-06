@@ -199,7 +199,9 @@
     "weekdaysOnly": "Nur Montag–Freitag",
     "myTimesheet": "Mein Stundenzettel",
     "filter": "Filter",
-    "overlapError": "Dieser Zeitraum überschneidet sich mit einem bestehenden Eintrag."
+    "overlapError": "Dieser Zeitraum überschneidet sich mit einem bestehenden Eintrag.",
+    "timerAlreadyRunning": "Für diesen Benutzer läuft bereits ein Timer.",
+    "invalidTimerStart": "Die Startzeit darf nicht in der Zukunft liegen."
   },
   "overtime": {
     "title": "Überstunden",
@@ -578,6 +580,7 @@
     "smtpTls": "TLS verwenden",
     "smtpTestButton": "Testmail senden",
     "smtpTesting": "Sendet …",
+    "smtpTestSent": "Testmail an {email} versendet.",
     "smtpTestHint": "Sendet eine Test-Mail an deine eigene Benutzer-Adresse.",
     "sectionLogin": "Anmeldung",
     "sectionLoginHint": "Steuerung, wie sich Mitarbeiter anmelden können.",

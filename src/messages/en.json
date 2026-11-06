@@ -199,7 +199,9 @@
     "weekdaysOnly": "Monday–Friday only",
     "myTimesheet": "My timesheet",
     "filter": "Filter",
-    "overlapError": "This time range overlaps with an existing entry."
+    "overlapError": "This time range overlaps with an existing entry.",
+    "timerAlreadyRunning": "A timer is already running for this user.",
+    "invalidTimerStart": "The start time must not be in the future."
   },
   "overtime": {
     "title": "Overtime",
@@ -578,6 +580,7 @@
     "smtpTls": "Use TLS",
     "smtpTestButton": "Send test mail",
     "smtpTesting": "Sending …",
+    "smtpTestSent": "Test mail sent to {email}.",
     "smtpTestHint": "Sends a test email to your own admin address.",
     "sectionLogin": "Sign-in",
     "sectionLoginHint": "Control how users sign in.",

@@ -68,7 +68,7 @@ export async function computeDaysForRange(opts: {
         where: {
           date: { gte: opts.from, lt: opts.to },
         },
-        select: { date: true },
+        select: { date: true, federalState: true },
       }),
       db.workingModel.findMany({
         where: {
@@ -110,8 +110,9 @@ export async function computeDaysForRange(opts: {
   }
   if (user) {
     for (const h of holidays) {
-      const hDate = toCalendarDate(h.date, "UTC");
-      excusedDays.add(hDate.getTime());
+      // Only holidays of the user's own federal state excuse a day.
+      if (h.federalState !== user.federalState) continue;
+      excusedDays.add(toCalendarDate(h.date, "UTC").getTime());
     }
   }
 
@@ -165,17 +166,6 @@ export async function computeDaysForRange(opts: {
       const modelForSummary = genuineHalf
         ? { ...model, [dayKeyForDate(date)]: halfDayMinutesFor(model, date) }
         : model;
-      // eslint-disable-next-line no-console
-      console.log(
-        "[dbg-sum]",
-        genuineHalf,
-        "smonday:",
-        (modelForSummary as { mondayMinutes?: number }).mondayMinutes,
-        "dateKey:",
-        dayKeyForDate(date),
-        "hdmin:",
-        halfDayMinutesFor(model, date)
-      );
       const summary = summarizeDay({
         date,
         workedMs: agg.workedMs,

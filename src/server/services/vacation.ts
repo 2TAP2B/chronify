@@ -14,10 +14,15 @@ import {
   consumedDaysOf,
   halfDayMinutesFor,
   vacationWeight,
+  requestEntryNote,
 } from "@/lib/vacation/business-days";
 import { toCalendarDate, isSameCalendarDay } from "@/lib/datetime";
 import { notificationText } from "@/lib/notifications/server-texts";
-import { workingModelsInRange } from "@/server/services/business-closures";
+import {
+  CLOSURE_NOTE_PREFIX,
+  closureDayKeys,
+  workingModelsInRange,
+} from "@/server/services/business-closures";
 import { targetMinutesForDate } from "@/lib/overtime/calculate";
 import type { FederalState, VacationKind, VacationRequest, VacationStatus } from "@prisma/client";
 
@@ -130,9 +135,12 @@ export async function createVacationRequest(opts: {
   );
 
   // Days with target = 0 in the working model (e.g. 4-day week) consume no
-  // vacation day.
+  // vacation day; days already covered by a business closure are not charged twice.
   const models = await workingModelsInRange(ownerUserId, from, to);
-  const { consumed: spendableDays } = splitByWorkTarget(businessDays, models);
+  const closureDays = await closureDayKeys(ownerUserId, from, to);
+  const spendableDays = splitByWorkTarget(businessDays, models).consumed.filter(
+    (d) => !closureDays.has(d.toISOString().slice(0, 10))
+  );
 
   if (spendableDays.length === 0) {
     throw new VacationError(
@@ -312,7 +320,10 @@ export async function approveVacationRequest(opts: {
     where: { federalState: state, date: { gte: req.from, lte: req.to } },
   });
   const resolver = makeHolidayResolver(holidays);
-  const { businessDays } = businessDaysInRange(req.from, req.to, state, resolver);
+  const { businessDays: rangeDays } = businessDaysInRange(req.from, req.to, state, resolver);
+  // Days already covered by a business closure stay with the closure.
+  const closureDays = await closureDayKeys(req.userId, req.from, req.to);
+  const businessDays = rangeDays.filter((d) => !closureDays.has(d.toISOString().slice(0, 10)));
   // Days with target = 0 in the working model (e.g. 4-day week) consume no
   // vacation day — both for entries and entitlement accounting.
   const models = await workingModelsInRange(req.userId, req.from, req.to);
@@ -342,6 +353,8 @@ export async function approveVacationRequest(opts: {
     }, 0);
 
     await db.$transaction([
+      // Persist the charged amount so cancel/closure refunds stay symmetric.
+      db.vacationRequest.update({ where: { id: req.id }, data: { days } }),
       db.overtimeBalance.upsert({
         where: { userId_year: { userId: req.userId, year: req.year } },
         create: {
@@ -362,12 +375,13 @@ export async function approveVacationRequest(opts: {
           breakMinutes: 0,
           type: "VACATION",
           source: "ADMIN",
-          note: `Urlaub (Überstunden) ${req.from.toISOString().slice(0, 10)} – ${req.to.toISOString().slice(0, 10)}`,
+          note: requestEntryNote(req),
         })),
       }),
     ]);
   } else {
     await db.$transaction([
+      db.vacationRequest.update({ where: { id: req.id }, data: { days } }),
       db.vacationEntitlement.upsert({
         where: { userId_year: { userId: req.userId, year: req.year } },
         create: {
@@ -390,7 +404,7 @@ export async function approveVacationRequest(opts: {
           breakMinutes: 0,
           type: "VACATION",
           source: "ADMIN",
-          note: `Urlaub ${req.from.toISOString().slice(0, 10)} – ${req.to.toISOString().slice(0, 10)}`,
+          note: requestEntryNote(req),
         })),
       }),
     ]);
@@ -431,7 +445,7 @@ export async function approveVacationRequest(opts: {
     payload: { days, year: req.year },
   });
 
-  return req;
+  return { ...req, days };
 }
 
 export async function rejectVacationRequest(opts: {
@@ -531,20 +545,24 @@ export async function cancelVacationRequest(opts: {
   // If was approved, reverse the consumption
   if (req.status === "APPROVED") {
     if (req.useOvertime) {
-      // Restore consumed overtime: recompute the consumed minutes from the vacation days
+      // Refund exactly the days this request still holds: days taken over by a
+      // business closure were already refunded there (see takeOverRequestDays).
       const ctx2 = await getUserContext(req.userId);
-      const state2 = ctx2.user.federalState;
-      const holidays2 = await db.publicHoliday.findMany({
-        where: { federalState: state2, date: { gte: req.from, lte: req.to } },
+      const ownEntries = await db.timeEntry.findMany({
+        where: {
+          userId: req.userId,
+          type: "VACATION",
+          note: requestEntryNote(req),
+          date: { gte: req.from, lte: req.to },
+        },
+        select: { date: true },
       });
-      const resolver2 = makeHolidayResolver(holidays2);
-      const { businessDays: bd } = businessDaysInRange(req.from, req.to, state2, resolver2);
       const models2 = await workingModelsInRange(req.userId, req.from, req.to);
       // Mirror the approve-time half-day charging (same weightOf rules).
       const settings2 = await db.orgSettings.findUniqueOrThrow({ where: { id: "singleton" } });
       const halfDays2 = halfDayDateSet(settings2);
       const halfDayReq = req.halfDay && isSameCalendarDay(req.from, req.to, ctx2.timeZone);
-      const consumedMinutes = bd.reduce((sum, d) => {
+      const consumedMinutes = ownEntries.reduce((sum, { date: d }) => {
         const model = modelForDate(models2, d);
         if (!model) return sum;
         const weight =
@@ -565,11 +583,13 @@ export async function cancelVacationRequest(opts: {
         data: { consumedDays: { decrement: req.days } },
       });
     }
+    // Only this request's entries; closure-owned days stay covered.
     await db.timeEntry.deleteMany({
       where: {
         userId: req.userId,
         type: "VACATION",
         date: { gte: req.from, lte: req.to },
+        NOT: { note: { startsWith: CLOSURE_NOTE_PREFIX } },
       },
     });
   }
