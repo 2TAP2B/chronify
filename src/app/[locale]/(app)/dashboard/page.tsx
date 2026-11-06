@@ -31,9 +31,8 @@ export default async function DashboardPage({ params }: Props) {
   }
   const timeZone = user.timezone || "Europe/Berlin";
   const now = new Date();
-  const year = now.getUTCFullYear();
-
   const todayStart = toCalendarDate(now, timeZone);
+  const year = todayStart.getUTCFullYear();
   const weekStart = startOfWeekUtc(now, timeZone);
   const weekEnd = addDaysUtc(weekStart, 7);
 

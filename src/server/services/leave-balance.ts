@@ -64,6 +64,8 @@ export type LeaveCharge = {
   days: number;
   /** Overtime minutes charged when paid from overtime. */
   minutes: number;
+  /** Per spendable day: vacation-day weight and overtime minutes. */
+  dayCharges: { date: Date; days: number; minutes: number }[];
   totalDays: number;
   holidayCount: number;
   weekendCount: number;
@@ -98,23 +100,24 @@ export async function computeLeaveCharge(opts: {
   const { consumed: spendableDays, skipped } = splitByWorkTarget(open, models);
 
   const halfDayRequest = opts.halfDay && isSameCalendarDay(from, to, timeZone);
-  let days = 0;
-  let minutes = 0;
-  for (const d of spendableDays) {
+  const dayCharges = spendableDays.map((d) => {
     const weight =
       halfDayRequest && isSameCalendarDay(from, d, timeZone)
         ? 0.5
         : vacationWeight(d, opts.halfDays);
-    days += weight;
     const model = modelForDate(models, d);
-    if (model) {
-      minutes += weight === 0.5 ? halfDayMinutesFor(model, d) : targetMinutesForDate(d, model);
-    }
-  }
+    const minutes = !model
+      ? 0
+      : weight === 0.5
+        ? halfDayMinutesFor(model, d)
+        : targetMinutesForDate(d, model);
+    return { date: d, days: weight, minutes };
+  });
   return {
     spendableDays,
-    days,
-    minutes,
+    days: dayCharges.reduce((sum, c) => sum + c.days, 0),
+    minutes: dayCharges.reduce((sum, c) => sum + c.minutes, 0),
+    dayCharges,
     totalDays: range.totalDays,
     holidayCount: range.holidayCount,
     weekendCount: range.weekendCount,

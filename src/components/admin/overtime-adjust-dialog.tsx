@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
+import { currentYear } from "@/lib/datetime";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -44,7 +45,7 @@ export function OvertimeAdjustDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   const t = useTranslations("adminUsers");
-  const year = new Date().getUTCFullYear();
+  const year = currentYear();
   const [carriedOver, setCarriedOver] = useState("00:00");
   const [consumed, setConsumed] = useState("00:00");
   const [computed, setComputed] = useState<number | null>(null);

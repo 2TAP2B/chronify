@@ -303,6 +303,11 @@ export async function deleteClosure({
   requireAdmin(actor);
   const closure = await db.businessClosure.findUnique({ where: { id: closureId } });
   if (!closure) throw new ClosureError("Not found", "NOT_FOUND", 404);
+  // Once a closure has started its days were actually off: deleting it would
+  // turn them into unworked days (minus) for everyone. Only future closures go.
+  if (closure.from.getTime() <= toCalendarDate(new Date(), BERLIN).getTime()) {
+    throw new ClosureError("Closure already started", "CLOSURE_STARTED", 409);
+  }
 
   const settings = await db.orgSettings.findUniqueOrThrow({ where: { id: "singleton" } });
   const year = closure.from.getUTCFullYear();
@@ -401,19 +406,22 @@ export async function updateChoice({
     if (choice === "OVERTIME" && existing.choice === "VACATION") {
       // Without its VACATION entries each closure day is an unworked day:
       // the day's target is debited from the overtime balance.
-      await db.timeEntry.deleteMany({
-        where: {
-          userId: actor.id,
-          type: "VACATION",
-          source: "ADMIN",
-          note: `${CLOSURE_NOTE_PREFIX}${closure.name}`,
-          date: { gte: closure.from, lte: closure.to },
-        },
-      });
+      // Refund only what is still booked (sick days may already have been
+      // given back, BUrlG §9).
+      const entryWhere = {
+        userId: actor.id,
+        type: "VACATION" as const,
+        source: "ADMIN" as const,
+        note: `${CLOSURE_NOTE_PREFIX}${closure.name}`,
+        date: { gte: closure.from, lte: closure.to },
+      };
+      const booked = await db.timeEntry.findMany({ where: entryWhere, select: { date: true } });
+      const refundDays = booked.reduce((sum, e) => sum + vacationWeight(e.date, halfDaySet), 0);
+      await db.timeEntry.deleteMany({ where: entryWhere });
       await db.vacationEntitlement
         .update({
           where: { userId_year: { userId: actor.id, year } },
-          data: { consumedDays: { decrement: consumedDaysTotal } },
+          data: { consumedDays: { decrement: refundDays } },
         })
         .catch(() => {});
     } else if (choice === "VACATION" && existing.choice === "OVERTIME") {

@@ -4,7 +4,9 @@ import { sendMail } from "@/server/services/mail";
 import { sickNoteReminderEmail } from "@/lib/email-templates";
 import { businessDaysInRange, makeHolidayResolver } from "@/lib/vacation/business-days";
 import { toCalendarDate } from "@/lib/datetime";
-import type { SickNote } from "@prisma/client";
+import { withLeaveLock } from "@/server/services/leave-balance";
+import { rebookVacationOnDays, refundVacationOnSickDays } from "@/server/services/sick-leave";
+import type { FederalState, SickNote } from "@prisma/client";
 
 export class SicknessError extends Error {
   constructor(
@@ -101,6 +103,8 @@ export async function createSickNote(opts: {
       note: `Krankheit ${from.toISOString().slice(0, 10)} – ${to.toISOString().slice(0, 10)}`,
     })),
   });
+  // Vacation on sick days is not consumed (BUrlG §9): give it back.
+  await withLeaveLock(userId, () => refundVacationOnSickDays(userId, businessDays));
 
   await audit({
     actorId: opts.actor.id,
@@ -153,11 +157,9 @@ export async function updateSickNote(opts: {
     const from = opts.input.from ?? existing.from;
     const to = opts.input.to ?? existing.to;
     const ctx = await getUserContext(existing.userId);
-    const holidays = await db.publicHoliday.findMany({
-      where: { federalState: ctx.user.federalState, date: { gte: from, lte: to } },
-    });
-    const resolver = makeHolidayResolver(holidays);
-    const { businessDays } = businessDaysInRange(from, to, ctx.user.federalState, resolver);
+    const state = ctx.user.federalState;
+    const businessDays = await sickBusinessDays(from, to, state);
+    const previousDays = await sickBusinessDays(existing.from, existing.to, state);
     data.days = businessDays.length;
 
     // Delete old TimeEntries and recreate
@@ -179,6 +181,17 @@ export async function updateSickNote(opts: {
         source: "ADMIN",
         note: `Krankheit ${from.toISOString().slice(0, 10)} – ${to.toISOString().slice(0, 10)}`,
       })),
+    });
+    // Days no longer sick get their vacation back; newly sick days refund it.
+    const nowSick = new Set(businessDays.map((d) => d.getTime()));
+    await withLeaveLock(existing.userId, async () => {
+      await rebookVacationOnDays({
+        userId: existing.userId,
+        days: previousDays.filter((d) => !nowSick.has(d.getTime())),
+        state,
+        timeZone: ctx.timeZone,
+      });
+      await refundVacationOnSickDays(existing.userId, businessDays);
     });
   }
 
@@ -215,6 +228,16 @@ export async function deleteSickNote(opts: {
       date: { gte: existing.from, lte: existing.to },
     },
   });
+  // Vacation that the sick note had given back is booked again.
+  const ctx = await getUserContext(existing.userId);
+  await withLeaveLock(existing.userId, async () =>
+    rebookVacationOnDays({
+      userId: existing.userId,
+      days: await sickBusinessDays(existing.from, existing.to, ctx.user.federalState),
+      state: ctx.user.federalState,
+      timeZone: ctx.timeZone,
+    })
+  );
 
   await db.sickNote.delete({ where: { id: opts.noteId } });
 
@@ -227,6 +250,13 @@ export async function deleteSickNote(opts: {
   });
 
   return { id: existing.id };
+}
+
+async function sickBusinessDays(from: Date, to: Date, state: FederalState): Promise<Date[]> {
+  const holidays = await db.publicHoliday.findMany({
+    where: { federalState: state, date: { gte: from, lte: to } },
+  });
+  return businessDaysInRange(from, to, state, makeHolidayResolver(holidays)).businessDays;
 }
 
 function resolveTarget(actor: SessionUser, targetUserId?: string): string {

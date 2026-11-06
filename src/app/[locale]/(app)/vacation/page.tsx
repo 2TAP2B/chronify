@@ -17,7 +17,7 @@ import {
 import { VacationRequestForm } from "@/components/vacation/vacation-request-form";
 import { VacationCancelAction } from "@/components/vacation/vacation-cancel-action";
 import { YearPicker } from "@/components/shared/year-picker";
-import { formatInZone } from "@/lib/datetime";
+import { currentYear, formatInZone } from "@/lib/datetime";
 import type { VacationStatus } from "@prisma/client";
 
 type Props = {
@@ -41,7 +41,7 @@ export default async function VacationPage({ params, searchParams }: Props) {
   if (!session?.user?.id) return null;
 
   const { year: yearStr } = await searchParams;
-  const year = yearStr ? Number(yearStr) : new Date().getUTCFullYear();
+  const year = yearStr ? Number(yearStr) : currentYear();
 
   const [requests, account, overtimeResult] = await Promise.all([
     db.vacationRequest.findMany({

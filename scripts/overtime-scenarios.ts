@@ -10,7 +10,13 @@ import {
   createVacationRequest,
   VacationError,
 } from "@/server/services/vacation";
-import { createClosure, deleteClosure, updateChoice } from "@/server/services/business-closures";
+import {
+  ClosureError,
+  createClosure,
+  deleteClosure,
+  updateChoice,
+} from "@/server/services/business-closures";
+import { createSickNote, deleteSickNote } from "@/server/services/sickness";
 import { vacationAccount } from "@/server/services/leave-balance";
 import { ensureHolidays } from "@/server/year-rollover";
 import type { SessionUser } from "@/server/context";
@@ -63,7 +69,9 @@ type EventDef =
       createAfterClosure?: true;
     }
   /** Half vacation day from the entitlement; works `workMinutes` the other half. */
-  | { kind: "vacationHalfDay"; date: string; workMinutes: number };
+  | { kind: "vacationHalfDay"; date: string; workMinutes: number }
+  /** Sick note entered after the leave was approved; `deleteAfter`: removed again. */
+  | { kind: "sick"; from: string; to: string; deleteAfter?: true };
 
 type Scenario = {
   key: string;
@@ -289,6 +297,43 @@ const SCENARIOS: Scenario[] = [
       closureFallback: true,
     },
   },
+  {
+    key: "krankimurlaub",
+    name: "Szenario Krank im Urlaub",
+    hireDate: "2026-01-01",
+    models: [{ from: "2026-01-01", week: [480, 480, 480, 480, 480] }],
+    events: [
+      // 5 vacation days, sick Wed+Thu → 2 days given back (BUrlG §9): 3 + closure 1.
+      { kind: "vacation", from: "2026-08-03", to: "2026-08-07" },
+      { kind: "sick", from: "2026-08-05", to: "2026-08-06" },
+      // Day off from overtime, sick that day → the 8h are refunded.
+      { kind: "overtimeDay", date: "2026-06-11" },
+      { kind: "sick", from: "2026-06-11", to: "2026-06-11" },
+    ],
+    closureChoice: "VACATION",
+    expected: {
+      consumedOvertimeMinutes: { [YEAR]: 0 },
+      vacationDays: { [YEAR]: 4 },
+      closureOvertimeMinutes: 0,
+    },
+  },
+  {
+    key: "krankgeloescht",
+    name: "Szenario Krankmeldung im Urlaub gelöscht",
+    hireDate: "2026-01-01",
+    models: [{ from: "2026-01-01", week: [480, 480, 480, 480, 480] }],
+    events: [
+      // Sick note entered and deleted again → vacation booked again: 5 + closure 1.
+      { kind: "vacation", from: "2026-08-03", to: "2026-08-07" },
+      { kind: "sick", from: "2026-08-05", to: "2026-08-06", deleteAfter: true },
+    ],
+    closureChoice: "VACATION",
+    expected: {
+      consumedOvertimeMinutes: { [YEAR]: 0 },
+      vacationDays: { [YEAR]: 6 },
+      closureOvertimeMinutes: 0,
+    },
+  },
 ];
 
 // ---------------------------------------------------------------------------
@@ -331,6 +376,9 @@ function buildPlan(s: Scenario, cal: Calendar): PlannedDay[] {
     }
     if (e.kind === "overtimeHalfDay" || e.kind === "vacationHalfDay") {
       half.set(e.date, e.workMinutes);
+    }
+    if (e.kind === "sick") {
+      for (let x = d(e.from); x <= d(e.to); x = addDaysUtc(x, 1)) off.add(iso(x));
     }
   }
 
@@ -418,9 +466,26 @@ async function seed() {
   }
   const calendar = await loadCalendar();
 
-  // Cleanup: reverse the closure for all users, then drop the test users.
+  // Cleanup: the scenario closure lies in the past (deleteClosure refuses
+  // started closures), so reverse it directly for every user, then drop the
+  // test users.
   for (const c of await db.businessClosure.findMany({ where: { name: CLOSURE_NAME } })) {
-    await deleteClosure({ actor, closureId: c.id });
+    const entries = await db.timeEntry.findMany({
+      where: { type: "VACATION", note: `Schließtag: ${c.name}`, date: { gte: c.from, lte: c.to } },
+      select: { id: true, userId: true },
+    });
+    const perUser = new Map<string, number>();
+    for (const e of entries) perUser.set(e.userId, (perUser.get(e.userId) ?? 0) + 1);
+    for (const [userId, n] of perUser) {
+      await db.vacationEntitlement
+        .update({
+          where: { userId_year: { userId, year: c.from.getUTCFullYear() } },
+          data: { consumedDays: { decrement: n } },
+        })
+        .catch(() => {});
+    }
+    await db.timeEntry.deleteMany({ where: { id: { in: entries.map((e) => e.id) } } });
+    await db.businessClosure.delete({ where: { id: c.id } });
   }
   const removed = await db.user.deleteMany({ where: { email: { endsWith: `@${EMAIL_DOMAIN}` } } });
   if (removed.count) console.log(`✓ ${removed.count} alte Szenario-User entfernt`);
@@ -490,7 +555,9 @@ async function seed() {
   }
 
   const toCancel: string[] = [];
-  const request = async (userId: string, e: EventDef) => {
+  type LeaveEvent = Exclude<EventDef, { kind: "sick" }>;
+  const isLeave = (e: EventDef): e is LeaveEvent => e.kind !== "sick";
+  const request = async (userId: string, e: LeaveEvent) => {
     const from = d(e.kind === "vacation" ? e.from : e.date);
     const to = d(e.kind === "vacation" ? e.to : e.date);
     const req = await createVacationRequest({
@@ -510,13 +577,14 @@ async function seed() {
 
   // Previous-year events; the year change itself needs no step (live carryover).
   for (const s of SCENARIOS) {
-    for (const e of s.events.filter((x) => eventYear(x) === PREV_YEAR)) {
+    for (const e of s.events.filter(isLeave).filter((x) => eventYear(x) === PREV_YEAR)) {
       await request(users.get(s.key)!, e);
     }
   }
   const afterClosure = (e: EventDef) => e.kind === "vacation" && e.createAfterClosure === true;
   for (const s of SCENARIOS) {
-    for (const e of s.events.filter((x) => eventYear(x) === YEAR && !afterClosure(x))) {
+    const events = s.events.filter(isLeave);
+    for (const e of events.filter((x) => eventYear(x) === YEAR && !afterClosure(x))) {
       await request(users.get(s.key)!, e);
     }
   }
@@ -526,7 +594,9 @@ async function seed() {
     input: { from: d(CLOSURE_DAY), to: d(CLOSURE_DAY), name: CLOSURE_NAME },
   });
   for (const s of SCENARIOS) {
-    for (const e of s.events.filter(afterClosure)) await request(users.get(s.key)!, e);
+    for (const e of s.events.filter(isLeave).filter(afterClosure)) {
+      await request(users.get(s.key)!, e);
+    }
   }
   for (const s of SCENARIOS.filter((x) => x.closureChoice === "OVERTIME")) {
     await updateChoice({
@@ -538,12 +608,24 @@ async function seed() {
   for (const requestId of toCancel) {
     await cancelVacationRequest({ actor, requestId });
   }
-  console.log(`✓ Schließtag ${CLOSURE_DAY} + Anträge genehmigt/storniert`);
+  // Sick notes after the leave they overlap (sickness during vacation).
+  for (const s of SCENARIOS) {
+    for (const e of s.events) {
+      if (e.kind !== "sick") continue;
+      const note = await createSickNote({
+        actor,
+        targetUserId: users.get(s.key)!,
+        input: { from: d(e.from), to: d(e.to), aubUntil: d(e.to), note: "Szenario" },
+      });
+      if (e.deleteAfter) await deleteSickNote({ actor, noteId: note.id });
+    }
+  }
+  console.log(`✓ Schließtag ${CLOSURE_DAY} + Anträge genehmigt/storniert + Krankmeldungen`);
   console.log(`\nLogin: <key>@${EMAIL_DOMAIN} / ${PASSWORD}`);
 }
 
 function eventYear(e: EventDef): number {
-  return Number((e.kind === "vacation" ? e.from : e.date).slice(0, 4));
+  return Number((e.kind === "vacation" || e.kind === "sick" ? e.from : e.date).slice(0, 4));
 }
 
 // ---------------------------------------------------------------------------
@@ -652,10 +734,28 @@ async function check(): Promise<boolean> {
   }
   const lateOk = await checkLateCorrection();
   const holidaysOk = await checkHolidayAutomation();
+  const closureDeleteOk = await checkStartedClosureDelete();
   const guardsOk = await checkGuards();
-  ok = ok && lateOk && holidaysOk && guardsOk;
+  ok = ok && lateOk && holidaysOk && closureDeleteOk && guardsOk;
   console.log(ok ? "\nAlle Szenarien OK." : "\nAbweichungen gefunden (FAIL).");
   return ok;
+}
+
+/** A closure that already started can't be deleted (its days were actually off). */
+async function checkStartedClosureDelete(): Promise<boolean> {
+  const actor = await adminActor();
+  const closure = await db.businessClosure.findFirstOrThrow({ where: { name: CLOSURE_NAME } });
+  let code: string | null = null;
+  try {
+    await deleteClosure({ actor, closureId: closure.id });
+  } catch (e) {
+    code = e instanceof ClosureError ? e.code : String(e);
+  }
+  const pass = code === "CLOSURE_STARTED";
+  console.log(
+    `  ${(pass ? "OK" : "FAIL").padEnd(4)} ${"Begonnenen Schließtag löschen".padEnd(44)} soll CLOSURE_STARTED          ist ${code ?? "gelöscht"}`
+  );
+  return pass;
 }
 
 /**

@@ -97,14 +97,6 @@ export function formatSignedDuration(ms: number): string {
   return `${sign}${pad(h)}:${pad(m)}`;
 }
 
-export function carryoverCutoffDate(year: number, month: number, day: number): Date {
-  return new Date(Date.UTC(year, month - 1, day));
-}
-
-export function isAfterCarryoverCutoff(date: Date, cutoff: Date): boolean {
-  return date.getTime() >= cutoff.getTime();
-}
-
 export type OvertimeComputation = {
   year: number;
   totalDeltaMs: number;

@@ -2,6 +2,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { WorkOverviewPanel } from "@/components/admin/work-overview";
+import { currentYear } from "@/lib/datetime";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -18,7 +19,7 @@ export default async function AdminWorkOverviewPage({ params }: Props) {
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
-      <WorkOverviewPanel currentUserId={session.user.id} year={new Date().getUTCFullYear()} />
+      <WorkOverviewPanel currentUserId={session.user.id} year={currentYear()} />
     </div>
   );
 }

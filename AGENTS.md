@@ -97,8 +97,9 @@ Overtime/vacation regression check (local DB only, refuses non-localhost):
 days 24.12/31.12) with a full year of entries; `npm run scenarios:check`
 recomputes balances via the real services, compares them with hand-derived
 expectations and verifies the year change (live carryover, late corrections,
-automatic holiday sync) and that vacation can't go negative (overtime may). Run
-it after any change to overtime, vacation, closure or year-change logic.
+automatic holiday sync), sickness during vacation, closure rules and that
+vacation can't go negative (overtime may). Run it after any change to
+overtime, vacation, sickness, closure or year-change logic.
 
 ## 4. Layout & where code goes
 

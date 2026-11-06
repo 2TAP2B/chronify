@@ -34,7 +34,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { Switch } from "@/components/ui/switch";
 import { TimeInput } from "@/components/timesheet/time-input";
 import { formatDuration } from "@/lib/timer-utils";
-import { zonedTimeToUtc } from "@/lib/datetime";
+import { currentYear, zonedTimeToUtc } from "@/lib/datetime";
 import { format } from "date-fns";
 import { STATE_CODES, STATE_NAMES } from "@/lib/federal-states";
 import { useConfirm } from "@/components/ui/confirm-dialog";
@@ -402,7 +402,7 @@ function WorkingModelSection({
 function EntitlementSection({ userId }: { userId: string }) {
   const t = useTranslations("adminUsers");
   const router = useRouter();
-  const year = new Date().getUTCFullYear();
+  const year = currentYear();
   const [totalDays, setTotalDays] = useState("30");
   const [usedDays, setUsedDays] = useState<number | null>(null);
   const [defaultDays, setDefaultDays] = useState<number | null>(null);
@@ -575,7 +575,7 @@ function NotificationsSection({ user }: { user: AdminUser }) {
 function OvertimeSection({ userId }: { userId: string }) {
   const t = useTranslations("adminUsers");
   const router = useRouter();
-  const year = new Date().getUTCFullYear();
+  const year = currentYear();
   const [carriedOver, setCarriedOver] = useState("00:00");
   const [consumed, setConsumed] = useState("00:00");
   const [computed, setComputed] = useState<number | null>(null);

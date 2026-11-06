@@ -12,7 +12,7 @@ import {
   requestEntryNote,
   vacationWeight,
 } from "@/lib/vacation/business-days";
-import { toCalendarDate, isSameCalendarDay } from "@/lib/datetime";
+import { toCalendarDate, isSameCalendarDay, currentYear } from "@/lib/datetime";
 import { notificationText } from "@/lib/notifications/server-texts";
 import {
   REGENERATION_EXTRA_DAYS,
@@ -578,7 +578,7 @@ export async function getVacationEntitlementView(opts: {
   year?: number;
 }) {
   const userId = resolveTarget(opts.actor, opts.targetUserId);
-  const year = opts.year ?? new Date().getUTCFullYear();
+  const year = opts.year ?? currentYear();
   const [account, regeneration] = await Promise.all([
     vacationAccount(userId, year),
     getRegenerationStatus(userId, year),

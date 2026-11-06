@@ -1,17 +1,15 @@
 import { db } from "@/lib/db";
 import { getUserContext, type SessionUser } from "@/server/context";
-import { getActiveWorkingModel } from "@/server/services/timer";
 import {
   computeOvertimeForYear,
   summarizeDay,
   targetMinutesForDate,
-  carryoverCutoffDate,
   formatSignedDuration,
   msToSignedHours,
   type OvertimeComputation,
   type DaySummary,
 } from "@/lib/overtime/calculate";
-import { toCalendarDate, addDaysUtc } from "@/lib/datetime";
+import { toCalendarDate, currentYear } from "@/lib/datetime";
 import { DAY_KEYS, type DayKey } from "@/lib/overtime/calculate";
 import {
   CLOSURE_NOTE_PREFIX,
@@ -291,29 +289,18 @@ export async function getOvertimeView(opts: {
     throw new Response("Forbidden", { status: 403 });
   }
   const ctx = await getUserContext(userId);
-  const year = opts.year ?? new Date().getUTCFullYear();
+  const year = opts.year ?? currentYear();
   const { computation, days } = await computeYearOvertime({
     userId,
     year,
     timeZone: ctx.timeZone,
   });
-  const settings = await db.orgSettings.findUniqueOrThrow({ where: { id: "singleton" } });
-  const cutoff = settings.overtimeCarryoverCutoffEnabled
-    ? carryoverCutoffDate(
-        year,
-        settings.overtimeCarryoverCutoffMonth,
-        settings.overtimeCarryoverCutoffDay
-      )
-    : null;
-
   return {
     userId,
     year,
     timeZone: ctx.timeZone,
     computation,
     days,
-    cutoff,
-    settings,
     signedBalance: formatSignedDuration(computation.balanceMs),
     balanceHours: msToSignedHours(computation.balanceMs),
   };
