@@ -35,7 +35,6 @@ export function VacationApprovalActions({ requestId }: { requestId: string }) {
       if (!res.ok) {
         const b = (await res.json().catch(() => ({}))) as { error?: string; code?: string };
         if (b.code === "INSUFFICIENT_ENTITLEMENT") setError(t("insufficientError"));
-        else if (b.code === "INSUFFICIENT_OVERTIME") setError(t("insufficientOvertimeError"));
         else setError(b.error ?? "error");
         return;
       }

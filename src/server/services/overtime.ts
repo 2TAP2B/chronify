@@ -190,68 +190,95 @@ export async function computeDaysForRange(opts: {
   return out;
 }
 
+/**
+ * First year the app tracks for this user: the hire year, else the year of the
+ * earliest time entry. Years before it are not computed (no phantom minus);
+ * the start year's stored carryover is the opening balance.
+ */
+export async function trackingStartYear(userId: string): Promise<number | null> {
+  const user = await db.user.findUnique({ where: { id: userId }, select: { hireDate: true } });
+  if (user?.hireDate) return user.hireDate.getUTCFullYear();
+  const first = await db.timeEntry.findFirst({
+    where: { userId },
+    orderBy: { date: "asc" },
+    select: { date: true },
+  });
+  return first ? first.date.getUTCFullYear() : null;
+}
+
+export type YearOvertime = {
+  /** `carryIsAuto`: carryover is the previous year's live closing balance (not editable). */
+  computation: OvertimeComputation & { carryIsAuto: boolean };
+  days: DaySummaryWithMeta[];
+  carriedOverMinutes: number;
+  consumedOvertimeMinutes: number;
+};
+
+/**
+ * Overtime account for one year. The carryover into a year after the tracking
+ * start is always the previous year's closing balance, computed live — nothing
+ * is frozen at the year change, so late corrections to December still flow
+ * into January and no minutes get lost.
+ */
 export async function computeYearOvertime(opts: {
   userId: string;
   year: number;
   timeZone: string;
-}): Promise<{
-  computation: OvertimeComputation;
-  days: DaySummaryWithMeta[];
-  carriedOverMinutes: number;
-  consumedOvertimeMinutes: number;
-}> {
-  const yearStart = new Date(Date.UTC(opts.year, 0, 1));
-  const yearEnd = new Date(Date.UTC(opts.year + 1, 0, 1));
+}): Promise<YearOvertime> {
+  const startYear = (await trackingStartYear(opts.userId)) ?? opts.year;
+  if (opts.year < startYear) {
+    const computation = computeOvertimeForYear({
+      year: opts.year,
+      days: [],
+      carriedOverMinutes: 0,
+    });
+    return {
+      computation: { ...computation, carryIsAuto: false },
+      days: [],
+      carriedOverMinutes: 0,
+      consumedOvertimeMinutes: 0,
+    };
+  }
 
-  const user = await db.user.findUnique({
-    where: { id: opts.userId },
-    select: { hireDate: true },
-  });
-
-  const from = user?.hireDate && user.hireDate > yearStart ? user.hireDate : yearStart;
-
-  const days = await computeDaysForRange({
+  // One pass from the start year to the requested year: days are computed
+  // once for the whole span, then each year's closing balance becomes the
+  // next year's carryover.
+  const [user, rows] = await Promise.all([
+    db.user.findUnique({ where: { id: opts.userId }, select: { hireDate: true } }),
+    db.overtimeBalance.findMany({
+      where: { userId: opts.userId, year: { gte: startYear, lte: opts.year } },
+    }),
+  ]);
+  const rowByYear = new Map(rows.map((r) => [r.year, r]));
+  const spanStart = new Date(Date.UTC(startYear, 0, 1));
+  const from = user?.hireDate && user.hireDate > spanStart ? user.hireDate : spanStart;
+  const allDays = await computeDaysForRange({
     userId: opts.userId,
     from,
-    to: yearEnd,
+    to: new Date(Date.UTC(opts.year + 1, 0, 1)),
     timeZone: opts.timeZone,
   });
 
-  const settings = await db.orgSettings.findUniqueOrThrow({ where: { id: "singleton" } });
-  const prevBalance = await db.overtimeBalance.findUnique({
-    where: { userId_year: { userId: opts.userId, year: opts.year } },
-  });
-  const carriedOverMinutes = prevBalance?.carriedOverMinutes ?? 0;
-  const consumedOvertimeMinutes = prevBalance?.consumedOvertimeMinutes ?? 0;
-
-  const computation = computeOvertimeForYear({
-    year: opts.year,
-    days,
-    carriedOverMinutes,
-    consumedOvertimeMinutes,
-  });
-  return { computation, days, carriedOverMinutes, consumedOvertimeMinutes };
-}
-
-export async function upsertOvertimeBalance(opts: {
-  userId: string;
-  year: number;
-  computation: OvertimeComputation;
-}): Promise<void> {
-  const computedMinutes = Math.round(opts.computation.totalDeltaMs / 60_000);
-  await db.overtimeBalance.upsert({
-    where: { userId_year: { userId: opts.userId, year: opts.year } },
-    create: {
-      userId: opts.userId,
-      year: opts.year,
-      carriedOverMinutes: opts.computation.carriedOverMinutes,
-      computedMinutes,
-    },
-    update: {
-      carriedOverMinutes: opts.computation.carriedOverMinutes,
-      computedMinutes,
-    },
-  });
+  let carriedOverMinutes = rowByYear.get(startYear)?.carriedOverMinutes ?? 0;
+  for (let y = startYear; ; y++) {
+    const days = allDays.filter((d) => d.date.getUTCFullYear() === y);
+    const consumedOvertimeMinutes = rowByYear.get(y)?.consumedOvertimeMinutes ?? 0;
+    const computation = computeOvertimeForYear({
+      year: y,
+      days,
+      carriedOverMinutes,
+      consumedOvertimeMinutes,
+    });
+    if (y === opts.year) {
+      return {
+        computation: { ...computation, carryIsAuto: y > startYear },
+        days,
+        carriedOverMinutes,
+        consumedOvertimeMinutes,
+      };
+    }
+    carriedOverMinutes = Math.round(computation.balanceMs / 60_000);
+  }
 }
 
 export async function getOvertimeView(opts: {

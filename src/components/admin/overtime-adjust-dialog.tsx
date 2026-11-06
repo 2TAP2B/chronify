@@ -50,6 +50,7 @@ export function OvertimeAdjustDialog({
   const [computed, setComputed] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [carryIsAuto, setCarryIsAuto] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -61,6 +62,7 @@ export function OvertimeAdjustDialog({
             setCarriedOver(minutesToHours(comp.carriedOverMinutes ?? 0));
             setConsumed(minutesToHours(comp.consumedOvertimeMinutes ?? 0));
             setComputed(comp.totalDeltaMs != null ? Math.round(comp.totalDeltaMs / 60_000) : null);
+            setCarryIsAuto(comp.carryIsAuto === true);
           }
         })
         .catch(() => {});
@@ -117,7 +119,9 @@ export function OvertimeAdjustDialog({
                 onChange={(e) => setCarriedOver(e.target.value)}
                 placeholder="00:00"
                 className="font-mono tabular-nums"
+                disabled={carryIsAuto}
               />
+              {carryIsAuto && <p className="text-xs text-muted-foreground">{t("carryAutoHint")}</p>}
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="consumed">{t("consumedLabel")}</Label>

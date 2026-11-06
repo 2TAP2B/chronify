@@ -11,7 +11,8 @@ import {
   VacationError,
 } from "@/server/services/vacation";
 import { createClosure, deleteClosure, updateChoice } from "@/server/services/business-closures";
-import { runYearSetup } from "@/server/services/admin-year-setup";
+import { vacationAccount } from "@/server/services/leave-balance";
+import { ensureHolidays } from "@/server/year-rollover";
 import type { SessionUser } from "@/server/context";
 
 /**
@@ -74,12 +75,20 @@ type Scenario = {
   closureChoice: "VACATION" | "OVERTIME";
   /** 24.12/31.12 neither worked nor booked (default: the half is worked). */
   skipOrgHalfDays?: true;
+  /** Contract vacation days set for the hire year (inherited by later years). */
+  vacationDaysPerYear?: number;
   /** Hand-calculated from the rules (see comments). */
   expected: {
     consumedOvertimeMinutes: Partial<Record<number, number>>;
     vacationDays: Partial<Record<number, number>>;
+    /** Unused vacation days carried into the year (live from the previous year). */
+    vacationCarry?: Partial<Record<number, number>>;
+    /** Contract days of the year (inherited from the latest earlier year). */
+    vacationTotal?: Partial<Record<number, number>>;
     /** Overtime debited via the closure day (choice OVERTIME): that day's model minutes. */
     closureOvertimeMinutes: number;
+    /** Not enough vacation left: the closure is booked as overtime automatically. */
+    closureFallback?: true;
   };
 };
 
@@ -96,9 +105,13 @@ const SCENARIOS: Scenario[] = [
       { kind: "vacation", from: "2026-08-03", to: "2026-08-07" }, // Mon–Fri → 5 days
     ],
     closureChoice: "VACATION", // Fri 8h → 1 vacation day
+    vacationDaysPerYear: 28, // contract set in 2025, inherited by 2026
     expected: {
       consumedOvertimeMinutes: { [PREV_YEAR]: 720, [YEAR]: 0 },
       vacationDays: { [PREV_YEAR]: 0.5, [YEAR]: 6 },
+      // 28 − 0.5 unused days of 2025 carry over in full.
+      vacationCarry: { [YEAR]: 27.5 },
+      vacationTotal: { [PREV_YEAR]: 28, [YEAR]: 28 },
       closureOvertimeMinutes: 0,
     },
   },
@@ -255,6 +268,25 @@ const SCENARIOS: Scenario[] = [
       consumedOvertimeMinutes: { [YEAR]: 0 },
       vacationDays: { [YEAR]: 1.5 },
       closureOvertimeMinutes: 0,
+    },
+  },
+  {
+    key: "wenigurlaub",
+    name: "Szenario Schließtag ohne Resturlaub",
+    hireDate: "2026-01-01",
+    models: [{ from: "2026-01-01", week: [480, 480, 480, 480, 480] }],
+    vacationDaysPerYear: 2,
+    events: [
+      // Both vacation days used up → the closure (Fri 8h) is booked as overtime
+      // automatically and the balance takes the 8h.
+      { kind: "vacation", from: "2026-02-02", to: "2026-02-03" },
+    ],
+    closureChoice: "VACATION",
+    expected: {
+      consumedOvertimeMinutes: { [YEAR]: 0 },
+      vacationDays: { [YEAR]: 2 },
+      closureOvertimeMinutes: 480,
+      closureFallback: true,
     },
   },
 ];
@@ -424,6 +456,15 @@ async function seed() {
       },
     });
     users.set(s.key, user.id);
+    if (s.vacationDaysPerYear !== undefined) {
+      await db.vacationEntitlement.create({
+        data: {
+          userId: user.id,
+          year: Number(s.hireDate.slice(0, 4)),
+          totalDays: s.vacationDaysPerYear,
+        },
+      });
+    }
 
     const plan = buildPlan(s, calendar);
     await db.timeEntry.createMany({
@@ -467,33 +508,12 @@ async function seed() {
     if (e.kind === "vacation" && e.cancelAfterClosure) toCancel.push(req.id);
   };
 
-  // Past days are seeded after the fact: a day off "requested in advance"
-  // already looks unworked (-target) when the request is placed now, and the
-  // no-negative guard would refuse it. A temporary carryover credit stands in
-  // for "requested before the day"; it is removed right after.
-  const SEED_CREDIT_MINUTES = 100 * 60;
-  const credit = async (year: number, minutes: number) => {
-    for (const userId of users.values()) {
-      await db.overtimeBalance.upsert({
-        where: { userId_year: { userId, year } },
-        create: { userId, year, carriedOverMinutes: minutes },
-        update: { carriedOverMinutes: { increment: minutes } },
-      });
-    }
-  };
-
-  // Previous-year events, then the year rollover with carryover.
-  await credit(PREV_YEAR, SEED_CREDIT_MINUTES);
+  // Previous-year events; the year change itself needs no step (live carryover).
   for (const s of SCENARIOS) {
     for (const e of s.events.filter((x) => eventYear(x) === PREV_YEAR)) {
       await request(users.get(s.key)!, e);
     }
   }
-  await credit(PREV_YEAR, -SEED_CREDIT_MINUTES);
-  await runYearSetup({ actor, year: YEAR, carriedOverFromPrev: true });
-  console.log(`✓ Jahreswechsel ${YEAR} mit Übertrag`);
-
-  await credit(YEAR, SEED_CREDIT_MINUTES);
   const afterClosure = (e: EventDef) => e.kind === "vacation" && e.createAfterClosure === true;
   for (const s of SCENARIOS) {
     for (const e of s.events.filter((x) => eventYear(x) === YEAR && !afterClosure(x))) {
@@ -518,7 +538,6 @@ async function seed() {
   for (const requestId of toCancel) {
     await cancelVacationRequest({ actor, requestId });
   }
-  await credit(YEAR, -SEED_CREDIT_MINUTES);
   console.log(`✓ Schließtag ${CLOSURE_DAY} + Anträge genehmigt/storniert`);
   console.log(`\nLogin: <key>@${EMAIL_DOMAIN} / ${PASSWORD}`);
 }
@@ -595,8 +614,32 @@ async function check(): Promise<boolean> {
         });
         add(`${year} Urlaubstage verbraucht`, String(vacationDays), String(ent?.consumedDays ?? 0));
       }
+      const expectedCarry = s.expected.vacationCarry?.[year];
+      const expectedTotal = s.expected.vacationTotal?.[year];
+      if (expectedCarry !== undefined || expectedTotal !== undefined) {
+        const account = await vacationAccount(user.id, year);
+        if (expectedCarry !== undefined) {
+          add(
+            `${year} Resturlaub übertragen`,
+            String(expectedCarry),
+            String(account.carriedOverDays)
+          );
+        }
+        if (expectedTotal !== undefined) {
+          add(`${year} Urlaubsanspruch`, String(expectedTotal), String(account.baseTotalDays));
+        }
+      }
       carry = balance;
     }
+
+    const closureChoice = await db.closureChoice.findFirst({
+      where: { userId: user.id, closure: { name: CLOSURE_NAME } },
+    });
+    add(
+      "Schließtag verrechnet als",
+      s.expected.closureFallback || s.closureChoice === "OVERTIME" ? "OVERTIME" : "VACATION",
+      closureChoice?.choice ?? "-"
+    );
 
     for (const [label, expected, actual] of rows) {
       const pass = expected === actual;
@@ -607,16 +650,76 @@ async function check(): Promise<boolean> {
       );
     }
   }
+  const lateOk = await checkLateCorrection();
+  const holidaysOk = await checkHolidayAutomation();
   const guardsOk = await checkGuards();
-  ok = ok && guardsOk;
+  ok = ok && lateOk && holidaysOk && guardsOk;
   console.log(ok ? "\nAlle Szenarien OK." : "\nAbweichungen gefunden (FAIL).");
   return ok;
 }
 
 /**
- * Neither vacation nor overtime may go negative. Uses the 4-day-week user
- * (32h, 26 vacation days left, ~46h overtime); every request created here is
- * deleted again, the entitlement is restored.
+ * Next year's holidays appear automatically from December on (not before),
+ * so the year starts with holidays already excused.
+ */
+async function checkHolidayAutomation(): Promise<boolean> {
+  const next = YEAR + 1;
+  const where = {
+    federalState: STATE,
+    date: { gte: d(`${next}-01-01`), lt: d(`${next + 1}-01-01`) },
+  };
+  await db.publicHoliday.deleteMany({ where });
+  await ensureHolidays(d(`${YEAR}-11-15`));
+  const inNovember = await db.publicHoliday.count({ where });
+  await ensureHolidays(d(`${YEAR}-12-01`));
+  const inDecember = await db.publicHoliday.count({ where });
+  const pass = inNovember === 0 && inDecember > 0;
+  console.log(
+    `  ${(pass ? "OK" : "FAIL").padEnd(4)} ${`Feiertage ${next} automatisch (Nov/Dez)`.padEnd(44)} soll 0 / >0                  ist ${inNovember} / ${inDecember}`
+  );
+  return pass;
+}
+
+/**
+ * A correction to last December after the year change flows into the new
+ * year's carryover (nothing is frozen): +1h on 29.12.2025 → +1h carried into
+ * 2026. The extra entry is removed again.
+ */
+async function checkLateCorrection(): Promise<boolean> {
+  const user = await db.user.findUniqueOrThrow({ where: { email: `vollzeit@${EMAIL_DOMAIN}` } });
+  const carryOf = async () =>
+    (await computeYearOvertime({ userId: user.id, year: YEAR, timeZone: TZ })).carriedOverMinutes;
+  const before = await carryOf();
+  const startAt = zonedTimeToUtc(PREV_YEAR, 12, 29, 18, 0, TZ);
+  const extra = await db.timeEntry.create({
+    data: {
+      userId: user.id,
+      date: d(`${PREV_YEAR}-12-29`),
+      startAt,
+      endAt: new Date(startAt.getTime() + 60 * 60_000),
+      type: "WORK",
+      source: "MANUAL",
+      note: "Szenario-Korrektur",
+    },
+  });
+  let after: number;
+  try {
+    after = await carryOf();
+  } finally {
+    await db.timeEntry.delete({ where: { id: extra.id } });
+  }
+  const pass = after - before === 60;
+  console.log(`\nJahreswechsel (${user.email})`);
+  console.log(
+    `  ${(pass ? "OK" : "FAIL").padEnd(4)} ${"Dezember-Korrektur +1h nach Jahreswechsel".padEnd(44)} soll Übertrag +1:00          ist ${fmt(after - before)}`
+  );
+  return pass;
+}
+
+/**
+ * Vacation days may not go negative (overtime may). Uses the 4-day-week user
+ * (32h, 26 vacation days left); every request created here is deleted again,
+ * the entitlement is restored.
  */
 async function checkGuards(): Promise<boolean> {
   const actor = await adminActor();
@@ -660,10 +763,11 @@ async function checkGuards(): Promise<boolean> {
   };
 
   try {
-    // 11 Mon–Thu days × 8h = 88h > ~46h balance.
-    await expectCode("Überstunden-Antrag über Saldo", "INSUFFICIENT_OVERTIME", () =>
+    // 11 Mon–Thu days × 8h = 88h > ~46h balance: overtime may go negative.
+    await expectCode("Überstunden-Antrag ins Minus", null, () =>
       request("2026-12-01", "2026-12-17", true)
     );
+    await db.vacationRequest.deleteMany({ where: { id: { in: created.splice(0) } } });
     // 2026-09-01..2026-12-23: far more than 26 working days.
     await expectCode("Urlaubsantrag über Anspruch", "INSUFFICIENT_ENTITLEMENT", () =>
       request("2026-09-01", "2026-12-23")

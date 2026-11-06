@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { computeYearOvertime } from "@/server/services/overtime";
 import { getRegenerationStatus } from "@/server/services/vacation";
+import { vacationAccount } from "@/server/services/leave-balance";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -42,15 +43,12 @@ export default async function VacationPage({ params, searchParams }: Props) {
   const { year: yearStr } = await searchParams;
   const year = yearStr ? Number(yearStr) : new Date().getUTCFullYear();
 
-  const [requests, entitlement, settings, overtimeResult] = await Promise.all([
+  const [requests, account, overtimeResult] = await Promise.all([
     db.vacationRequest.findMany({
       where: { userId: session.user.id, year },
       orderBy: { from: "desc" },
     }),
-    db.vacationEntitlement.findUnique({
-      where: { userId_year: { userId: session.user.id, year } },
-    }),
-    db.orgSettings.findUniqueOrThrow({ where: { id: "singleton" } }),
+    vacationAccount(session.user.id, year),
     computeYearOvertime({
       userId: session.user.id,
       year,
@@ -60,11 +58,8 @@ export default async function VacationPage({ params, searchParams }: Props) {
 
   const regen = await getRegenerationStatus(session.user.id, year);
 
-  const totalDays =
-    (entitlement?.totalDays ?? settings.defaultVacationDays) + (regen.enabled ? regen.total : 0);
-  const carriedOverDays = entitlement?.carriedOverDays ?? 0;
-  const consumedDays = entitlement?.consumedDays ?? 0;
-  const availableDays = totalDays + carriedOverDays - consumedDays;
+  const totalDays = account.baseTotalDays + account.regenerationDays;
+  const { carriedOverDays, availableDays, consumedDays } = account;
   const overtimeHours = Math.round((overtimeResult.computation.balanceMs / 3_600_000) * 100) / 100;
 
   return (

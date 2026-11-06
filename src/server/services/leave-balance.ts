@@ -10,7 +10,7 @@ import {
   splitByWorkTarget,
   vacationWeight,
 } from "@/lib/vacation/business-days";
-import { computeYearOvertime } from "@/server/services/overtime";
+import { trackingStartYear } from "@/server/services/overtime";
 import type { FederalState } from "@prisma/client";
 
 /** Extra vacation days per year for users with regeneration leave enabled. */
@@ -122,54 +122,103 @@ export async function computeLeaveCharge(opts: {
   };
 }
 
+/** Base entitlement for a year: its own row, else the latest earlier row (contract carries on), else the org default. */
+export async function inheritedTotalDays(userId: string, year: number): Promise<number> {
+  const row = await db.vacationEntitlement.findFirst({
+    where: { userId, year: { lte: year } },
+    orderBy: { year: "desc" },
+    select: { totalDays: true },
+  });
+  if (row) return row.totalDays;
+  const settings = await db.orgSettings.findUniqueOrThrow({ where: { id: "singleton" } });
+  return settings.defaultVacationDays;
+}
+
+export type VacationAccount = {
+  year: number;
+  /** Contract days for the year (without regeneration). */
+  baseTotalDays: number;
+  regenerationDays: number;
+  carriedOverDays: number;
+  /** Carryover is the previous year's live remainder (not stored, never expires). */
+  carryIsAuto: boolean;
+  consumedDays: number;
+  availableDays: number;
+};
+
 /**
- * Vacation days and overtime minutes still available for new leave in `year`.
- * Pending requests count as reserved unless `includePending` is false (approval
- * re-checks against approved state only).
+ * Vacation account for one year. Unused days of the previous year always carry
+ * over in full (computed live), so nothing is lost at the year change and late
+ * corrections in the old year flow into the new one.
  */
-export async function leaveHeadroom(opts: {
+export async function vacationAccount(userId: string, year: number): Promise<VacationAccount> {
+  const [startYearOrNull, user, rows, settings] = await Promise.all([
+    trackingStartYear(userId),
+    db.user.findUniqueOrThrow({ where: { id: userId }, select: { regeneration: true } }),
+    db.vacationEntitlement.findMany({
+      where: { userId, year: { lte: year } },
+      orderBy: { year: "asc" },
+    }),
+    db.orgSettings.findUniqueOrThrow({ where: { id: "singleton" } }),
+  ]);
+  const startYear = Math.min(startYearOrNull ?? year, year);
+  const regenerationDays = user.regeneration ? REGENERATION_EXTRA_DAYS : 0;
+  const rowByYear = new Map(rows.map((r) => [r.year, r]));
+  // Contract days carry forward from the latest earlier row, else org default.
+  let baseTotalDays = settings.defaultVacationDays;
+  for (const r of rows) if (r.year < startYear) baseTotalDays = r.totalDays;
+
+  // One pass from the start year: each year's remainder is the next year's carryover.
+  let carriedOverDays = rowByYear.get(startYear)?.carriedOverDays ?? 0;
+  for (let y = startYear; ; y++) {
+    const row = rowByYear.get(y);
+    if (row) baseTotalDays = row.totalDays;
+    const consumedDays = row?.consumedDays ?? 0;
+    const availableDays = baseTotalDays + regenerationDays + carriedOverDays - consumedDays;
+    if (y === year) {
+      return {
+        year,
+        baseTotalDays,
+        regenerationDays,
+        carriedOverDays,
+        carryIsAuto: y > startYear,
+        consumedDays,
+        availableDays,
+      };
+    }
+    carriedOverDays = availableDays;
+  }
+}
+
+/**
+ * Vacation days still available for new leave in `year`. Pending (non-overtime)
+ * requests count as reserved unless `includePending` is false (approval
+ * re-checks against approved state only). Overtime has no such limit — it may
+ * go negative.
+ */
+export async function vacationHeadroom(opts: {
   userId: string;
   year: number;
-  state: FederalState;
-  timeZone: string;
-  halfDays: Set<string>;
   includePending: boolean;
-}): Promise<{ vacationDays: number; overtimeMinutes: number }> {
-  const { userId, year } = opts;
-  const [user, entitlement, settings, overtime, pending] = await Promise.all([
-    db.user.findUniqueOrThrow({ where: { id: userId }, select: { regeneration: true } }),
-    db.vacationEntitlement.findUnique({ where: { userId_year: { userId, year } } }),
-    db.orgSettings.findUniqueOrThrow({ where: { id: "singleton" } }),
-    computeYearOvertime({ userId, year, timeZone: opts.timeZone }),
-    opts.includePending
-      ? db.vacationRequest.findMany({
-          where: { userId, year, status: "PENDING" },
-        })
-      : Promise.resolve([]),
-  ]);
+}): Promise<number> {
+  const account = await vacationAccount(opts.userId, opts.year);
+  if (!opts.includePending) return account.availableDays;
+  const pending = await db.vacationRequest.aggregate({
+    where: { userId: opts.userId, year: opts.year, status: "PENDING", useOvertime: false },
+    _sum: { days: true },
+  });
+  return account.availableDays - (pending._sum.days ?? 0);
+}
 
-  let vacationDays =
-    (entitlement?.totalDays ?? settings.defaultVacationDays) +
-    (user.regeneration ? REGENERATION_EXTRA_DAYS : 0) +
-    (entitlement?.carriedOverDays ?? 0) -
-    (entitlement?.consumedDays ?? 0);
-  let overtimeMinutes = Math.round(overtime.computation.balanceMs / 60_000);
-
-  for (const r of pending) {
-    if (!r.useOvertime) {
-      vacationDays -= r.days;
-      continue;
-    }
-    const charge = await computeLeaveCharge({
-      userId,
-      from: r.from,
-      to: r.to,
-      halfDay: r.halfDay,
-      state: opts.state,
-      timeZone: opts.timeZone,
-      halfDays: opts.halfDays,
-    });
-    overtimeMinutes -= charge.minutes;
-  }
-  return { vacationDays, overtimeMinutes };
+/** Ensures the year's entitlement row exists (inherited contract days) before increments. */
+export async function ensureEntitlement(userId: string, year: number): Promise<void> {
+  const existing = await db.vacationEntitlement.findUnique({
+    where: { userId_year: { userId, year } },
+  });
+  if (existing) return;
+  await db.vacationEntitlement.upsert({
+    where: { userId_year: { userId, year } },
+    create: { userId, year, totalDays: await inheritedTotalDays(userId, year) },
+    update: {},
+  });
 }

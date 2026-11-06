@@ -55,7 +55,10 @@ prisma/
 - Reports (PDF / CSV / Excel), scheduled PDF export automation
 - PWA (offline-capable, Web Push notifications)
 - NFC kiosk for clocking in/out on the separate kiosk domain
-- Admin: user CRUD, working models, year setup, business closures, GDPR
+- Admin: user CRUD, working models, business closures, GDPR
+- Automatic year change: unused vacation days and the overtime balance carry
+  over live (never expire, late corrections flow through); public holidays for
+  the current year — and from December the next — are synced automatically
 
 ## Scripts
 

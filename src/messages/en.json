@@ -273,9 +273,6 @@
     "insufficientError": "Not enough vacation days available",
     "noBusinessDaysError": "No business days (Mon–Fri, no holidays) in the range",
     "useOvertimeLabel": "Use overtime",
-    "overtimeAvailable": "Available: {hours} overtime hours",
-    "noOvertimeAvailable": "No overtime available",
-    "insufficientOvertimeError": "Not enough overtime available",
     "overtimeBadge": "Overtime",
     "kindLabel": "Type",
     "scopeLabel": "Scope",
@@ -298,7 +295,8 @@
       "APPROVED": "Approved",
       "REJECTED": "Rejected",
       "CANCELLED": "Cancelled"
-    }
+    },
+    "overtimeBalanceHint": "Current overtime balance: {hours} h — the balance may go negative."
   },
   "holidays": {
     "title": "Public holidays",
@@ -343,7 +341,6 @@
     "saveOk": "Saved.",
     "saving": "Saving …",
     "backToList": "Back to list",
-
     "notificationSection": "Notifications",
     "notificationSectionHint": "Controls which emails this user receives (in-app notifications are always sent).",
     "sickMailLabel": "Sick mail",
@@ -410,7 +407,8 @@
     "consumedLabel": "Consumed (min)",
     "computedThisYear": "Earned this year",
     "netBalance": "Balance",
-    "overtimeHint": "Values in hours:minutes (e.g. 08:30) or decimal (8.5)."
+    "overtimeHint": "Values in hours:minutes (e.g. 08:30) or decimal (8.5).",
+    "carryAutoHint": "Carryover is taken over automatically from the previous year's closing balance and can't be edited here."
   },
   "adminAutomation": {
     "heading": "Automation",
@@ -567,7 +565,6 @@
     "defaultVacationDays": "Default vacation days",
     "save": "Save",
     "saved": "Settings saved",
-
     "sectionSmtp": "Email / SMTP",
     "smtpHint": "SMTP configuration saved to the database (used when .env does not define SMTP_HOST).",
     "smtpEnvHint": "SMTP is currently via .env — edit it there or remove to change here.",
@@ -757,25 +754,6 @@
     "dataHint": "GDPR access and data portability (Art. 15/20 GDPR).",
     "dataExportDescription": "Download all your data as a JSON file."
   },
-  "adminYearSetup": {
-    "title": "Year setup",
-    "year": "Year",
-    "explanationTitle": "What does this do?",
-    "explanation1": "Creates vacation entitlements and overtime balances for all active employees for the selected year.",
-    "explanation2": "Carries over remaining vacation days and overtime from the previous year (if enabled).",
-    "explanation3": "Locks the previous year's overtime calculation (no longer editable).",
-    "explanation4": "Run once at year-end — but can also be run retroactively for any year.",
-    "runSetup": "Run year setup",
-    "carriedOver": "Carry over from previous year",
-    "status": "Status",
-    "usersProcessed": "Users processed",
-    "entitlementsCreated": "Entitlements created",
-    "balancesCreated": "Balances created",
-    "setupComplete": "Setup complete",
-    "setupIncomplete": "Setup incomplete",
-    "confirmRun": "Run year setup for {year}? Existing entries will be updated.",
-    "activeUsers": "Active users"
-  },
   "adminAuditLog": {
     "title": "Audit log",
     "filter": "Filter",
@@ -868,7 +846,6 @@
     "overtime": "Use overtime",
     "overtimeDescription": "Hours are deducted from your overtime balance.",
     "saving": "Saving…",
-    "insufficientOvertime": "Not enough overtime available — the balance must not go negative.",
     "insufficientVacation": "Not enough vacation days available — the balance must not go negative."
   },
   "branding": {

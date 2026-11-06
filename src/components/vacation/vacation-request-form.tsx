@@ -42,8 +42,6 @@ export function VacationRequestForm({ overtimeHours = 0, regeneration }: Props) 
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  const overtimeAvailable = overtimeHours > 0;
-
   const handleFromChange = useCallback((value: string) => {
     setFrom(value);
     setTo(value);
@@ -86,7 +84,6 @@ export function VacationRequestForm({ overtimeHours = 0, regeneration }: Props) 
         const code = (b as { code?: string }).code;
         if (code === "OVERLAP") setError(t("overlapError"));
         else if (code === "INSUFFICIENT_ENTITLEMENT") setError(t("insufficientError"));
-        else if (code === "INSUFFICIENT_OVERTIME") setError(t("insufficientOvertimeError"));
         else if (code === "NO_REGENERATION") setError(t("noRegenerationError"));
         else if (code === "NO_BUSINESS_DAYS") setError(t("noBusinessDaysError"));
         else setError((b as { error?: string }).error ?? "error");
@@ -180,19 +177,13 @@ export function VacationRequestForm({ overtimeHours = 0, regeneration }: Props) 
             id="useOvertime"
             checked={useOvertime}
             onCheckedChange={(v) => setUseOvertime(v === true)}
-            disabled={!overtimeAvailable}
           />
           <div className="grid gap-0.5 leading-none">
-            <Label
-              htmlFor="useOvertime"
-              className={overtimeAvailable ? "cursor-pointer" : "cursor-not-allowed opacity-50"}
-            >
+            <Label htmlFor="useOvertime" className="cursor-pointer">
               {t("useOvertimeLabel")}
             </Label>
             <p className="text-xs text-muted-foreground">
-              {overtimeAvailable
-                ? t("overtimeAvailable", { hours: overtimeHours })
-                : t("noOvertimeAvailable")}
+              {t("overtimeBalanceHint", { hours: overtimeHours })}
             </p>
           </div>
         </div>

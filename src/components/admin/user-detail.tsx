@@ -579,6 +579,7 @@ function OvertimeSection({ userId }: { userId: string }) {
   const [carriedOver, setCarriedOver] = useState("00:00");
   const [consumed, setConsumed] = useState("00:00");
   const [computed, setComputed] = useState<number | null>(null);
+  const [carryIsAuto, setCarryIsAuto] = useState(false);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -592,6 +593,7 @@ function OvertimeSection({ userId }: { userId: string }) {
           setCarriedOver(minutesToHours(comp.carriedOverMinutes ?? 0));
           setConsumed(minutesToHours(comp.consumedOvertimeMinutes ?? 0));
           if (comp.totalDeltaMs != null) setComputed(Math.round(comp.totalDeltaMs / 60_000));
+          setCarryIsAuto(comp.carryIsAuto === true);
         }
       })
       .catch(() => {});
@@ -644,7 +646,9 @@ function OvertimeSection({ userId }: { userId: string }) {
               value={carriedOver}
               onChange={(e) => setCarriedOver(e.target.value)}
               className="font-mono tabular-nums"
+              disabled={carryIsAuto}
             />
+            {carryIsAuto && <p className="text-xs text-muted-foreground">{t("carryAutoHint")}</p>}
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="consumed">{t("consumedLabel")}</Label>

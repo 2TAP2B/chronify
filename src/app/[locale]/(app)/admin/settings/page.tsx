@@ -6,7 +6,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { getSettings } from "@/server/services/admin-settings";
 import { SettingsForm } from "@/components/admin/settings-form";
 import { BrandingSettings } from "@/components/admin/branding-settings";
-import { YearSetupCard } from "@/components/admin/year-setup-card";
 import { HolidaySync } from "@/components/admin/holiday-sync";
 
 type Props = {
@@ -33,8 +32,6 @@ export default async function AdminSettingsPage({ params }: Props) {
       <SettingsForm settings={settings} />
 
       <HolidaySync defaultFederalState={settings.defaultFederalState} />
-
-      <YearSetupCard />
     </div>
   );
 }

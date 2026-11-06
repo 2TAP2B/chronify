@@ -273,9 +273,6 @@
     "insufficientError": "Nicht genug Urlaubstage verfügbar",
     "noBusinessDaysError": "Im Zeitraum sind keine Arbeitstage (Mo–Fr, keine Feiertage)",
     "useOvertimeLabel": "Überstunden abbauen",
-    "overtimeAvailable": "Verfügbar: {hours} Überstunden",
-    "noOvertimeAvailable": "Keine Überstunden verfügbar",
-    "insufficientOvertimeError": "Nicht genug Überstunden verfügbar",
     "overtimeBadge": "Überstunden",
     "kindLabel": "Art",
     "scopeLabel": "Zeitraum",
@@ -298,7 +295,8 @@
       "APPROVED": "Genehmigt",
       "REJECTED": "Abgelehnt",
       "CANCELLED": "Storniert"
-    }
+    },
+    "overtimeBalanceHint": "Aktueller Überstundensaldo: {hours} h – das Konto darf ins Minus gehen."
   },
   "holidays": {
     "title": "Feiertage",
@@ -343,7 +341,6 @@
     "saveOk": "Gespeichert.",
     "saving": "Speichert …",
     "backToList": "Zurück zur Liste",
-
     "notificationSection": "Benachrichtigungen",
     "notificationSectionHint": "Steuert, welche Mails dieser Benutzer erhält (In-App-Benachrichtigungen bleiben immer aktiv).",
     "sickMailLabel": "Krank-Mail",
@@ -410,7 +407,8 @@
     "consumedLabel": "Verbraucht (Min.)",
     "computedThisYear": "Dieses Jahr erarbeitet",
     "netBalance": "Saldo",
-    "overtimeHint": "Werte in Stunden:Minuten (z.B. 08:30) oder Dezimal (8,5)."
+    "overtimeHint": "Werte in Stunden:Minuten (z.B. 08:30) oder Dezimal (8,5).",
+    "carryAutoHint": "Übertrag wird automatisch aus dem Vorjahr übernommen (Schlusssaldo) und ist hier nicht änderbar."
   },
   "adminAutomation": {
     "heading": "Automatisierung",
@@ -567,7 +565,6 @@
     "defaultVacationDays": "Standard-Urlaubstage",
     "save": "Speichern",
     "saved": "Einstellungen gespeichert",
-
     "sectionSmtp": "E-Mail / SMTP",
     "smtpHint": "SMTP-Server für die Mails der App. Wird aus dieser Konfiguration gespeichert, wenn .env sie nicht selbst festlegt.",
     "smtpEnvHint": "SMTP ist über .env festgelegt und kann im Dashboard nicht geändert werden.",
@@ -757,25 +754,6 @@
     "dataHint": "DSGVO-Auskunft und Datenübertragbarkeit (Art. 15/20 DSGVO).",
     "dataExportDescription": "Alle Ihre Daten als JSON-Datei herunterladen."
   },
-  "adminYearSetup": {
-    "title": "Jahreswechsel",
-    "year": "Jahr",
-    "explanationTitle": "Was macht diese Funktion?",
-    "explanation1": "Erstellt für das ausgewählte Jahr Urlaubstage und Überstundenkonten für alle aktiven Mitarbeiter.",
-    "explanation2": "Übernimmt verbleibende Urlaubstage und Überstunden aus dem Vorjahr (falls aktiviert).",
-    "explanation3": "Sperrt die Überstundenberechnung des Vorjahres (nicht mehr änderbar).",
-    "explanation4": "Einmalig zum Jahreswechsel ausführen — kann aber auch nachträglich für jedes Jahr ausgeführt werden.",
-    "runSetup": "Jahressetup ausführen",
-    "carriedOver": "Übertrag aus Vorjahr übernehmen",
-    "status": "Status",
-    "usersProcessed": "Benutzer verarbeitet",
-    "entitlementsCreated": "Urlaubsansprüche erstellt",
-    "balancesCreated": "Überstundenkonten erstellt",
-    "setupComplete": "Setup bereits vollständig",
-    "setupIncomplete": "Setup unvollständig",
-    "confirmRun": "Jahressetup für {year} ausführen? Bestehende Einträge werden aktualisiert.",
-    "activeUsers": "Aktive Benutzer"
-  },
   "adminAuditLog": {
     "title": "Audit-Protokoll",
     "filter": "Filter",
@@ -868,7 +846,6 @@
     "overtime": "Überstunden abbauen",
     "overtimeDescription": "Die Stunden werden von deinem Überstundenkonto abgezogen.",
     "saving": "Wird gespeichert…",
-    "insufficientOvertime": "Nicht genug Überstunden verfügbar – das Konto darf nicht ins Minus gehen.",
     "insufficientVacation": "Nicht genug Urlaubstage verfügbar – der Urlaub darf nicht ins Minus gehen."
   },
   "branding": {

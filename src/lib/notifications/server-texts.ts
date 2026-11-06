@@ -5,6 +5,7 @@ export type NotificationKind =
   | "vacationRejected"
   | "vacationRequested"
   | "closureChoice"
+  | "closureOvertime"
   | `arbzg:${string}`;
 
 const ARBZG_TITLES_BODIES: Record<
@@ -99,6 +100,16 @@ export function notificationText(
         : {
             title: "Schließtag",
             body: `${params.closureName ?? ""}: ${days} Tag(e) wurden als Urlaub eingetragen. Du kannst stattdessen Überstunden abbauen.`,
+          };
+    case "closureOvertime":
+      return locale === "en"
+        ? {
+            title: "Business closure",
+            body: `${params.closureName ?? ""}: not enough vacation days left — ${days} day(s) were booked against your overtime balance.`,
+          }
+        : {
+            title: "Schließtag",
+            body: `${params.closureName ?? ""}: Nicht genug Urlaubstage übrig – ${days} Tag(e) wurden über das Überstundenkonto verrechnet.`,
           };
     default:
       throw new Error(`Unknown notification kind: ${kind}`);

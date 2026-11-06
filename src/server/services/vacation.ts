@@ -17,7 +17,9 @@ import { notificationText } from "@/lib/notifications/server-texts";
 import {
   REGENERATION_EXTRA_DAYS,
   computeLeaveCharge,
-  leaveHeadroom,
+  ensureEntitlement,
+  vacationAccount,
+  vacationHeadroom,
   withLeaveLock,
   workingModelsInRange,
 } from "@/server/services/leave-balance";
@@ -153,28 +155,16 @@ export async function createVacationRequest(opts: {
       throw new VacationError("Range overlaps an existing request", "OVERLAP");
     }
 
-    // Neither vacation nor overtime may go negative; pending requests reserve.
-    const headroom = await leaveHeadroom({
-      userId: ownerUserId,
-      year,
-      state,
-      timeZone: ctx.timeZone,
-      halfDays,
-      includePending: true,
-    });
-    if (useOvertime && charge.minutes > headroom.overtimeMinutes) {
-      throw new VacationError(
-        `Insufficient overtime: requested ${charge.minutes} min, available ${headroom.overtimeMinutes} min`,
-        "INSUFFICIENT_OVERTIME",
-        403
-      );
-    }
-    if (!useOvertime && vacationDays > headroom.vacationDays) {
-      throw new VacationError(
-        `Insufficient entitlement: requested ${vacationDays} days, available ${headroom.vacationDays}`,
-        "INSUFFICIENT_ENTITLEMENT",
-        403
-      );
+    // Vacation days may not go negative (pending requests reserve); overtime may.
+    if (!useOvertime) {
+      const headroom = await vacationHeadroom({ userId: ownerUserId, year, includePending: true });
+      if (vacationDays > headroom) {
+        throw new VacationError(
+          `Insufficient entitlement: requested ${vacationDays} days, available ${headroom}`,
+          "INSUFFICIENT_ENTITLEMENT",
+          403
+        );
+      }
     }
 
     return db.vacationRequest.create({
@@ -282,7 +272,7 @@ export async function approveVacationRequest(opts: {
     }
 
     // Recompute the charge (models/holidays/closures may have changed since the
-    // request) and re-check it against the approved balances before claiming.
+    // request) and re-check vacation days against the approved balance.
     const ctx = await getUserContext(pending.userId);
     const settings = await db.orgSettings.findUniqueOrThrow({ where: { id: "singleton" } });
     const halfDays = halfDayDateSet(settings);
@@ -295,27 +285,20 @@ export async function approveVacationRequest(opts: {
       timeZone: ctx.timeZone,
       halfDays,
     });
-    const headroom = await leaveHeadroom({
-      userId: pending.userId,
-      year: pending.year,
-      state: ctx.user.federalState,
-      timeZone: ctx.timeZone,
-      halfDays,
-      includePending: false,
-    });
-    if (pending.useOvertime && charge.minutes > headroom.overtimeMinutes) {
-      throw new VacationError(
-        `Insufficient overtime: requested ${charge.minutes} min, available ${headroom.overtimeMinutes} min`,
-        "INSUFFICIENT_OVERTIME",
-        403
-      );
-    }
-    if (!pending.useOvertime && charge.days > headroom.vacationDays) {
-      throw new VacationError(
-        `Insufficient entitlement: requested ${charge.days} days, available ${headroom.vacationDays}`,
-        "INSUFFICIENT_ENTITLEMENT",
-        403
-      );
+    if (!pending.useOvertime) {
+      const headroom = await vacationHeadroom({
+        userId: pending.userId,
+        year: pending.year,
+        includePending: false,
+      });
+      if (charge.days > headroom) {
+        throw new VacationError(
+          `Insufficient entitlement: requested ${charge.days} days, available ${headroom}`,
+          "INSUFFICIENT_ENTITLEMENT",
+          403
+        );
+      }
+      await ensureEntitlement(pending.userId, pending.year);
     }
 
     const claim = await db.vacationRequest.updateMany({
@@ -368,17 +351,9 @@ export async function approveVacationRequest(opts: {
     } else {
       await db.$transaction([
         db.vacationRequest.update({ where: { id: req.id }, data: { days } }),
-        db.vacationEntitlement.upsert({
+        db.vacationEntitlement.update({
           where: { userId_year: { userId: req.userId, year: req.year } },
-          create: {
-            userId: req.userId,
-            year: req.year,
-            totalDays: settings.defaultVacationDays,
-            consumedDays: days,
-          },
-          update: {
-            consumedDays: { increment: days },
-          },
+          data: { consumedDays: { increment: days } },
         }),
         db.timeEntry.createMany({
           data: spendableDays.map((d) => ({
@@ -604,25 +579,18 @@ export async function getVacationEntitlementView(opts: {
 }) {
   const userId = resolveTarget(opts.actor, opts.targetUserId);
   const year = opts.year ?? new Date().getUTCFullYear();
-  const [entitlement, settings, regeneration] = await Promise.all([
-    db.vacationEntitlement.findUnique({
-      where: { userId_year: { userId, year } },
-    }),
-    db.orgSettings.findUniqueOrThrow({ where: { id: "singleton" } }),
+  const [account, regeneration] = await Promise.all([
+    vacationAccount(userId, year),
     getRegenerationStatus(userId, year),
   ]);
-  const baseDays = entitlement?.totalDays ?? settings.defaultVacationDays;
-  const totalDays = baseDays + (regeneration.enabled ? regeneration.total : 0);
-  const carriedOverDays = entitlement?.carriedOverDays ?? 0;
-  const consumedDays = entitlement?.consumedDays ?? 0;
   return {
     userId,
     year,
-    totalDays,
-    baseTotalDays: baseDays,
-    carriedOverDays,
-    consumedDays,
-    availableDays: totalDays + carriedOverDays - consumedDays,
+    totalDays: account.baseTotalDays + account.regenerationDays,
+    baseTotalDays: account.baseTotalDays,
+    carriedOverDays: account.carriedOverDays,
+    consumedDays: account.consumedDays,
+    availableDays: account.availableDays,
     regeneration,
   };
 }

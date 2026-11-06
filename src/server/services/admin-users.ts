@@ -5,6 +5,7 @@ import { z } from "zod";
 import type { Role, Locale, FederalState, BreakMode } from "@prisma/client";
 import { sendMail } from "@/server/services/mail";
 import { welcomeEmail } from "@/lib/email-templates";
+import { trackingStartYear } from "@/server/services/overtime";
 
 export class AdminError extends Error {
   constructor(
@@ -337,17 +338,21 @@ export async function adjustOvertimeBalance(opts: {
   const existing = await db.overtimeBalance.findUnique({
     where: { userId_year: { userId: opts.userId, year: opts.year } },
   });
+  // After the tracking start year the carryover is the previous year's live
+  // closing balance; only the start year's opening balance is stored.
+  const startYear = (await trackingStartYear(opts.userId)) ?? opts.year;
+  const carryEditable = opts.year === startYear;
   await db.overtimeBalance.upsert({
     where: { userId_year: { userId: opts.userId, year: opts.year } },
     create: {
       userId: opts.userId,
       year: opts.year,
-      carriedOverMinutes: opts.carriedOverMinutes,
+      carriedOverMinutes: carryEditable ? opts.carriedOverMinutes : 0,
       consumedOvertimeMinutes: opts.consumedOvertimeMinutes,
       computedMinutes: 0,
     },
     update: {
-      carriedOverMinutes: opts.carriedOverMinutes,
+      ...(carryEditable ? { carriedOverMinutes: opts.carriedOverMinutes } : {}),
       consumedOvertimeMinutes: opts.consumedOvertimeMinutes,
     },
   });

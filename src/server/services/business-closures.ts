@@ -20,7 +20,8 @@ import {
 import type { FederalState } from "@prisma/client";
 import { targetMinutesForDate } from "@/lib/overtime/calculate";
 import {
-  leaveHeadroom,
+  ensureEntitlement,
+  vacationHeadroom,
   withLeaveLock,
   workingModelsInRange,
 } from "@/server/services/leave-balance";
@@ -58,26 +59,32 @@ async function buildResolver(from: Date, to: Date, states: string[]): Promise<Ho
   return makeHolidayResolver(holidays);
 }
 
+type TakeOver = {
+  req: { id: string; year: number; useOvertime: boolean };
+  entryIds: string[];
+  refundDays: number;
+  refundMinutes: number;
+};
+
 /**
- * The closure takes over `days` the user already holds as approved request
- * vacation: the request's entry for each such day is removed and its charge
- * (vacation days or overtime minutes) refunded, so every day is consumed once
- * and stays covered by the closure if the request is cancelled later.
+ * Approved request vacation the user already holds on `days`: per request the
+ * entries and what they were charged (vacation days or overtime minutes).
  */
-async function takeOverRequestDays(
+async function planTakeOver(
   userId: string,
   days: Date[],
   halfDaySet: Set<string>
-): Promise<void> {
-  if (days.length === 0) return;
+): Promise<TakeOver[]> {
+  if (days.length === 0) return [];
   const from = days[0];
   const to = days[days.length - 1];
   const requests = await db.vacationRequest.findMany({
     where: { userId, status: "APPROVED", from: { lte: to }, to: { gte: from } },
   });
-  if (requests.length === 0) return;
+  if (requests.length === 0) return [];
   const models = await workingModelsInRange(userId, from, to);
 
+  const plan: TakeOver[] = [];
   for (const req of requests) {
     const covered = await db.timeEntry.findMany({
       where: {
@@ -89,7 +96,6 @@ async function takeOverRequestDays(
       select: { id: true, date: true },
     });
     if (covered.length === 0) continue;
-
     let refundDays = 0;
     let refundMinutes = 0;
     for (const e of covered) {
@@ -101,9 +107,27 @@ async function takeOverRequestDays(
           weight === 0.5 ? halfDayMinutesFor(m, e.date) : targetMinutesForDate(e.date, m);
       }
     }
+    plan.push({ req, entryIds: covered.map((e) => e.id), refundDays, refundMinutes });
+  }
+  return plan;
+}
+
+/** Vacation days of `plan` that the closure refunds (and re-charges as closure days). */
+function heldVacationDays(plan: TakeOver[]): number {
+  return plan.reduce((sum, p) => sum + (p.req.useOvertime ? 0 : p.refundDays), 0);
+}
+
+/**
+ * The closure takes over days the user already holds as approved request
+ * vacation: the request's entries are removed and their charge refunded, so
+ * every day is consumed once and stays covered by the closure if the request
+ * is cancelled later.
+ */
+async function applyTakeOver(userId: string, plan: TakeOver[]): Promise<void> {
+  for (const { req, entryIds, refundDays, refundMinutes } of plan) {
     const balanceKey = { userId_year: { userId, year: req.year } };
     await db.$transaction([
-      db.timeEntry.deleteMany({ where: { id: { in: covered.map((e) => e.id) } } }),
+      db.timeEntry.deleteMany({ where: { id: { in: entryIds } } }),
       db.vacationRequest.update({
         where: { id: req.id },
         data: { days: { decrement: refundDays } },
@@ -199,8 +223,17 @@ export async function createClosure({
       0
     );
 
-    if (consumedDays.length > 0) {
-      await takeOverRequestDays(u.id, consumedDays, halfDaySet);
+    // Closure days are vacation as long as the user's vacation days cover them
+    // (days already held as request vacation are re-charged, so they count as
+    // covered); otherwise the whole closure is booked as overtime, which may go
+    // negative — vacation days never do.
+    const choice = await withLeaveLock(u.id, async () => {
+      if (consumedDays.length === 0) return "VACATION" as const;
+      const plan = await planTakeOver(u.id, consumedDays, halfDaySet);
+      const headroom = await vacationHeadroom({ userId: u.id, year, includePending: true });
+      if (consumedDaysTotal > headroom + heldVacationDays(plan)) return "OVERTIME" as const;
+
+      await applyTakeOver(u.id, plan);
       await db.timeEntry.createMany({
         data: consumedDays.map((day) => ({
           userId: u.id,
@@ -211,24 +244,17 @@ export async function createClosure({
           breakMinutes: 0,
         })),
       });
-
-      await db.vacationEntitlement.upsert({
+      await ensureEntitlement(u.id, year);
+      await db.vacationEntitlement.update({
         where: { userId_year: { userId: u.id, year } },
-        create: {
-          userId: u.id,
-          year,
-          totalDays: settings.defaultVacationDays,
-          consumedDays: consumedDaysTotal,
-        },
-        update: {
-          consumedDays: { increment: consumedDaysTotal },
-        },
+        data: { consumedDays: { increment: consumedDaysTotal } },
       });
-    }
+      return "VACATION" as const;
+    });
 
     await db.closureChoice
       .create({
-        data: { closureId: closure.id, userId: u.id, choice: "VACATION" },
+        data: { closureId: closure.id, userId: u.id, choice },
       })
       .catch(() => {});
 
@@ -236,7 +262,7 @@ export async function createClosure({
     await notifyUser({
       userId: u.id,
       type: "CLOSURE_CHOICE",
-      ...notificationText("closureChoice", locale, {
+      ...notificationText(choice === "OVERTIME" ? "closureOvertime" : "closureChoice", locale, {
         closureName: input.name,
         days: consumedDaysTotal,
       }),
@@ -306,68 +332,14 @@ export async function deleteClosure({
 
   for (const [userId, n] of consumedByUser) {
     await db.vacationEntitlement
-      .upsert({
+      .update({
         where: { userId_year: { userId, year } },
-        create: {
-          userId,
-          year,
-          totalDays: settings.defaultVacationDays,
-          consumedDays: -n,
-        },
-        update: {
-          consumedDays: { decrement: n },
-        },
+        data: { consumedDays: { decrement: n } },
       })
       .catch(() => {});
   }
-
-  // Restore overtime for users who had compensated the closure with overtime.
-  const overtimeChoices = await db.closureChoice.findMany({
-    where: { closureId: closure.id, choice: "OVERTIME" },
-  });
-  if (overtimeChoices.length > 0) {
-    const overtimeUsers = await db.user.findMany({
-      where: { id: { in: overtimeChoices.map((c) => c.userId) } },
-      select: { id: true, federalState: true },
-    });
-    const resolver = await buildResolver(closure.from, closure.to, [
-      settings.defaultFederalState,
-      ...overtimeUsers.map((u) => u.federalState),
-    ]);
-    for (const u of overtimeUsers) {
-      const days = businessDaysInRange(
-        closure.from,
-        closure.to,
-        u.federalState,
-        resolver
-      ).businessDays;
-      const models = await workingModelsInRange(u.id, closure.from, closure.to);
-      const overtimeMinutes = days.reduce((sum, d) => {
-        const m = modelForDate(models, d);
-        return m
-          ? sum +
-              (vacationWeight(d, halfDaySet) === 0.5
-                ? halfDayMinutesFor(m, d)
-                : targetMinutesForDate(d, m))
-          : sum;
-      }, 0);
-      if (overtimeMinutes <= 0) continue;
-      await db.overtimeBalance
-        .upsert({
-          where: { userId_year: { userId: u.id, year } },
-          create: {
-            userId: u.id,
-            year,
-            carriedOverMinutes: 0,
-            computedMinutes: overtimeMinutes,
-          },
-          update: {
-            computedMinutes: { increment: overtimeMinutes },
-          },
-        })
-        .catch(() => {});
-    }
-  }
+  // OVERTIME choices have no entries: their closure days were unworked days
+  // (-target) and stay so — nothing stored to reverse.
 
   await db.businessClosure.delete({ where: { id: closureId } });
 
@@ -420,36 +392,15 @@ export async function updateChoice({
   const { consumed } = splitByWorkTarget(businessDays, models);
   const halfDaySet = halfDayDateSet(settings);
   const consumedDaysTotal = consumed.reduce((sum, d) => sum + vacationWeight(d, halfDaySet), 0);
-  const totalOvertimeMinutes = businessDays.reduce((sum, d) => {
-    const m = modelForDate(models, d);
-    return m
-      ? sum +
-          (vacationWeight(d, halfDaySet) === 0.5
-            ? halfDayMinutesFor(m, d)
-            : targetMinutesForDate(d, m))
-      : sum;
-  }, 0);
+  const year = closure.from.getUTCFullYear();
 
-  // Check + switch run under the user's leave lock; the switch must not drive
-  // the target balance negative (pending requests reserve).
-  const ctx = await getUserContext(actor.id);
+  // Check + switch run under the user's leave lock. Overtime may go negative,
+  // vacation days may not (pending requests reserve; days the closure takes
+  // over from approved requests are re-charged, so they count as covered).
   return withLeaveLock(actor.id, async () => {
-    const headroom = await leaveHeadroom({
-      userId: actor.id,
-      year: closure.from.getUTCFullYear(),
-      state,
-      timeZone: ctx.timeZone,
-      halfDays: halfDaySet,
-      includePending: true,
-    });
-    if (choice === "OVERTIME" && totalOvertimeMinutes > headroom.overtimeMinutes) {
-      throw new ClosureError("Not enough overtime", "INSUFFICIENT_OVERTIME", 403);
-    }
-    if (choice === "VACATION" && consumedDaysTotal > headroom.vacationDays) {
-      throw new ClosureError("Not enough vacation days", "INSUFFICIENT_ENTITLEMENT", 403);
-    }
-
     if (choice === "OVERTIME" && existing.choice === "VACATION") {
+      // Without its VACATION entries each closure day is an unworked day:
+      // the day's target is debited from the overtime balance.
       await db.timeEntry.deleteMany({
         where: {
           userId: actor.id,
@@ -459,36 +410,19 @@ export async function updateChoice({
           date: { gte: closure.from, lte: closure.to },
         },
       });
-
       await db.vacationEntitlement
-        .upsert({
-          where: { userId_year: { userId: actor.id, year: closure.from.getUTCFullYear() } },
-          create: {
-            userId: actor.id,
-            year: closure.from.getUTCFullYear(),
-            totalDays: settings.defaultVacationDays,
-            consumedDays: -consumedDaysTotal,
-          },
-          update: {
-            consumedDays: { decrement: consumedDaysTotal },
-          },
+        .update({
+          where: { userId_year: { userId: actor.id, year } },
+          data: { consumedDays: { decrement: consumedDaysTotal } },
         })
         .catch(() => {});
-
-      await db.overtimeBalance.upsert({
-        where: { userId_year: { userId: actor.id, year: closure.from.getUTCFullYear() } },
-        create: {
-          userId: actor.id,
-          year: closure.from.getUTCFullYear(),
-          carriedOverMinutes: 0,
-          computedMinutes: -totalOvertimeMinutes,
-        },
-        update: {
-          computedMinutes: { decrement: totalOvertimeMinutes },
-        },
-      });
     } else if (choice === "VACATION" && existing.choice === "OVERTIME") {
-      await takeOverRequestDays(actor.id, consumed, halfDaySet);
+      const plan = await planTakeOver(actor.id, consumed, halfDaySet);
+      const headroom = await vacationHeadroom({ userId: actor.id, year, includePending: true });
+      if (consumedDaysTotal > headroom + heldVacationDays(plan)) {
+        throw new ClosureError("Not enough vacation days", "INSUFFICIENT_ENTITLEMENT", 403);
+      }
+      await applyTakeOver(actor.id, plan);
       await db.timeEntry.createMany({
         data: consumed.map((day) => ({
           userId: actor.id,
@@ -499,31 +433,10 @@ export async function updateChoice({
           breakMinutes: 0,
         })),
       });
-
-      await db.vacationEntitlement.upsert({
-        where: { userId_year: { userId: actor.id, year: closure.from.getUTCFullYear() } },
-        create: {
-          userId: actor.id,
-          year: closure.from.getUTCFullYear(),
-          totalDays: settings.defaultVacationDays,
-          consumedDays: consumedDaysTotal,
-        },
-        update: {
-          consumedDays: { increment: consumedDaysTotal },
-        },
-      });
-
-      await db.overtimeBalance.upsert({
-        where: { userId_year: { userId: actor.id, year: closure.from.getUTCFullYear() } },
-        create: {
-          userId: actor.id,
-          year: closure.from.getUTCFullYear(),
-          carriedOverMinutes: 0,
-          computedMinutes: totalOvertimeMinutes,
-        },
-        update: {
-          computedMinutes: { increment: totalOvertimeMinutes },
-        },
+      await ensureEntitlement(actor.id, year);
+      await db.vacationEntitlement.update({
+        where: { userId_year: { userId: actor.id, year } },
+        data: { consumedDays: { increment: consumedDaysTotal } },
       });
     }
 
