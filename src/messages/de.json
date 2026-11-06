@@ -867,7 +867,9 @@
     "vacationDescription": "Die Tage werden von deinem Urlaubsanspruch abgezogen (Standard).",
     "overtime": "Überstunden abbauen",
     "overtimeDescription": "Die Stunden werden von deinem Überstundenkonto abgezogen.",
-    "saving": "Wird gespeichert…"
+    "saving": "Wird gespeichert…",
+    "insufficientOvertime": "Nicht genug Überstunden verfügbar – das Konto darf nicht ins Minus gehen.",
+    "insufficientVacation": "Nicht genug Urlaubstage verfügbar – der Urlaub darf nicht ins Minus gehen."
   },
   "branding": {
     "sectionBranding": "Branding",

@@ -93,10 +93,11 @@ Other useful scripts: `npm run prisma:studio`, `npm run prisma:migrate`,
 
 Overtime/vacation regression check (local DB only, refuses non-localhost):
 `npm run scenarios:seed` creates deterministic test users (`*@szenario.local` /
-`test1234`: 40h, 4-day week, part-time, model change, closure overlaps) with a
-full year of entries; `npm run scenarios:check` recomputes balances via the real
-services and compares them with hand-derived expectations. Run it after any
-change to overtime, vacation, closure or year-setup logic.
+`test1234`: 40h, 4-day week, part-time, model change, closure overlaps, half
+days 24.12/31.12) with a full year of entries; `npm run scenarios:check`
+recomputes balances via the real services, compares them with hand-derived
+expectations and verifies that vacation/overtime can't go negative. Run it after
+any change to overtime, vacation, closure or year-setup logic.
 
 ## 4. Layout & where code goes
 

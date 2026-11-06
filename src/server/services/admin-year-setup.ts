@@ -32,7 +32,7 @@ export async function runYearSetup(opts: {
   const year = opts.year;
   const users = await db.user.findMany({
     where: { active: true },
-    select: { id: true, timezone: true },
+    select: { id: true, timezone: true, hireDate: true },
   });
 
   let entitlementsCreated = 0;
@@ -42,7 +42,9 @@ export async function runYearSetup(opts: {
   for (const u of users) {
     // VacationEntitlement: upsert with org default days; carry over from prev year if requested
     let carriedOverDays = 0;
-    if (opts.carriedOverFromPrev) {
+    // Nothing to carry from a year the user wasn't employed in.
+    const employedPrevYear = !u.hireDate || u.hireDate < new Date(Date.UTC(year, 0, 1));
+    if (opts.carriedOverFromPrev && employedPrevYear) {
       const prev = await db.vacationEntitlement.findUnique({
         where: { userId_year: { userId: u.id, year: year - 1 } },
       });

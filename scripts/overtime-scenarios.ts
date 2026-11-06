@@ -8,6 +8,7 @@ import {
   approveVacationRequest,
   cancelVacationRequest,
   createVacationRequest,
+  VacationError,
 } from "@/server/services/vacation";
 import { createClosure, deleteClosure, updateChoice } from "@/server/services/business-closures";
 import { runYearSetup } from "@/server/services/admin-year-setup";
@@ -71,6 +72,8 @@ type Scenario = {
   events: EventDef[];
   /** Employee switches the business-closure choice from vacation to overtime. */
   closureChoice: "VACATION" | "OVERTIME";
+  /** 24.12/31.12 neither worked nor booked (default: the half is worked). */
+  skipOrgHalfDays?: true;
   /** Hand-calculated from the rules (see comments). */
   expected: {
     consumedOvertimeMinutes: Partial<Record<number, number>>;
@@ -88,12 +91,14 @@ const SCENARIOS: Scenario[] = [
     models: [{ from: "2025-10-01", week: [480, 480, 480, 480, 480] }],
     events: [
       { kind: "overtimeDay", date: "2025-12-19" }, // Fri 8h → 480 min from 2025 overtime
+      { kind: "overtimeDay", date: "2025-12-24" }, // Wed, half working day → 240 min
+      { kind: "vacation", from: "2025-12-31", to: "2025-12-31" }, // Wed, half day → 0.5 days
       { kind: "vacation", from: "2026-08-03", to: "2026-08-07" }, // Mon–Fri → 5 days
     ],
     closureChoice: "VACATION", // Fri 8h → 1 vacation day
     expected: {
-      consumedOvertimeMinutes: { [PREV_YEAR]: 480, [YEAR]: 0 },
-      vacationDays: { [YEAR]: 6 },
+      consumedOvertimeMinutes: { [PREV_YEAR]: 720, [YEAR]: 0 },
+      vacationDays: { [PREV_YEAR]: 0.5, [YEAR]: 6 },
       closureOvertimeMinutes: 0,
     },
   },
@@ -217,6 +222,41 @@ const SCENARIOS: Scenario[] = [
       closureOvertimeMinutes: 0,
     },
   },
+  {
+    key: "halbtagschliesstag",
+    name: "Szenario Halber Urlaubstag am späteren Schließtag",
+    hireDate: "2026-01-01",
+    models: [{ from: "2026-01-01", week: [480, 480, 480, 480, 480] }],
+    events: [
+      // Half vacation day on Fri 15.05., booked before the closure exists: the
+      // closure takes the whole day over (0.5 refunded, 1 day charged, nothing owed).
+      { kind: "vacationHalfDay", date: "2026-05-15", workMinutes: 240 },
+    ],
+    closureChoice: "VACATION",
+    expected: {
+      consumedOvertimeMinutes: { [YEAR]: 0 },
+      vacationDays: { [YEAR]: 1 },
+      closureOvertimeMinutes: 0,
+    },
+  },
+  {
+    key: "halbtage",
+    name: "Szenario Halbe Tage ungebucht",
+    hireDate: "2025-12-01",
+    models: [{ from: "2025-12-01", week: [480, 480, 480, 480, 480] }],
+    // 24.12/31.12.2025 neither worked nor booked → only the half is missing (-4h each).
+    skipOrgHalfDays: true,
+    events: [
+      // Half vacation day, other half not worked → 0.5 days, half target owed (-4h).
+      { kind: "vacationHalfDay", date: "2026-03-10", workMinutes: 0 },
+    ],
+    closureChoice: "VACATION",
+    expected: {
+      consumedOvertimeMinutes: { [YEAR]: 0 },
+      vacationDays: { [YEAR]: 1.5 },
+      closureOvertimeMinutes: 0,
+    },
+  },
 ];
 
 // ---------------------------------------------------------------------------
@@ -268,9 +308,16 @@ function buildPlan(s: Scenario, cal: Calendar): PlannedDay[] {
     const key = iso(x);
     const target = targetOn(s, x);
     if (target === 0 || cal.holidays.has(key)) continue;
+    if (off.has(key)) continue;
+    const halfTarget = Math.floor(target / 2);
     if (cal.halfDays.has(key.slice(5))) {
-      // 24.12/31.12 are half working days for the org: work the half, delta 0.
-      plan.push({ date: x, workMinutes: Math.floor(target / 2), deltaMinutes: 0 });
+      // 24.12/31.12: half working day for the org. Worked half → 0; neither
+      // worked nor booked → the half is missing.
+      plan.push(
+        s.skipOrgHalfDays
+          ? { date: x, workMinutes: 0, deltaMinutes: -halfTarget }
+          : { date: x, workMinutes: halfTarget, deltaMinutes: 0 }
+      );
       continue;
     }
     if (key === CLOSURE_DAY) {
@@ -278,11 +325,10 @@ function buildPlan(s: Scenario, cal: Calendar): PlannedDay[] {
       plan.push({ date: x, workMinutes: 0, deltaMinutes: -s.expected.closureOvertimeMinutes });
       continue;
     }
-    if (off.has(key)) continue;
     const halfWork = half.get(key);
     if (halfWork !== undefined) {
-      // The other half is vacation/overtime → that half's target is covered.
-      plan.push({ date: x, workMinutes: halfWork, deltaMinutes: 0 });
+      // One half is vacation/overtime; the other half is owed as work.
+      plan.push({ date: x, workMinutes: halfWork, deltaMinutes: halfWork - halfTarget });
       continue;
     }
     const month = key.slice(0, 7);
@@ -421,15 +467,33 @@ async function seed() {
     if (e.kind === "vacation" && e.cancelAfterClosure) toCancel.push(req.id);
   };
 
+  // Past days are seeded after the fact: a day off "requested in advance"
+  // already looks unworked (-target) when the request is placed now, and the
+  // no-negative guard would refuse it. A temporary carryover credit stands in
+  // for "requested before the day"; it is removed right after.
+  const SEED_CREDIT_MINUTES = 100 * 60;
+  const credit = async (year: number, minutes: number) => {
+    for (const userId of users.values()) {
+      await db.overtimeBalance.upsert({
+        where: { userId_year: { userId, year } },
+        create: { userId, year, carriedOverMinutes: minutes },
+        update: { carriedOverMinutes: { increment: minutes } },
+      });
+    }
+  };
+
   // Previous-year events, then the year rollover with carryover.
+  await credit(PREV_YEAR, SEED_CREDIT_MINUTES);
   for (const s of SCENARIOS) {
     for (const e of s.events.filter((x) => eventYear(x) === PREV_YEAR)) {
       await request(users.get(s.key)!, e);
     }
   }
+  await credit(PREV_YEAR, -SEED_CREDIT_MINUTES);
   await runYearSetup({ actor, year: YEAR, carriedOverFromPrev: true });
   console.log(`✓ Jahreswechsel ${YEAR} mit Übertrag`);
 
+  await credit(YEAR, SEED_CREDIT_MINUTES);
   const afterClosure = (e: EventDef) => e.kind === "vacation" && e.createAfterClosure === true;
   for (const s of SCENARIOS) {
     for (const e of s.events.filter((x) => eventYear(x) === YEAR && !afterClosure(x))) {
@@ -454,6 +518,7 @@ async function seed() {
   for (const requestId of toCancel) {
     await cancelVacationRequest({ actor, requestId });
   }
+  await credit(YEAR, -SEED_CREDIT_MINUTES);
   console.log(`✓ Schließtag ${CLOSURE_DAY} + Anträge genehmigt/storniert`);
   console.log(`\nLogin: <key>@${EMAIL_DOMAIN} / ${PASSWORD}`);
 }
@@ -542,7 +607,93 @@ async function check(): Promise<boolean> {
       );
     }
   }
+  const guardsOk = await checkGuards();
+  ok = ok && guardsOk;
   console.log(ok ? "\nAlle Szenarien OK." : "\nAbweichungen gefunden (FAIL).");
+  return ok;
+}
+
+/**
+ * Neither vacation nor overtime may go negative. Uses the 4-day-week user
+ * (32h, 26 vacation days left, ~46h overtime); every request created here is
+ * deleted again, the entitlement is restored.
+ */
+async function checkGuards(): Promise<boolean> {
+  const actor = await adminActor();
+  const user = await db.user.findUniqueOrThrow({ where: { email: `viertage@${EMAIL_DOMAIN}` } });
+  const created: string[] = [];
+  const entitlementKey = { userId_year: { userId: user.id, year: YEAR } };
+  const before = await db.vacationEntitlement.findUniqueOrThrow({ where: entitlementKey });
+  let ok = true;
+  console.log(`\nSperren gegen Minus (${user.email})`);
+
+  const expectCode = async (
+    label: string,
+    expected: string | null,
+    run: () => Promise<unknown>
+  ) => {
+    let actual: string | null = null;
+    try {
+      await run();
+    } catch (e) {
+      actual = e instanceof VacationError ? e.code : String(e);
+    }
+    const pass = actual === expected;
+    if (!pass) ok = false;
+    console.log(
+      `  ${(pass ? "OK" : "FAIL").padEnd(4)} ${label.padEnd(44)} soll ${String(expected ?? "erlaubt").padEnd(24)} ist ${actual ?? "erlaubt"}`
+    );
+  };
+  const request = async (from: string, to: string, useOvertime = false) => {
+    const r = await createVacationRequest({
+      actor,
+      input: {
+        from: d(from),
+        to: d(to),
+        useOvertime,
+        targetUserId: user.id,
+        note: "Szenario-Sperre",
+      },
+    });
+    created.push(r.id);
+    return r;
+  };
+
+  try {
+    // 11 Mon–Thu days × 8h = 88h > ~46h balance.
+    await expectCode("Überstunden-Antrag über Saldo", "INSUFFICIENT_OVERTIME", () =>
+      request("2026-12-01", "2026-12-17", true)
+    );
+    // 2026-09-01..2026-12-23: far more than 26 working days.
+    await expectCode("Urlaubsantrag über Anspruch", "INSUFFICIENT_ENTITLEMENT", () =>
+      request("2026-09-01", "2026-12-23")
+    );
+    // A: 16 days pending (fits 26); B: 14.5 days fits alone, but not on top of A.
+    let pendingA: { id: string } | undefined;
+    await expectCode("Antrag A (16 Tage) offen", null, async () => {
+      pendingA = await request("2026-11-09", "2026-12-04");
+    });
+    await expectCode("Antrag B (14,5 Tage) trotz offenem A", "INSUFFICIENT_ENTITLEMENT", () =>
+      request("2026-12-07", "2026-12-30")
+    );
+    // Balance shrinks after A was requested → approval re-check refuses A.
+    if (pendingA) {
+      const requestId = pendingA.id;
+      await db.vacationEntitlement.update({
+        where: entitlementKey,
+        data: { consumedDays: { increment: 15 } },
+      });
+      await expectCode("Genehmigung A nach Verbrauch", "INSUFFICIENT_ENTITLEMENT", () =>
+        approveVacationRequest({ actor, requestId })
+      );
+    }
+  } finally {
+    await db.vacationRequest.deleteMany({ where: { id: { in: created } } });
+    await db.vacationEntitlement.update({
+      where: entitlementKey,
+      data: { consumedDays: before.consumedDays },
+    });
+  }
   return ok;
 }
 

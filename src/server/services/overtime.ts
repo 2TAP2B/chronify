@@ -13,7 +13,11 @@ import {
 } from "@/lib/overtime/calculate";
 import { toCalendarDate, addDaysUtc } from "@/lib/datetime";
 import { DAY_KEYS, type DayKey } from "@/lib/overtime/calculate";
-import { halfDayMinutesFor, halfDayDateSet } from "@/lib/vacation/business-days";
+import {
+  CLOSURE_NOTE_PREFIX,
+  halfDayMinutesFor,
+  halfDayDateSet,
+} from "@/lib/vacation/business-days";
 import type { WorkingModel } from "@prisma/client";
 
 /** Working-model field key (e.g. "mondayMinutes") for a UTC date. */
@@ -62,7 +66,7 @@ export async function computeDaysForRange(opts: {
           date: { gte: opts.from, lt: opts.to },
           type: { in: ["VACATION", "SICK", "PUBLIC_HOLIDAY"] },
         },
-        select: { date: true, type: true },
+        select: { date: true, type: true, note: true },
       }),
       db.publicHoliday.findMany({
         where: {
@@ -83,7 +87,7 @@ export async function computeDaysForRange(opts: {
         select: { federalState: true },
       }),
       db.vacationRequest.findMany({
-        where: { userId: opts.userId, halfDay: true, status: { in: ["PENDING", "APPROVED"] } },
+        where: { userId: opts.userId, halfDay: true, status: "APPROVED" },
         select: { from: true },
       }),
     ]);
@@ -99,9 +103,11 @@ export async function computeDaysForRange(opts: {
   }
 
   const absenceByDay = new Map<number, string[]>();
+  const closureDays = new Set<number>();
   for (const e of absenceEntries) {
     const day = toCalendarDate(e.date, opts.timeZone).getTime();
     absenceByDay.set(day, [...(absenceByDay.get(day) ?? []), e.type]);
+    if (e.type === "VACATION" && e.note?.startsWith(CLOSURE_NOTE_PREFIX)) closureDays.add(day);
   }
 
   const excusedDays = new Set<number>();
@@ -116,22 +122,27 @@ export async function computeDaysForRange(opts: {
     }
   }
 
-  // Genuine half days: halfDay vacation requests (single day) plus the
+  // Genuine half days: approved halfDay requests (single day) plus the
   // configured 24.12/31.12 toggles. Everything else — e.g. a full-day
   // vacation with a stray WORK entry — keeps the full target.
   const settings = await db.orgSettings.findUniqueOrThrow({ where: { id: "singleton" } });
-  const halfAbsenceDays = new Set<number>();
-  for (const r of halfDayRequests) {
-    halfAbsenceDays.add(toCalendarDate(r.from, opts.timeZone).getTime());
-  }
+  const orgHalfDays = new Set<number>();
   for (const halfDayIso of halfDayDateSet(settings)) {
     const [m, d] = halfDayIso.split("-").map(Number);
     // Mark every occurrence of the MM-DD date within the range's years.
     const fromYear = toCalendarDate(opts.from, "UTC").getUTCFullYear();
     const toYear = toCalendarDate(opts.to, "UTC").getUTCFullYear();
     for (let y = fromYear; y <= toYear; y++) {
-      halfAbsenceDays.add(toCalendarDate(new Date(Date.UTC(y, m - 1, d)), opts.timeZone).getTime());
+      orgHalfDays.add(toCalendarDate(new Date(Date.UTC(y, m - 1, d)), opts.timeZone).getTime());
     }
+  }
+  // A half-day request on a regular day covers only one half: the other half
+  // is owed as work even though the day has a VACATION entry — unless a
+  // business closure took the day over (request refunded, closure covers it).
+  const requestHalfDays = new Set<number>();
+  for (const r of halfDayRequests) {
+    const day = toCalendarDate(r.from, opts.timeZone).getTime();
+    if (!orgHalfDays.has(day) && !closureDays.has(day)) requestHalfDays.add(day);
   }
 
   function modelForDate(d: Date): WorkingModel | null {
@@ -156,33 +167,24 @@ export async function computeDaysForRange(opts: {
     const agg = byDay.get(dayMs);
     if (targetMin === 0 && !agg) continue;
 
-    if (agg) {
-      // Half vacation day applies only on genuine half dates — a halfDay
-      // request's single day or the toggled 24.12/31.12 (structurally a half
-      // working day for the org). Everything else keeps the full target
-      // (e.g. a full-day vacation with a stray work entry — legacy data must
-      // not inflate).
-      const genuineHalf = halfAbsenceDays.has(dayMs);
-      const modelForSummary = genuineHalf
-        ? { ...model, [dayKeyForDate(date)]: halfDayMinutesFor(model, date) }
-        : model;
-      const summary = summarizeDay({
-        date,
-        workedMs: agg.workedMs,
-        breakMinutes: agg.breakMinutes,
-        model: modelForSummary,
-      });
-      out.push({ ...summary, hasTimerEntry: agg.hasTimer });
-    } else {
-      if (excusedDays.has(dayMs)) continue;
-      const summary = summarizeDay({
-        date,
-        workedMs: 0,
-        breakMinutes: 0,
-        model,
-      });
-      out.push({ ...summary, hasTimerEntry: false });
-    }
+    // Genuine half dates — an approved halfDay request's day or the toggled
+    // 24.12/31.12 (half working day for the org) — carry half the target,
+    // whether worked or not. Everything else keeps the full target (e.g. a
+    // full-day vacation with a stray work entry — legacy data must not inflate).
+    const half = orgHalfDays.has(dayMs) || requestHalfDays.has(dayMs);
+    const modelForSummary = half
+      ? { ...model, [dayKeyForDate(date)]: halfDayMinutesFor(model, date) }
+      : model;
+    // Absences/holidays excuse an unworked day — except the owed half of a
+    // half-day request. A booked 24.12/31.12 is fully covered (half free, half booked).
+    if (!agg && excusedDays.has(dayMs) && !requestHalfDays.has(dayMs)) continue;
+    const summary = summarizeDay({
+      date,
+      workedMs: agg?.workedMs ?? 0,
+      breakMinutes: agg?.breakMinutes ?? 0,
+      model: modelForSummary,
+    });
+    out.push({ ...summary, hasTimerEntry: agg?.hasTimer ?? false });
   }
 
   return out;

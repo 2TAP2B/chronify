@@ -4,7 +4,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getOrgSettings } from "@/server/context";
 import { computeYearOvertime } from "@/server/services/overtime";
-import { REGENERATION_EXTRA_DAYS } from "@/server/services/vacation";
+import { REGENERATION_EXTRA_DAYS } from "@/server/services/leave-balance";
 import { toCalendarDate, startOfWeekUtc, addDaysUtc, formatInZone } from "@/lib/datetime";
 import { msToHours } from "@/lib/timer-utils";
 import { TimerWidget } from "@/components/timer/timer-widget";
