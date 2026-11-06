@@ -31,8 +31,10 @@ export function ClosureChoiceCard({
         setChoice(newChoice);
         setError(null);
       } else {
-        const b = await res.json().catch(() => ({}));
-        setError((b as { error?: string }).error ?? "error");
+        const b = (await res.json().catch(() => ({}))) as { error?: string; code?: string };
+        if (b.code === "INSUFFICIENT_OVERTIME") setError(t("insufficientOvertime"));
+        else if (b.code === "INSUFFICIENT_ENTITLEMENT") setError(t("insufficientVacation"));
+        else setError(b.error ?? "error");
       }
     });
   }

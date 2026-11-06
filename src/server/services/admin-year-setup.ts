@@ -32,7 +32,7 @@ export async function runYearSetup(opts: {
   const year = opts.year;
   const users = await db.user.findMany({
     where: { active: true },
-    select: { id: true, timezone: true },
+    select: { id: true, timezone: true, hireDate: true },
   });
 
   let entitlementsCreated = 0;
@@ -42,7 +42,9 @@ export async function runYearSetup(opts: {
   for (const u of users) {
     // VacationEntitlement: upsert with org default days; carry over from prev year if requested
     let carriedOverDays = 0;
-    if (opts.carriedOverFromPrev) {
+    // Nothing to carry from a year the user wasn't employed in.
+    const employedPrevYear = !u.hireDate || u.hireDate < new Date(Date.UTC(year, 0, 1));
+    if (opts.carriedOverFromPrev && employedPrevYear) {
       const prev = await db.vacationEntitlement.findUnique({
         where: { userId_year: { userId: u.id, year: year - 1 } },
       });
@@ -67,7 +69,8 @@ export async function runYearSetup(opts: {
     });
     if (ent) entitlementsCreated++;
 
-    // OvertimeBalance: compute carriedOverMinutes from prev year's totalDeltaMs
+    // OvertimeBalance: carry over the previous year's closing balance
+    // (its own carryover + worked delta − overtime taken off).
     let carriedOverMinutes = 0;
     if (opts.carriedOverFromPrev) {
       const prevCompute = await computeYearOvertime({
@@ -75,7 +78,8 @@ export async function runYearSetup(opts: {
         year: year - 1,
         timeZone: u.timezone || "Europe/Berlin",
       });
-      carriedOverMinutes = Math.round(prevCompute.computation.totalDeltaMs / 60_000);
+      carriedOverMinutes = Math.round(prevCompute.computation.balanceMs / 60_000);
+      const prevComputedMinutes = Math.round(prevCompute.computation.totalDeltaMs / 60_000);
       // Also persist previous year's computedMinutes
       await db.overtimeBalance.upsert({
         where: { userId_year: { userId: u.id, year: year - 1 } },
@@ -83,11 +87,11 @@ export async function runYearSetup(opts: {
           userId: u.id,
           year: year - 1,
           carriedOverMinutes: prevCompute.carriedOverMinutes,
-          computedMinutes: carriedOverMinutes,
+          computedMinutes: prevComputedMinutes,
           lockedAt: new Date(),
         },
         update: {
-          computedMinutes: carriedOverMinutes,
+          computedMinutes: prevComputedMinutes,
           lockedAt: new Date(),
         },
       });

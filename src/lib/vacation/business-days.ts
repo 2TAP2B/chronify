@@ -177,6 +177,15 @@ export function consumedDaysOf(days: Date[], halfDays: Set<string>): number {
   return days.reduce((sum, d) => sum + vacationWeight(d, halfDays), 0);
 }
 
+/** Note prefix marking VACATION entries owned by a business closure. */
+export const CLOSURE_NOTE_PREFIX = "Schließtag: ";
+
+/** Note on the VACATION entries an approved request creates; identifies the request's own entries. */
+export function requestEntryNote(req: { from: Date; to: Date; useOvertime: boolean }): string {
+  const range = `${req.from.toISOString().slice(0, 10)} – ${req.to.toISOString().slice(0, 10)}`;
+  return req.useOvertime ? `Urlaub (Überstunden) ${range}` : `Urlaub ${range}`;
+}
+
 /**
  * Overtime minutes charged for a half vacation day: explicit model value or
  * half of that weekday's target. Never charges minutes on 0-target days —

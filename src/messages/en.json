@@ -199,7 +199,9 @@
     "weekdaysOnly": "Monday–Friday only",
     "myTimesheet": "My timesheet",
     "filter": "Filter",
-    "overlapError": "This time range overlaps with an existing entry."
+    "overlapError": "This time range overlaps with an existing entry.",
+    "timerAlreadyRunning": "A timer is already running for this user.",
+    "invalidTimerStart": "The start time must not be in the future."
   },
   "overtime": {
     "title": "Overtime",
@@ -578,6 +580,7 @@
     "smtpTls": "Use TLS",
     "smtpTestButton": "Send test mail",
     "smtpTesting": "Sending …",
+    "smtpTestSent": "Test mail sent to {email}.",
     "smtpTestHint": "Sends a test email to your own admin address.",
     "sectionLogin": "Sign-in",
     "sectionLoginHint": "Control how users sign in.",
@@ -864,7 +867,9 @@
     "vacationDescription": "Days are deducted from your vacation entitlement (default).",
     "overtime": "Use overtime",
     "overtimeDescription": "Hours are deducted from your overtime balance.",
-    "saving": "Saving…"
+    "saving": "Saving…",
+    "insufficientOvertime": "Not enough overtime available — the balance must not go negative.",
+    "insufficientVacation": "Not enough vacation days available — the balance must not go negative."
   },
   "branding": {
     "sectionBranding": "Branding",

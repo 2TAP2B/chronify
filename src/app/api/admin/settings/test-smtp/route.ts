@@ -45,7 +45,11 @@ export async function POST() {
     if (result.skipped) {
       return NextResponse.json({ error: "smtp_not_configured" }, { status: 400 });
     }
-    return NextResponse.json({ delivered: true, message: `Test mail sent to ${user.email}` });
+    return NextResponse.json({
+      delivered: true,
+      to: user.email,
+      message: `Test mail sent to ${user.email}`,
+    });
   } catch (e) {
     if (e instanceof Response) return e;
     if (e instanceof Error) {

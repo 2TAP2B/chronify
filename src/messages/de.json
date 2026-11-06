@@ -199,7 +199,9 @@
     "weekdaysOnly": "Nur Montag–Freitag",
     "myTimesheet": "Mein Stundenzettel",
     "filter": "Filter",
-    "overlapError": "Dieser Zeitraum überschneidet sich mit einem bestehenden Eintrag."
+    "overlapError": "Dieser Zeitraum überschneidet sich mit einem bestehenden Eintrag.",
+    "timerAlreadyRunning": "Für diesen Benutzer läuft bereits ein Timer.",
+    "invalidTimerStart": "Die Startzeit darf nicht in der Zukunft liegen."
   },
   "overtime": {
     "title": "Überstunden",
@@ -578,6 +580,7 @@
     "smtpTls": "TLS verwenden",
     "smtpTestButton": "Testmail senden",
     "smtpTesting": "Sendet …",
+    "smtpTestSent": "Testmail an {email} versendet.",
     "smtpTestHint": "Sendet eine Test-Mail an deine eigene Benutzer-Adresse.",
     "sectionLogin": "Anmeldung",
     "sectionLoginHint": "Steuerung, wie sich Mitarbeiter anmelden können.",
@@ -864,7 +867,9 @@
     "vacationDescription": "Die Tage werden von deinem Urlaubsanspruch abgezogen (Standard).",
     "overtime": "Überstunden abbauen",
     "overtimeDescription": "Die Stunden werden von deinem Überstundenkonto abgezogen.",
-    "saving": "Wird gespeichert…"
+    "saving": "Wird gespeichert…",
+    "insufficientOvertime": "Nicht genug Überstunden verfügbar – das Konto darf nicht ins Minus gehen.",
+    "insufficientVacation": "Nicht genug Urlaubstage verfügbar – der Urlaub darf nicht ins Minus gehen."
   },
   "branding": {
     "sectionBranding": "Branding",
