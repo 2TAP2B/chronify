@@ -323,13 +323,17 @@
     "save": "Speichern",
     "noNotes": "Keine Krankmeldungen vorhanden",
     "confirmDelete": "Krankmeldung wirklich löschen?",
-    "status": "Status"
+    "status": "Status",
+    "employee": "Mitarbeiter",
+    "selectEmployee": "Mitarbeiter auswählen",
+    "aubHint": "Fällt die Krankheit in einen genehmigten Urlaub, werden die durch die AU-Bescheinigung nachgewiesenen Tage nicht auf den Urlaub angerechnet (§ 9 BUrlG). Ohne AU-Datum bleibt der Urlaub verbraucht."
   },
   "adminSickness": {
     "title": "Krankmeldungen verwalten",
     "employee": "Mitarbeiter",
     "allEmployees": "Alle Mitarbeiter",
-    "addForUser": "Krankmeldung für Mitarbeiter erfassen"
+    "addForUser": "Krankmeldung für Mitarbeiter erfassen",
+    "addForUserHint": "Für vergessene oder nachzutragende Krankmeldungen – auch rückwirkend."
   },
   "adminUsers": {
     "roleAdmin": "Administrator",

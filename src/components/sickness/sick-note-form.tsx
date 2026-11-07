@@ -7,27 +7,46 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DatePicker } from "@/components/ui/date-picker";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
-export function SickNoteForm() {
+/**
+ * Sick note entry. With `employees` (admin area) the note is recorded for the
+ * selected employee, e.g. when it was forgotten or has to be entered later.
+ */
+export function SickNoteForm({
+  employees,
+}: {
+  employees?: { id: string; name: string; email: string }[];
+}) {
   const t = useTranslations("sickness");
+  const [userId, setUserId] = useState("");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
+  const [aubUntil, setAubUntil] = useState("");
   const [note, setNote] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!from || !to) return;
+    if (!from || !to || (employees && !userId)) return;
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/sickness", {
+      const qs = employees ? `?userId=${encodeURIComponent(userId)}` : "";
+      const res = await fetch(`/api/sickness${qs}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           from: new Date(from + "T00:00:00Z").toISOString(),
           to: new Date(to + "T00:00:00Z").toISOString(),
+          aubUntil: aubUntil ? new Date(aubUntil + "T00:00:00Z").toISOString() : null,
           note: note || null,
         }),
       });
@@ -46,7 +65,24 @@ export function SickNoteForm() {
 
   return (
     <form onSubmit={onSubmit} className="space-y-4">
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      {employees && (
+        <div className="space-y-1.5">
+          <Label htmlFor="employee">{t("employee")}</Label>
+          <Select value={userId} onValueChange={setUserId}>
+            <SelectTrigger id="employee">
+              <SelectValue placeholder={t("selectEmployee")} />
+            </SelectTrigger>
+            <SelectContent>
+              {employees.map((u) => (
+                <SelectItem key={u.id} value={u.id}>
+                  {u.name} ({u.email})
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <div className="space-y-1.5">
           <Label htmlFor="from">{t("from")}</Label>
           <DatePicker
@@ -63,13 +99,22 @@ export function SickNoteForm() {
             onChange={(d) => d && setTo(format(d, "yyyy-MM-dd"))}
           />
         </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="aubUntil">{t("aubUntil")}</Label>
+          <DatePicker
+            id="aubUntil"
+            value={aubUntil ? new Date(aubUntil + "T00:00:00") : undefined}
+            onChange={(d) => setAubUntil(d ? format(d, "yyyy-MM-dd") : "")}
+          />
+        </div>
       </div>
+      <p className="text-xs text-muted-foreground">{t("aubHint")}</p>
       <div className="space-y-1.5">
         <Label htmlFor="note">{t("note")}</Label>
         <Input id="note" value={note} onChange={(e) => setNote(e.target.value)} />
       </div>
       {error && <p className="text-sm text-destructive">{error}</p>}
-      <Button type="submit" disabled={loading}>
+      <Button type="submit" disabled={loading || (employees !== undefined && !userId)}>
         {t("submit")}
       </Button>
     </form>

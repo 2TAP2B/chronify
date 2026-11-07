@@ -27,11 +27,13 @@ export function SickNoteRowActions({
   from: initialFrom,
   to: initialTo,
   note: initialNote,
+  aubUntil: initialAubUntil,
 }: {
   noteId: string;
   from: string;
   to: string;
   note: string | null;
+  aubUntil: string | null;
 }) {
   const t = useTranslations("sickness");
   const confirm = useConfirm();
@@ -47,10 +49,12 @@ export function SickNoteRowActions({
 
   const [editFrom, setEditFrom] = useState(toInput(initialFrom));
   const [editTo, setEditTo] = useState(toInput(initialTo));
+  const [editAub, setEditAub] = useState(toInput(initialAubUntil));
 
   function openEdit() {
     setEditFrom(toInput(initialFrom));
     setEditTo(toInput(initialTo));
+    setEditAub(toInput(initialAubUntil));
     setEditOpen(true);
     setMenuOpen(false);
   }
@@ -65,6 +69,7 @@ export function SickNoteRowActions({
         body: JSON.stringify({
           from: new Date(editFrom + "T00:00:00Z").toISOString(),
           to: new Date(editTo + "T00:00:00Z").toISOString(),
+          aubUntil: editAub ? new Date(editAub + "T00:00:00Z").toISOString() : null,
         }),
       });
       if (!res.ok) {
@@ -158,6 +163,14 @@ export function SickNoteRowActions({
                   onChange={(d) => d && setEditTo(format(d, "yyyy-MM-dd"))}
                 />
               </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="edit-aub">{t("aubUntil")}</Label>
+              <DatePicker
+                value={editAub ? new Date(editAub + "T00:00:00") : undefined}
+                onChange={(d) => setEditAub(d ? format(d, "yyyy-MM-dd") : "")}
+              />
+              <p className="text-xs text-muted-foreground">{t("aubHint")}</p>
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
           </div>

@@ -13,6 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { SickNoteRowActions } from "@/components/sickness/sick-note-row-actions";
+import { SickNoteForm } from "@/components/sickness/sick-note-form";
 import { formatInZone } from "@/lib/datetime";
 
 type Props = {
@@ -29,11 +30,18 @@ export default async function AdminSicknessPage({ params }: Props) {
   if (!session?.user?.id) return null;
   if (session.user.role !== "ADMIN") redirect(`/${locale}/dashboard`);
 
-  const notes = await db.sickNote.findMany({
-    orderBy: { from: "desc" },
-    include: { user: { select: { name: true, email: true } } },
-    take: 50,
-  });
+  const [notes, employees] = await Promise.all([
+    db.sickNote.findMany({
+      orderBy: { from: "desc" },
+      include: { user: { select: { name: true, email: true } } },
+      take: 50,
+    }),
+    db.user.findMany({
+      where: { active: true },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true, email: true },
+    }),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -43,6 +51,16 @@ export default async function AdminSicknessPage({ params }: Props) {
           {ta("allEmployees")} ({notes.length})
         </p>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{ta("addForUser")}</CardTitle>
+          <CardDescription>{ta("addForUserHint")}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <SickNoteForm employees={employees} />
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
@@ -94,6 +112,7 @@ export default async function AdminSicknessPage({ params }: Props) {
                           from={n.from.toISOString()}
                           to={n.to.toISOString()}
                           note={n.note}
+                          aubUntil={n.aubUntil?.toISOString() ?? null}
                         />
                       </TableCell>
                     </TableRow>

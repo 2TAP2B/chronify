@@ -16,7 +16,7 @@ import {
   deleteClosure,
   updateChoice,
 } from "@/server/services/business-closures";
-import { createSickNote, deleteSickNote } from "@/server/services/sickness";
+import { createSickNote, deleteSickNote, updateSickNote } from "@/server/services/sickness";
 import { vacationAccount } from "@/server/services/leave-balance";
 import { ensureHolidays } from "@/server/year-rollover";
 import type { SessionUser } from "@/server/context";
@@ -70,8 +70,12 @@ type EventDef =
     }
   /** Half vacation day from the entitlement; works `workMinutes` the other half. */
   | { kind: "vacationHalfDay"; date: string; workMinutes: number }
-  /** Sick note entered after the leave was approved; `deleteAfter`: removed again. */
-  | { kind: "sick"; from: string; to: string; deleteAfter?: true };
+  /**
+   * Sick note entered after the leave was approved. `au`: AU certificate up to
+   * the last day (default), "none" = no certificate, "later" = certificate date
+   * added afterwards. `deleteAfter`: note removed again.
+   */
+  | { kind: "sick"; from: string; to: string; au?: "none" | "later"; deleteAfter?: true };
 
 type Scenario = {
   key: string;
@@ -303,16 +307,17 @@ const SCENARIOS: Scenario[] = [
     hireDate: "2026-01-01",
     models: [{ from: "2026-01-01", week: [480, 480, 480, 480, 480] }],
     events: [
-      // 5 vacation days, sick Wed+Thu → 2 days given back (BUrlG §9): 3 + closure 1.
+      // 5 vacation days, sick Wed+Thu with AU → 2 days given back (§ 9 BUrlG): 3 + closure 1.
       { kind: "vacation", from: "2026-08-03", to: "2026-08-07" },
       { kind: "sick", from: "2026-08-05", to: "2026-08-06" },
-      // Day off from overtime, sick that day → the 8h are refunded.
+      // Day off from overtime (Freizeitausgleich), sick that day → not vacation,
+      // § 9 doesn't apply: the 8h stay consumed.
       { kind: "overtimeDay", date: "2026-06-11" },
       { kind: "sick", from: "2026-06-11", to: "2026-06-11" },
     ],
     closureChoice: "VACATION",
     expected: {
-      consumedOvertimeMinutes: { [YEAR]: 0 },
+      consumedOvertimeMinutes: { [YEAR]: 480 },
       vacationDays: { [YEAR]: 4 },
       closureOvertimeMinutes: 0,
     },
@@ -331,6 +336,40 @@ const SCENARIOS: Scenario[] = [
     expected: {
       consumedOvertimeMinutes: { [YEAR]: 0 },
       vacationDays: { [YEAR]: 6 },
+      closureOvertimeMinutes: 0,
+    },
+  },
+  {
+    key: "krankohneau",
+    name: "Szenario Krank im Urlaub ohne AU",
+    hireDate: "2026-01-01",
+    models: [{ from: "2026-01-01", week: [480, 480, 480, 480, 480] }],
+    events: [
+      // No doctor's certificate → not proven, vacation stays consumed: 5 + closure 1.
+      { kind: "vacation", from: "2026-08-03", to: "2026-08-07" },
+      { kind: "sick", from: "2026-08-05", to: "2026-08-06", au: "none" },
+    ],
+    closureChoice: "VACATION",
+    expected: {
+      consumedOvertimeMinutes: { [YEAR]: 0 },
+      vacationDays: { [YEAR]: 6 },
+      closureOvertimeMinutes: 0,
+    },
+  },
+  {
+    key: "krankaunachgereicht",
+    name: "Szenario AU im Urlaub nachgereicht",
+    hireDate: "2026-01-01",
+    models: [{ from: "2026-01-01", week: [480, 480, 480, 480, 480] }],
+    events: [
+      // Certificate date added later → the proven days are given back then: 3 + closure 1.
+      { kind: "vacation", from: "2026-08-03", to: "2026-08-07" },
+      { kind: "sick", from: "2026-08-05", to: "2026-08-06", au: "later" },
+    ],
+    closureChoice: "VACATION",
+    expected: {
+      consumedOvertimeMinutes: { [YEAR]: 0 },
+      vacationDays: { [YEAR]: 4 },
       closureOvertimeMinutes: 0,
     },
   },
@@ -615,8 +654,16 @@ async function seed() {
       const note = await createSickNote({
         actor,
         targetUserId: users.get(s.key)!,
-        input: { from: d(e.from), to: d(e.to), aubUntil: d(e.to), note: "Szenario" },
+        input: {
+          from: d(e.from),
+          to: d(e.to),
+          aubUntil: e.au ? null : d(e.to),
+          note: "Szenario",
+        },
       });
+      if (e.au === "later") {
+        await updateSickNote({ actor, noteId: note.id, input: { aubUntil: d(e.to) } });
+      }
       if (e.deleteAfter) await deleteSickNote({ actor, noteId: note.id });
     }
   }

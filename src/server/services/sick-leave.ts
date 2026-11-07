@@ -2,29 +2,41 @@ import { db } from "@/lib/db";
 import {
   CLOSURE_NOTE_PREFIX,
   halfDayDateSet,
-  halfDayMinutesFor,
-  modelForDate,
   requestEntryNote,
   vacationWeight,
 } from "@/lib/vacation/business-days";
-import { targetMinutesForDate } from "@/lib/overtime/calculate";
-import {
-  computeLeaveCharge,
-  ensureEntitlement,
-  workingModelsInRange,
-} from "@/server/services/leave-balance";
+import { computeLeaveCharge, ensureEntitlement } from "@/server/services/leave-balance";
 import type { FederalState } from "@prisma/client";
 
 /**
- * Sickness during vacation (BUrlG §9): vacation days covered by a sick note
- * are not consumed. Their VACATION entries are removed and the charge is
- * refunded — vacation days to the entitlement, overtime minutes to the
- * overtime balance, for request vacation and closure vacation alike. When a
- * sick note is shortened or deleted, the vacation is booked again on the freed
- * days. Callers hold the user's leave lock.
+ * Sickness during vacation, § 9 BUrlG: "Erkrankt ein Arbeitnehmer während des
+ * Urlaubs, so werden die durch ärztliches Zeugnis nachgewiesenen Tage der
+ * Arbeitsunfähigkeit auf den Jahresurlaub nicht angerechnet."
+ *
+ * - Only days proven by a doctor's certificate count: a sick note's days up to
+ *   its `aubUntil` (AU-Bescheinigung bis). Without an AU date nothing is given back.
+ * - Only Erholungsurlaub counts: regular vacation requests and business-closure
+ *   vacation. Time off against overtime (Freizeitausgleich), special leave
+ *   (Sonderurlaub) and regeneration days are not vacation in that sense and stay
+ *   consumed.
+ *
+ * The refund removes the VACATION entries and gives the days back to the
+ * entitlement. When the AU coverage shrinks (sick note shortened, AU date
+ * moved/removed, note deleted) the vacation is booked again on the freed days.
+ * Callers hold the user's leave lock and call this after the sick note itself
+ * was saved/deleted.
  */
 
 const dayKey = (d: Date) => d.toISOString().slice(0, 10);
+
+/** Sick business days proven by the AU certificate (up to `aubUntil`). */
+export function auCoveredDays(businessDays: Date[], aubUntil: Date | null): Date[] {
+  if (!aubUntil) return [];
+  return businessDays.filter((d) => d.getTime() <= aubUntil.getTime());
+}
+
+/** Requests whose days § 9 BUrlG gives back: regular vacation paid from the entitlement. */
+const refundableRequest = { status: "APPROVED", kind: "REGULAR", useOvertime: false } as const;
 
 export async function refundVacationOnSickDays(userId: string, days: Date[]): Promise<void> {
   if (days.length === 0) return;
@@ -33,15 +45,14 @@ export async function refundVacationOnSickDays(userId: string, days: Date[]): Pr
   const from = sorted[0];
   const to = sorted[sorted.length - 1];
 
-  const [entries, settings, models, requests] = await Promise.all([
+  const [entries, settings, requests] = await Promise.all([
     db.timeEntry.findMany({
       where: { userId, type: "VACATION", date: { gte: from, lte: to } },
       select: { id: true, date: true, note: true },
     }),
     db.orgSettings.findUniqueOrThrow({ where: { id: "singleton" } }),
-    workingModelsInRange(userId, from, to),
     db.vacationRequest.findMany({
-      where: { userId, status: "APPROVED", from: { lte: to }, to: { gte: from } },
+      where: { userId, ...refundableRequest, from: { lte: to }, to: { gte: from } },
     }),
   ]);
   const halfDays = halfDayDateSet(settings);
@@ -50,33 +61,20 @@ export async function refundVacationOnSickDays(userId: string, days: Date[]): Pr
   for (const req of requests) {
     const own = sickEntries.filter((e) => e.note === requestEntryNote(req));
     if (own.length === 0) continue;
-    let refundDays = 0;
-    let refundMinutes = 0;
-    for (const e of own) {
-      const weight = req.halfDay ? 0.5 : vacationWeight(e.date, halfDays);
-      refundDays += weight;
-      const m = modelForDate(models, e.date);
-      if (m) {
-        refundMinutes +=
-          weight === 0.5 ? halfDayMinutesFor(m, e.date) : targetMinutesForDate(e.date, m);
-      }
-    }
-    const balanceKey = { userId_year: { userId, year: req.year } };
+    const refundDays = own.reduce(
+      (sum, e) => sum + (req.halfDay ? 0.5 : vacationWeight(e.date, halfDays)),
+      0
+    );
     await db.$transaction([
       db.timeEntry.deleteMany({ where: { id: { in: own.map((e) => e.id) } } }),
       db.vacationRequest.update({
         where: { id: req.id },
         data: { days: { decrement: refundDays } },
       }),
-      req.useOvertime
-        ? db.overtimeBalance.update({
-            where: balanceKey,
-            data: { consumedOvertimeMinutes: { decrement: refundMinutes } },
-          })
-        : db.vacationEntitlement.update({
-            where: balanceKey,
-            data: { consumedDays: { decrement: refundDays } },
-          }),
+      db.vacationEntitlement.update({
+        where: { userId_year: { userId, year: req.year } },
+        data: { consumedDays: { decrement: refundDays } },
+      }),
     ]);
   }
 
@@ -119,16 +117,27 @@ export async function rebookVacationOnDays(opts: {
   const from = sorted[0];
   const to = sorted[sorted.length - 1];
 
-  // Days still covered by another sick note or already holding vacation stay as they are.
-  const [blocked, settings] = await Promise.all([
+  // Days already holding vacation, or still proven sick by another sick note's
+  // AU, stay as they are.
+  const [vacation, otherNotes, settings] = await Promise.all([
     db.timeEntry.findMany({
-      where: { userId, type: { in: ["SICK", "VACATION"] }, date: { gte: from, lte: to } },
+      where: { userId, type: "VACATION", date: { gte: from, lte: to } },
       select: { date: true },
+    }),
+    db.sickNote.findMany({
+      where: { userId, aubUntil: { not: null, gte: from }, from: { lte: to }, to: { gte: from } },
+      select: { from: true, to: true, aubUntil: true },
     }),
     db.orgSettings.findUniqueOrThrow({ where: { id: "singleton" } }),
   ]);
-  const blockedKeys = new Set(blocked.map((e) => dayKey(e.date)));
-  const free = new Set(opts.days.map(dayKey).filter((k) => !blockedKeys.has(k)));
+  const blocked = new Set(vacation.map((e) => dayKey(e.date)));
+  const stillSick = (d: Date) =>
+    otherNotes.some(
+      (n) => n.aubUntil && d >= n.from && d <= n.to && d.getTime() <= n.aubUntil.getTime()
+    );
+  const free = new Set(
+    opts.days.filter((d) => !blocked.has(dayKey(d)) && !stillSick(d)).map(dayKey)
+  );
   if (free.size === 0) return;
   const halfDays = halfDayDateSet(settings);
   const charge = (range: { from: Date; to: Date; halfDay: boolean }) =>
@@ -169,16 +178,14 @@ export async function rebookVacationOnDays(opts: {
   }
 
   const requests = await db.vacationRequest.findMany({
-    where: { userId, status: "APPROVED", from: { lte: to }, to: { gte: from } },
+    where: { userId, ...refundableRequest, from: { lte: to }, to: { gte: from } },
   });
   for (const req of requests) {
     const c = await charge({ from: req.from, to: req.to, halfDay: req.halfDay });
     const days = c.dayCharges.filter((d) => free.has(dayKey(d.date)));
     if (days.length === 0) continue;
     const addDays = days.reduce((s, d) => s + d.days, 0);
-    const addMinutes = days.reduce((s, d) => s + d.minutes, 0);
-    const balanceKey = { userId_year: { userId, year: req.year } };
-    if (!req.useOvertime) await ensureEntitlement(userId, req.year);
+    await ensureEntitlement(userId, req.year);
     await db.$transaction([
       db.timeEntry.createMany({
         data: days.map((d) => ({
@@ -194,16 +201,10 @@ export async function rebookVacationOnDays(opts: {
         where: { id: req.id },
         data: { days: { increment: addDays } },
       }),
-      req.useOvertime
-        ? db.overtimeBalance.upsert({
-            where: balanceKey,
-            create: { userId, year: req.year, consumedOvertimeMinutes: addMinutes },
-            update: { consumedOvertimeMinutes: { increment: addMinutes } },
-          })
-        : db.vacationEntitlement.update({
-            where: balanceKey,
-            data: { consumedDays: { increment: addDays } },
-          }),
+      db.vacationEntitlement.update({
+        where: { userId_year: { userId, year: req.year } },
+        data: { consumedDays: { increment: addDays } },
+      }),
     ]);
     for (const d of days) free.delete(dayKey(d.date));
   }

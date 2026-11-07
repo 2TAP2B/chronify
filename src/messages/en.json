@@ -323,13 +323,17 @@
     "save": "Save",
     "noNotes": "No sick notes yet",
     "confirmDelete": "Delete this sick note?",
-    "status": "Status"
+    "status": "Status",
+    "employee": "Employee",
+    "selectEmployee": "Select employee",
+    "aubHint": "If the sickness falls into approved vacation, the days proven by the doctor's certificate are not counted as vacation (§ 9 BUrlG). Without a certificate date the vacation stays consumed."
   },
   "adminSickness": {
     "title": "Manage sick notes",
     "employee": "Employee",
     "allEmployees": "All employees",
-    "addForUser": "Add sick note for employee"
+    "addForUser": "Add sick note for employee",
+    "addForUserHint": "For forgotten sick notes or ones that have to be entered later — retroactive too."
   },
   "adminUsers": {
     "roleAdmin": "Administrator",

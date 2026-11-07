@@ -154,8 +154,12 @@ e2e/                          Playwright specs + fixtures (login, timer, vacatio
 - Secrets live only in `.env` (gitignored; template in `.env.example`):
   `NEXTAUTH_SECRET`, `BACKUP_ENCRYPTION_PASSPHRASE`,
   SMTP, VAPID, OIDC. Never commit or print real values; never commit `.env`.
-- GDPR-relevant (Art. 9) data: sickness records and retention
-  (`scripts/retention-cleanup.ts`) — changes there need human review.
+- GDPR-relevant (Art. 9) data: sickness records. Agents may change the sickness
+  business logic (`src/server/services/sickness.ts`, `sick-leave.ts`, sickness
+  UI/API) like any other domain code — keep it covered by `npm run
+scenarios:check`. Retention/deletion of sickness data
+  (`scripts/retention-cleanup.ts`, `gdpr-cleanup.ts`) and any new storage or
+  export of health data still need human review.
 - Auth/session (`src/lib/auth.ts`, `src/middleware.ts`), CSRF (`src/lib/csrf.ts`),
   rate limiting (`src/lib/rate-limit.ts`), RBAC checks in services, backups, and
   anything touching `AuditLog` require human review.
