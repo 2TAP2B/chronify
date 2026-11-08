@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
+import { currentYear } from "@/lib/datetime";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -44,12 +45,13 @@ export function OvertimeAdjustDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   const t = useTranslations("adminUsers");
-  const year = new Date().getUTCFullYear();
+  const year = currentYear();
   const [carriedOver, setCarriedOver] = useState("00:00");
   const [consumed, setConsumed] = useState("00:00");
   const [computed, setComputed] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [carryIsAuto, setCarryIsAuto] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -61,6 +63,7 @@ export function OvertimeAdjustDialog({
             setCarriedOver(minutesToHours(comp.carriedOverMinutes ?? 0));
             setConsumed(minutesToHours(comp.consumedOvertimeMinutes ?? 0));
             setComputed(comp.totalDeltaMs != null ? Math.round(comp.totalDeltaMs / 60_000) : null);
+            setCarryIsAuto(comp.carryIsAuto === true);
           }
         })
         .catch(() => {});
@@ -117,7 +120,9 @@ export function OvertimeAdjustDialog({
                 onChange={(e) => setCarriedOver(e.target.value)}
                 placeholder="00:00"
                 className="font-mono tabular-nums"
+                disabled={carryIsAuto}
               />
+              {carryIsAuto && <p className="text-xs text-muted-foreground">{t("carryAutoHint")}</p>}
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="consumed">{t("consumedLabel")}</Label>

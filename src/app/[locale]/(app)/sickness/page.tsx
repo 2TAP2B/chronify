@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/table";
 import { SickNoteForm } from "@/components/sickness/sick-note-form";
 import { YearPicker } from "@/components/shared/year-picker";
-import { formatInZone } from "@/lib/datetime";
+import { currentYear, formatInZone } from "@/lib/datetime";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -29,7 +29,7 @@ export default async function SicknessPage({ params, searchParams }: Props) {
   if (!session?.user?.id) return null;
 
   const { year: yearStr } = await searchParams;
-  const year = yearStr ? Number(yearStr) : new Date().getUTCFullYear();
+  const year = yearStr ? Number(yearStr) : currentYear();
 
   const notes = await db.sickNote.findMany({
     where: {

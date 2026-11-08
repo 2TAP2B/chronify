@@ -199,7 +199,9 @@
     "weekdaysOnly": "Monday–Friday only",
     "myTimesheet": "My timesheet",
     "filter": "Filter",
-    "overlapError": "This time range overlaps with an existing entry."
+    "overlapError": "This time range overlaps with an existing entry.",
+    "timerAlreadyRunning": "A timer is already running for this user.",
+    "invalidTimerStart": "The start time must not be in the future."
   },
   "overtime": {
     "title": "Overtime",
@@ -223,8 +225,6 @@
     "positive": "Plus",
     "negative": "Minus",
     "neutral": "Even",
-    "carryoverCutoff": "Carryover cutoff",
-    "cutoffHint": "On the cutoff date ({date}) the prior-year carryover expires.",
     "noData": "No data for {year}.",
     "autoBreakApplied": "Automatic break ({minutes} min) applied per ArbZG §4.",
     "breakModeAuto": "Automatic",
@@ -271,9 +271,6 @@
     "insufficientError": "Not enough vacation days available",
     "noBusinessDaysError": "No business days (Mon–Fri, no holidays) in the range",
     "useOvertimeLabel": "Use overtime",
-    "overtimeAvailable": "Available: {hours} overtime hours",
-    "noOvertimeAvailable": "No overtime available",
-    "insufficientOvertimeError": "Not enough overtime available",
     "overtimeBadge": "Overtime",
     "kindLabel": "Type",
     "scopeLabel": "Scope",
@@ -296,7 +293,8 @@
       "APPROVED": "Approved",
       "REJECTED": "Rejected",
       "CANCELLED": "Cancelled"
-    }
+    },
+    "overtimeBalanceHint": "Current overtime balance: {hours} h — the balance may go negative."
   },
   "holidays": {
     "title": "Public holidays",
@@ -325,13 +323,17 @@
     "save": "Save",
     "noNotes": "No sick notes yet",
     "confirmDelete": "Delete this sick note?",
-    "status": "Status"
+    "status": "Status",
+    "employee": "Employee",
+    "selectEmployee": "Select employee",
+    "aubHint": "If the sickness falls into approved vacation, the days proven by the doctor's certificate are not counted as vacation (§ 9 BUrlG). Without a certificate date the vacation stays consumed."
   },
   "adminSickness": {
     "title": "Manage sick notes",
     "employee": "Employee",
     "allEmployees": "All employees",
-    "addForUser": "Add sick note for employee"
+    "addForUser": "Add sick note for employee",
+    "addForUserHint": "For forgotten sick notes or ones that have to be entered later — retroactive too."
   },
   "adminUsers": {
     "roleAdmin": "Administrator",
@@ -341,7 +343,6 @@
     "saveOk": "Saved.",
     "saving": "Saving …",
     "backToList": "Back to list",
-
     "notificationSection": "Notifications",
     "notificationSectionHint": "Controls which emails this user receives (in-app notifications are always sent).",
     "sickMailLabel": "Sick mail",
@@ -408,7 +409,8 @@
     "consumedLabel": "Consumed (min)",
     "computedThisYear": "Earned this year",
     "netBalance": "Balance",
-    "overtimeHint": "Values in hours:minutes (e.g. 08:30) or decimal (8.5)."
+    "overtimeHint": "Values in hours:minutes (e.g. 08:30) or decimal (8.5).",
+    "carryAutoHint": "Carryover is taken over automatically from the previous year's closing balance and can't be edited here."
   },
   "adminAutomation": {
     "heading": "Automation",
@@ -553,11 +555,6 @@
     "appearance": "Appearance",
     "appearanceHint": "Choose a color scheme for the application.",
     "defaultFederalState": "Default federal state",
-    "carryoverCutoffMonth": "Carryover cutoff (month, 1-12)",
-    "carryoverCutoffDay": "Carryover cutoff (day, 1-31)",
-    "carryoverCutoffDate": "Carryover cutoff date",
-    "carryoverEnabled": "Carryover cutoff active",
-    "carryoverEnabledHint": "When enabled, prior-year carryover expires at the cutoff date.",
     "lockWindowDays": "Lock window (days)",
     "autoBreakDefault": "Default break mode",
     "autoBreakLabel": "Automatic break (ArbZG §4)",
@@ -565,7 +562,6 @@
     "defaultVacationDays": "Default vacation days",
     "save": "Save",
     "saved": "Settings saved",
-
     "sectionSmtp": "Email / SMTP",
     "smtpHint": "SMTP configuration saved to the database (used when .env does not define SMTP_HOST).",
     "smtpEnvHint": "SMTP is currently via .env — edit it there or remove to change here.",
@@ -578,6 +574,7 @@
     "smtpTls": "Use TLS",
     "smtpTestButton": "Send test mail",
     "smtpTesting": "Sending …",
+    "smtpTestSent": "Test mail sent to {email}.",
     "smtpTestHint": "Sends a test email to your own admin address.",
     "sectionLogin": "Sign-in",
     "sectionLoginHint": "Control how users sign in.",
@@ -592,8 +589,6 @@
     "sectionOrgHint": "Base settings for the company.",
     "sectionBreak": "Breaks",
     "sectionBreakHint": "Automatic or manual break tracking.",
-    "sectionOvertime": "Overtime",
-    "sectionOvertimeHint": "Carryover and expiry of overtime.",
     "sectionLock": "Lock window",
     "sectionLockHint": "Period in which entries can be retroactively edited.",
     "lockWindowHint": "Entries older than N days are locked for employees. Admins can always edit."
@@ -754,25 +749,6 @@
     "dataHint": "GDPR access and data portability (Art. 15/20 GDPR).",
     "dataExportDescription": "Download all your data as a JSON file."
   },
-  "adminYearSetup": {
-    "title": "Year setup",
-    "year": "Year",
-    "explanationTitle": "What does this do?",
-    "explanation1": "Creates vacation entitlements and overtime balances for all active employees for the selected year.",
-    "explanation2": "Carries over remaining vacation days and overtime from the previous year (if enabled).",
-    "explanation3": "Locks the previous year's overtime calculation (no longer editable).",
-    "explanation4": "Run once at year-end — but can also be run retroactively for any year.",
-    "runSetup": "Run year setup",
-    "carriedOver": "Carry over from previous year",
-    "status": "Status",
-    "usersProcessed": "Users processed",
-    "entitlementsCreated": "Entitlements created",
-    "balancesCreated": "Balances created",
-    "setupComplete": "Setup complete",
-    "setupIncomplete": "Setup incomplete",
-    "confirmRun": "Run year setup for {year}? Existing entries will be updated.",
-    "activeUsers": "Active users"
-  },
   "adminAuditLog": {
     "title": "Audit log",
     "filter": "Filter",
@@ -844,7 +820,8 @@
   },
   "adminClosures": {
     "title": "Business closures",
-    "description": "Days when the business is closed. All employees get automatic vacation.",
+    "description": "Days when the business is closed. Employees get vacation automatically — if their vacation days don't suffice, the closure is booked against their overtime balance.",
+    "deleteStarted": "Closures that have already started can't be deleted — those days were actually off.",
     "new": "New closure",
     "name": "Name",
     "from": "From",
@@ -864,7 +841,8 @@
     "vacationDescription": "Days are deducted from your vacation entitlement (default).",
     "overtime": "Use overtime",
     "overtimeDescription": "Hours are deducted from your overtime balance.",
-    "saving": "Saving…"
+    "saving": "Saving…",
+    "insufficientVacation": "Not enough vacation days available — the balance must not go negative."
   },
   "branding": {
     "sectionBranding": "Branding",

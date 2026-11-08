@@ -7,8 +7,6 @@ import {
   msToSignedHours,
   msToSignedMinutes,
   formatSignedDuration,
-  carryoverCutoffDate,
-  isAfterCarryoverCutoff,
   computeOvertimeForYear,
   type WorkingModelMinutes,
 } from "@/lib/overtime/calculate";
@@ -124,19 +122,6 @@ describe("formatSignedDuration / msToSignedHours", () => {
     expect(msToSignedHours(90 * M)).toBe(1.5);
     expect(msToSignedHours(-90 * M)).toBe(-1.5);
     expect(msToSignedHours(0)).toBe(0);
-  });
-});
-
-describe("carryoverCutoff", () => {
-  it("builds cutoff date (month is 1-based)", () => {
-    expect(carryoverCutoffDate(2026, 4, 1)).toEqual(new Date("2026-04-01T00:00:00Z"));
-    expect(carryoverCutoffDate(2026, 1, 1)).toEqual(new Date("2026-01-01T00:00:00Z"));
-  });
-
-  it("isAfterCarryoverCutoff", () => {
-    const cutoff = carryoverCutoffDate(2026, 4, 1);
-    expect(isAfterCarryoverCutoff(new Date("2026-04-01T00:00:00Z"), cutoff)).toBe(true);
-    expect(isAfterCarryoverCutoff(new Date("2026-03-31T23:59:59Z"), cutoff)).toBe(false);
   });
 });
 

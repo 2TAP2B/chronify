@@ -13,15 +13,20 @@ import {
 import { resolveBreakMinutes } from "@/lib/overtime/breaks";
 import type { WorkingModel, TimerSession } from "@prisma/client";
 
+/**
+ * Working model valid on a calendar date (UTC midnight of the local day, the
+ * same key as validFrom/validTo). Passing an instant instead would miss the
+ * model on its validTo day for any time after 00:00 UTC.
+ */
 export async function getActiveWorkingModel(
   userId: string,
-  reference: Date
+  calendarDate: Date
 ): Promise<WorkingModel | null> {
   const models = await db.workingModel.findMany({
     where: {
       userId,
-      validFrom: { lte: reference },
-      OR: [{ validTo: null }, { validTo: { gte: reference } }],
+      validFrom: { lte: calendarDate },
+      OR: [{ validTo: null }, { validTo: { gte: calendarDate } }],
     },
     orderBy: { validFrom: "desc" },
     take: 1,
@@ -165,7 +170,7 @@ export async function stopTimer(userId: string, now: Date = new Date()) {
   const date = toCalendarDate(finalStartedAt, ctx.timeZone);
 
   // Resolve final break minutes per the user's break mode.
-  const workingModel = await getActiveWorkingModel(userId, finalStartedAt);
+  const workingModel = await getActiveWorkingModel(userId, date);
   let breakMinutes = manualBreakMinutes;
   let autoApplied = false;
   if (workingModel) {

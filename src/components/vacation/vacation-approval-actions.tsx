@@ -33,8 +33,9 @@ export function VacationApprovalActions({ requestId }: { requestId: string }) {
         body: JSON.stringify({ approverNote: note || null }),
       });
       if (!res.ok) {
-        const b = await res.json().catch(() => ({}));
-        setError((b as { error?: string }).error ?? "error");
+        const b = (await res.json().catch(() => ({}))) as { error?: string; code?: string };
+        if (b.code === "INSUFFICIENT_ENTITLEMENT") setError(t("insufficientError"));
+        else setError(b.error ?? "error");
         return;
       }
       window.location.reload();

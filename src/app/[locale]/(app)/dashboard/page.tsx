@@ -2,9 +2,8 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { getOrgSettings } from "@/server/context";
 import { computeYearOvertime } from "@/server/services/overtime";
-import { REGENERATION_EXTRA_DAYS } from "@/server/services/vacation";
+import { vacationAccount } from "@/server/services/leave-balance";
 import { toCalendarDate, startOfWeekUtc, addDaysUtc, formatInZone } from "@/lib/datetime";
 import { msToHours } from "@/lib/timer-utils";
 import { TimerWidget } from "@/components/timer/timer-widget";
@@ -26,18 +25,14 @@ export default async function DashboardPage({ params }: Props) {
   const session = await auth();
   if (!session?.user?.id) return null;
 
-  const [user, settings] = await Promise.all([
-    db.user.findUnique({ where: { id: session.user.id } }),
-    getOrgSettings(),
-  ]);
+  const user = await db.user.findUnique({ where: { id: session.user.id } });
   if (!user) {
     redirect("/api/auth/signout");
   }
   const timeZone = user.timezone || "Europe/Berlin";
   const now = new Date();
-  const year = now.getUTCFullYear();
-
   const todayStart = toCalendarDate(now, timeZone);
+  const year = todayStart.getUTCFullYear();
   const weekStart = startOfWeekUtc(now, timeZone);
   const weekEnd = addDaysUtc(weekStart, 7);
 
@@ -126,15 +121,11 @@ export default async function DashboardPage({ params }: Props) {
 
   const overtimeHours = overtimeResult ? overtimeResult.computation.balanceMs / 3_600_000 : 0;
 
-  const vacationEntitlement = await db.vacationEntitlement.findUnique({
-    where: { userId_year: { userId: user.id, year } },
-  });
-
+  // Remaining days include the live carryover from the previous year.
+  const vacation = await vacationAccount(user.id, year);
   const vacationTotal =
-    (vacationEntitlement?.totalDays ?? settings.defaultVacationDays) +
-    (user.regeneration ? REGENERATION_EXTRA_DAYS : 0);
-  const vacationConsumed = vacationEntitlement?.consumedDays ?? 0;
-  const vacationRemaining = Math.max(0, vacationTotal - vacationConsumed);
+    vacation.baseTotalDays + vacation.regenerationDays + vacation.carriedOverDays;
+  const vacationRemaining = vacation.availableDays;
 
   const cardsData: SectionCardsData = {
     todayHours: msToHours(todayMs),

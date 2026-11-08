@@ -1,6 +1,7 @@
 import { getTranslations, setRequestLocale, getLocale } from "next-intl/server";
 import { auth } from "@/lib/auth";
 import { getTeamCalendar, type TeamCalendarDay } from "@/server/services/team";
+import { toCalendarDate } from "@/lib/datetime";
 import { TeamCalendar } from "@/components/team/team-calendar";
 import { TeamPdfExport } from "@/components/team/team-pdf-export";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -49,9 +50,9 @@ export default async function TeamPage({ params, searchParams }: Props) {
   if (!session?.user?.id) return null;
 
   const { year: yearStr, month: monthStr } = await searchParams;
-  const now = new Date();
-  const year = yearStr ? Number(yearStr) : now.getUTCFullYear();
-  const month = monthStr ? Number(monthStr) : now.getUTCMonth() + 1;
+  const today = toCalendarDate(new Date(), "Europe/Berlin");
+  const year = yearStr ? Number(yearStr) : today.getUTCFullYear();
+  const month = monthStr ? Number(monthStr) : today.getUTCMonth() + 1;
 
   const { days, users } = await getTeamCalendar({
     actor: { id: session.user.id, role: session.user.role },

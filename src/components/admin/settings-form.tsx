@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { DatePicker } from "@/components/ui/date-picker";
 import {
   Select,
   SelectContent,
@@ -22,9 +21,6 @@ export function SettingsForm({ settings }: { settings: SettingsView }) {
   const t = useTranslations("adminSettings");
   const [form, setForm] = useState({
     defaultFederalState: settings.defaultFederalState,
-    overtimeCarryoverCutoffMonth: settings.overtimeCarryoverCutoffMonth,
-    overtimeCarryoverCutoffDay: settings.overtimeCarryoverCutoffDay,
-    overtimeCarryoverCutoffEnabled: settings.overtimeCarryoverCutoffEnabled,
     timeEntryLockWindowDays: String(settings.timeEntryLockWindowDays),
     autoBreakDefault: settings.autoBreakDefault,
     defaultVacationDays: String(settings.defaultVacationDays),
@@ -45,12 +41,6 @@ export function SettingsForm({ settings }: { settings: SettingsView }) {
   const [msg, setMsg] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const cutoffDate = new Date(
-    2026,
-    form.overtimeCarryoverCutoffMonth - 1,
-    form.overtimeCarryoverCutoffDay
-  );
-
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
@@ -59,7 +49,6 @@ export function SettingsForm({ settings }: { settings: SettingsView }) {
     try {
       const body: Record<string, unknown> = {
         defaultFederalState: form.defaultFederalState,
-        overtimeCarryoverCutoffEnabled: form.overtimeCarryoverCutoffEnabled,
         timeEntryLockWindowDays: Number(form.timeEntryLockWindowDays),
         autoBreakDefault: form.autoBreakDefault,
         defaultVacationDays: Number(form.defaultVacationDays),
@@ -75,10 +64,6 @@ export function SettingsForm({ settings }: { settings: SettingsView }) {
           smtpTls: form.smtpTls,
         }),
       };
-      if (form.overtimeCarryoverCutoffEnabled) {
-        body.overtimeCarryoverCutoffMonth = form.overtimeCarryoverCutoffMonth;
-        body.overtimeCarryoverCutoffDay = form.overtimeCarryoverCutoffDay;
-      }
       const res = await fetch("/api/admin/settings", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -226,10 +211,10 @@ export function SettingsForm({ settings }: { settings: SettingsView }) {
                   const res = await fetch("/api/admin/settings/test-smtp", { method: "POST" });
                   const b = (await res.json().catch(() => ({}))) as {
                     error?: string;
-                    message?: string;
+                    to?: string;
                   };
                   if (!res.ok) throw new Error(b.error ?? `HTTP ${res.status}`);
-                  setMsg(b.message ?? t("smtpTestSent"));
+                  setMsg(t("smtpTestSent", { email: b.to ?? "" }));
                 } catch (e) {
                   setError(e instanceof Error ? e.message : "error");
                 } finally {
@@ -304,46 +289,6 @@ export function SettingsForm({ settings }: { settings: SettingsView }) {
               }
             />
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Section: Überstunden */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">{t("sectionOvertime")}</CardTitle>
-          <CardDescription>{t("sectionOvertimeHint")}</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between rounded-lg border p-3">
-            <div className="space-y-0.5">
-              <Label>{t("carryoverEnabled")}</Label>
-              <p className="text-xs text-muted-foreground">{t("carryoverEnabledHint")}</p>
-            </div>
-            <Switch
-              checked={form.overtimeCarryoverCutoffEnabled}
-              onCheckedChange={(checked) =>
-                setForm({ ...form, overtimeCarryoverCutoffEnabled: checked })
-              }
-            />
-          </div>
-
-          {form.overtimeCarryoverCutoffEnabled && (
-            <div className="space-y-1.5 pl-3">
-              <Label>{t("carryoverCutoffDate")}</Label>
-              <DatePicker
-                value={cutoffDate}
-                onChange={(d) => {
-                  if (d) {
-                    setForm({
-                      ...form,
-                      overtimeCarryoverCutoffMonth: d.getMonth() + 1,
-                      overtimeCarryoverCutoffDay: d.getDate(),
-                    });
-                  }
-                }}
-              />
-            </div>
-          )}
         </CardContent>
       </Card>
 

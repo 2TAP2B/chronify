@@ -13,7 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { YearPicker } from "@/components/shared/year-picker";
-import { formatInZone } from "@/lib/datetime";
+import { currentYear, formatInZone } from "@/lib/datetime";
 import { stateName } from "@/lib/federal-states";
 import { HolidaySyncButtonInline } from "@/components/admin/holiday-sync-button-inline";
 
@@ -35,7 +35,7 @@ export default async function AdminHolidaysPage({ params, searchParams }: Props)
   const federalState = settings.defaultFederalState;
 
   const { year: yearStr } = await searchParams;
-  const year = yearStr ? Number(yearStr) : new Date().getUTCFullYear();
+  const year = yearStr ? Number(yearStr) : currentYear();
 
   const holidays = await db.publicHoliday.findMany({
     where: {

@@ -4,7 +4,13 @@ import { sendMail } from "@/server/services/mail";
 import { sickNoteReminderEmail } from "@/lib/email-templates";
 import { businessDaysInRange, makeHolidayResolver } from "@/lib/vacation/business-days";
 import { toCalendarDate } from "@/lib/datetime";
-import type { SickNote } from "@prisma/client";
+import { withLeaveLock } from "@/server/services/leave-balance";
+import {
+  auCoveredDays,
+  rebookVacationOnDays,
+  refundVacationOnSickDays,
+} from "@/server/services/sick-leave";
+import type { FederalState, SickNote } from "@prisma/client";
 
 export class SicknessError extends Error {
   constructor(
@@ -101,6 +107,10 @@ export async function createSickNote(opts: {
       note: `Krankheit ${from.toISOString().slice(0, 10)} – ${to.toISOString().slice(0, 10)}`,
     })),
   });
+  // § 9 BUrlG: AU-proven sick days don't consume vacation — give it back.
+  await withLeaveLock(userId, () =>
+    refundVacationOnSickDays(userId, auCoveredDays(businessDays, note.aubUntil))
+  );
 
   await audit({
     actorId: opts.actor.id,
@@ -148,16 +158,16 @@ export async function updateSickNote(opts: {
   if (opts.input.aubUntil !== undefined) data.aubUntil = opts.input.aubUntil ?? null;
   if (opts.input.note !== undefined) data.note = opts.input.note ?? null;
 
+  const ctx = await getUserContext(existing.userId);
+  const state = ctx.user.federalState;
+  const previousDays = await sickBusinessDays(existing.from, existing.to, state);
+  const rangeChanged = opts.input.from !== undefined || opts.input.to !== undefined;
+  const from = opts.input.from ?? existing.from;
+  const to = opts.input.to ?? existing.to;
+  const businessDays = rangeChanged ? await sickBusinessDays(from, to, state) : previousDays;
+
   // Recompute days if from/to changed
-  if (opts.input.from !== undefined || opts.input.to !== undefined) {
-    const from = opts.input.from ?? existing.from;
-    const to = opts.input.to ?? existing.to;
-    const ctx = await getUserContext(existing.userId);
-    const holidays = await db.publicHoliday.findMany({
-      where: { federalState: ctx.user.federalState, date: { gte: from, lte: to } },
-    });
-    const resolver = makeHolidayResolver(holidays);
-    const { businessDays } = businessDaysInRange(from, to, ctx.user.federalState, resolver);
+  if (rangeChanged) {
     data.days = businessDays.length;
 
     // Delete old TimeEntries and recreate
@@ -187,6 +197,23 @@ export async function updateSickNote(opts: {
     data: data as never,
   });
 
+  // § 9 BUrlG follows the AU coverage: days no longer proven sick get their
+  // vacation back, newly proven days refund it (e.g. AU handed in later).
+  if (rangeChanged || opts.input.aubUntil !== undefined) {
+    const before = auCoveredDays(previousDays, existing.aubUntil);
+    const after = auCoveredDays(businessDays, updated.aubUntil);
+    const afterKeys = new Set(after.map((d) => d.getTime()));
+    await withLeaveLock(existing.userId, async () => {
+      await rebookVacationOnDays({
+        userId: existing.userId,
+        days: before.filter((d) => !afterKeys.has(d.getTime())),
+        state,
+        timeZone: ctx.timeZone,
+      });
+      await refundVacationOnSickDays(existing.userId, after);
+    });
+  }
+
   await audit({
     actorId: opts.actor.id,
     targetId: existing.userId,
@@ -215,8 +242,18 @@ export async function deleteSickNote(opts: {
       date: { gte: existing.from, lte: existing.to },
     },
   });
-
   await db.sickNote.delete({ where: { id: opts.noteId } });
+  // Vacation that the sick note's AU had given back is booked again.
+  const ctx = await getUserContext(existing.userId);
+  const previousDays = await sickBusinessDays(existing.from, existing.to, ctx.user.federalState);
+  await withLeaveLock(existing.userId, () =>
+    rebookVacationOnDays({
+      userId: existing.userId,
+      days: auCoveredDays(previousDays, existing.aubUntil),
+      state: ctx.user.federalState,
+      timeZone: ctx.timeZone,
+    })
+  );
 
   await audit({
     actorId: opts.actor.id,
@@ -227,6 +264,13 @@ export async function deleteSickNote(opts: {
   });
 
   return { id: existing.id };
+}
+
+async function sickBusinessDays(from: Date, to: Date, state: FederalState): Promise<Date[]> {
+  const holidays = await db.publicHoliday.findMany({
+    where: { federalState: state, date: { gte: from, lte: to } },
+  });
+  return businessDaysInRange(from, to, state, makeHolidayResolver(holidays)).businessDays;
 }
 
 function resolveTarget(actor: SessionUser, targetUserId?: string): string {

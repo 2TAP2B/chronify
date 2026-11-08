@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { currentYear } from "@/lib/datetime";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, Loader2 } from "lucide-react";
@@ -16,7 +17,7 @@ export function HolidaySync({ defaultFederalState }: { defaultFederalState: Fede
   async function sync(type: "single" | "all") {
     setLoading(type);
     setMsg(null);
-    const year = new Date().getUTCFullYear();
+    const year = currentYear();
     try {
       const body = type === "all" ? { year, all: true } : { year, state: defaultFederalState };
       const res = await fetch("/api/holidays/sync", {

@@ -199,7 +199,9 @@
     "weekdaysOnly": "Nur Montag–Freitag",
     "myTimesheet": "Mein Stundenzettel",
     "filter": "Filter",
-    "overlapError": "Dieser Zeitraum überschneidet sich mit einem bestehenden Eintrag."
+    "overlapError": "Dieser Zeitraum überschneidet sich mit einem bestehenden Eintrag.",
+    "timerAlreadyRunning": "Für diesen Benutzer läuft bereits ein Timer.",
+    "invalidTimerStart": "Die Startzeit darf nicht in der Zukunft liegen."
   },
   "overtime": {
     "title": "Überstunden",
@@ -223,8 +225,6 @@
     "positive": "Plus",
     "negative": "Minus",
     "neutral": "Ausgeglichen",
-    "carryoverCutoff": "Übertrag-Stichtag",
-    "cutoffHint": "Am Stichtag ({date}) verfällt der Übertrag aus dem Vorjahr.",
     "noData": "Keine Daten für {year} vorhanden.",
     "autoBreakApplied": "Automatische Pause ({minutes} min) gemäß ArbZG §4 angewendet.",
     "breakModeAuto": "Automatik",
@@ -271,9 +271,6 @@
     "insufficientError": "Nicht genug Urlaubstage verfügbar",
     "noBusinessDaysError": "Im Zeitraum sind keine Arbeitstage (Mo–Fr, keine Feiertage)",
     "useOvertimeLabel": "Überstunden abbauen",
-    "overtimeAvailable": "Verfügbar: {hours} Überstunden",
-    "noOvertimeAvailable": "Keine Überstunden verfügbar",
-    "insufficientOvertimeError": "Nicht genug Überstunden verfügbar",
     "overtimeBadge": "Überstunden",
     "kindLabel": "Art",
     "scopeLabel": "Zeitraum",
@@ -296,7 +293,8 @@
       "APPROVED": "Genehmigt",
       "REJECTED": "Abgelehnt",
       "CANCELLED": "Storniert"
-    }
+    },
+    "overtimeBalanceHint": "Aktueller Überstundensaldo: {hours} h – das Konto darf ins Minus gehen."
   },
   "holidays": {
     "title": "Feiertage",
@@ -325,13 +323,17 @@
     "save": "Speichern",
     "noNotes": "Keine Krankmeldungen vorhanden",
     "confirmDelete": "Krankmeldung wirklich löschen?",
-    "status": "Status"
+    "status": "Status",
+    "employee": "Mitarbeiter",
+    "selectEmployee": "Mitarbeiter auswählen",
+    "aubHint": "Fällt die Krankheit in einen genehmigten Urlaub, werden die durch die AU-Bescheinigung nachgewiesenen Tage nicht auf den Urlaub angerechnet (§ 9 BUrlG). Ohne AU-Datum bleibt der Urlaub verbraucht."
   },
   "adminSickness": {
     "title": "Krankmeldungen verwalten",
     "employee": "Mitarbeiter",
     "allEmployees": "Alle Mitarbeiter",
-    "addForUser": "Krankmeldung für Mitarbeiter erfassen"
+    "addForUser": "Krankmeldung für Mitarbeiter erfassen",
+    "addForUserHint": "Für vergessene oder nachzutragende Krankmeldungen – auch rückwirkend."
   },
   "adminUsers": {
     "roleAdmin": "Administrator",
@@ -341,7 +343,6 @@
     "saveOk": "Gespeichert.",
     "saving": "Speichert …",
     "backToList": "Zurück zur Liste",
-
     "notificationSection": "Benachrichtigungen",
     "notificationSectionHint": "Steuert, welche Mails dieser Benutzer erhält (In-App-Benachrichtigungen bleiben immer aktiv).",
     "sickMailLabel": "Krank-Mail",
@@ -408,7 +409,8 @@
     "consumedLabel": "Verbraucht (Min.)",
     "computedThisYear": "Dieses Jahr erarbeitet",
     "netBalance": "Saldo",
-    "overtimeHint": "Werte in Stunden:Minuten (z.B. 08:30) oder Dezimal (8,5)."
+    "overtimeHint": "Werte in Stunden:Minuten (z.B. 08:30) oder Dezimal (8,5).",
+    "carryAutoHint": "Übertrag wird automatisch aus dem Vorjahr übernommen (Schlusssaldo) und ist hier nicht änderbar."
   },
   "adminAutomation": {
     "heading": "Automatisierung",
@@ -553,11 +555,6 @@
     "appearance": "Darstellung",
     "appearanceHint": "Wählen Sie ein Farbschema für die Anwendung.",
     "defaultFederalState": "Standard-Bundesland",
-    "carryoverCutoffMonth": "Übertrag-Stichtag (Monat, 1-12)",
-    "carryoverCutoffDay": "Übertrag-Stichtag (Tag, 1-31)",
-    "carryoverCutoffDate": "Übertrag-Stichtag",
-    "carryoverEnabled": "Übertrag-Stichtag aktiv",
-    "carryoverEnabledHint": "Wenn aktiv, verfällt der Übertrag aus dem Vorjahr am Stichtag.",
     "lockWindowDays": "Sperrfrist (Tage)",
     "autoBreakDefault": "Standard-Pausenmodus",
     "autoBreakLabel": "Automatische Pause (ArbZG §4)",
@@ -565,7 +562,6 @@
     "defaultVacationDays": "Standard-Urlaubstage",
     "save": "Speichern",
     "saved": "Einstellungen gespeichert",
-
     "sectionSmtp": "E-Mail / SMTP",
     "smtpHint": "SMTP-Server für die Mails der App. Wird aus dieser Konfiguration gespeichert, wenn .env sie nicht selbst festlegt.",
     "smtpEnvHint": "SMTP ist über .env festgelegt und kann im Dashboard nicht geändert werden.",
@@ -578,6 +574,7 @@
     "smtpTls": "TLS verwenden",
     "smtpTestButton": "Testmail senden",
     "smtpTesting": "Sendet …",
+    "smtpTestSent": "Testmail an {email} versendet.",
     "smtpTestHint": "Sendet eine Test-Mail an deine eigene Benutzer-Adresse.",
     "sectionLogin": "Anmeldung",
     "sectionLoginHint": "Steuerung, wie sich Mitarbeiter anmelden können.",
@@ -592,8 +589,6 @@
     "sectionOrgHint": "Grundeinstellungen für das Unternehmen.",
     "sectionBreak": "Pausen",
     "sectionBreakHint": "Automatische oder manuelle Pausenerfassung.",
-    "sectionOvertime": "Überstunden",
-    "sectionOvertimeHint": "Übertrag und Verfall von Überstunden.",
     "sectionLock": "Sperrfrist",
     "sectionLockHint": "Zeitraum, in dem Einträge nachträglich geändert werden können.",
     "lockWindowHint": "Einträge älter als N Tage sind für Mitarbeiter gesperrt. Administratoren können jederzeit ändern."
@@ -754,25 +749,6 @@
     "dataHint": "DSGVO-Auskunft und Datenübertragbarkeit (Art. 15/20 DSGVO).",
     "dataExportDescription": "Alle Ihre Daten als JSON-Datei herunterladen."
   },
-  "adminYearSetup": {
-    "title": "Jahreswechsel",
-    "year": "Jahr",
-    "explanationTitle": "Was macht diese Funktion?",
-    "explanation1": "Erstellt für das ausgewählte Jahr Urlaubstage und Überstundenkonten für alle aktiven Mitarbeiter.",
-    "explanation2": "Übernimmt verbleibende Urlaubstage und Überstunden aus dem Vorjahr (falls aktiviert).",
-    "explanation3": "Sperrt die Überstundenberechnung des Vorjahres (nicht mehr änderbar).",
-    "explanation4": "Einmalig zum Jahreswechsel ausführen — kann aber auch nachträglich für jedes Jahr ausgeführt werden.",
-    "runSetup": "Jahressetup ausführen",
-    "carriedOver": "Übertrag aus Vorjahr übernehmen",
-    "status": "Status",
-    "usersProcessed": "Benutzer verarbeitet",
-    "entitlementsCreated": "Urlaubsansprüche erstellt",
-    "balancesCreated": "Überstundenkonten erstellt",
-    "setupComplete": "Setup bereits vollständig",
-    "setupIncomplete": "Setup unvollständig",
-    "confirmRun": "Jahressetup für {year} ausführen? Bestehende Einträge werden aktualisiert.",
-    "activeUsers": "Aktive Benutzer"
-  },
   "adminAuditLog": {
     "title": "Audit-Protokoll",
     "filter": "Filter",
@@ -844,7 +820,8 @@
   },
   "adminClosures": {
     "title": "Schließtage",
-    "description": "Tage an denen das Unternehmen geschlossen ist. Alle Mitarbeiter bekommen automatisch Urlaub.",
+    "description": "Tage an denen das Unternehmen geschlossen ist. Mitarbeiter bekommen automatisch Urlaub – reichen die Urlaubstage nicht, wird über das Überstundenkonto verrechnet.",
+    "deleteStarted": "Bereits begonnene Schließtage können nicht gelöscht werden – die Tage waren tatsächlich frei.",
     "new": "Neuer Schließtag",
     "name": "Name",
     "from": "Von",
@@ -864,7 +841,8 @@
     "vacationDescription": "Die Tage werden von deinem Urlaubsanspruch abgezogen (Standard).",
     "overtime": "Überstunden abbauen",
     "overtimeDescription": "Die Stunden werden von deinem Überstundenkonto abgezogen.",
-    "saving": "Wird gespeichert…"
+    "saving": "Wird gespeichert…",
+    "insufficientVacation": "Nicht genug Urlaubstage verfügbar – der Urlaub darf nicht ins Minus gehen."
   },
   "branding": {
     "sectionBranding": "Branding",

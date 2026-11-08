@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/table";
 import { getOvertimeView } from "@/server/services/overtime";
 import { formatSignedDuration } from "@/lib/overtime/calculate";
-import { formatInZone } from "@/lib/datetime";
+import { currentYear, formatInZone } from "@/lib/datetime";
 import { OvertimeBarChart } from "@/components/overtime/overtime-bar-chart";
 import {
   OvertimeDayOverview,
@@ -63,7 +63,7 @@ export default async function OvertimePage({ params, searchParams }: Props) {
   if (!session?.user?.id) return null;
 
   const { year: yearStr } = await searchParams;
-  const year = yearStr ? Number(yearStr) : new Date().getUTCFullYear();
+  const year = yearStr ? Number(yearStr) : currentYear();
 
   const view = await getOvertimeView({
     actor: { id: session.user.id, role: session.user.role },
@@ -71,9 +71,6 @@ export default async function OvertimePage({ params, searchParams }: Props) {
   });
 
   const monthNames = appLocale === "en" ? MONTH_NAMES_EN : MONTH_NAMES_DE;
-  const cutoffLabel = view.cutoff
-    ? formatInZone(view.cutoff, view.timeZone, "dd.MM.yyyy", appLocale)
-    : null;
   const balancePositive = view.computation.balanceMs >= 0;
 
   return (
@@ -83,7 +80,7 @@ export default async function OvertimePage({ params, searchParams }: Props) {
         <YearPicker year={view.year} />
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>{t("carriedOver")}</CardDescription>
@@ -117,19 +114,6 @@ export default async function OvertimePage({ params, searchParams }: Props) {
             </Badge>
           </CardContent>
         </Card>
-        {cutoffLabel && (
-          <Card>
-            <CardHeader className="pb-2">
-              <CardDescription>{t("carryoverCutoff")}</CardDescription>
-              <CardTitle className="text-base">{cutoffLabel}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-xs text-muted-foreground">
-                {t("cutoffHint", { date: cutoffLabel })}
-              </p>
-            </CardContent>
-          </Card>
-        )}
       </div>
 
       <OvertimeBarChart

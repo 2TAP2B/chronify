@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { useConfirm } from "@/components/ui/confirm-dialog";
@@ -16,6 +16,7 @@ export function ClosureDelete({
   const t = useTranslations("adminClosures");
   const confirm = useConfirm();
   const [pending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
 
   async function onDelete() {
     if (
@@ -27,20 +28,28 @@ export function ClosureDelete({
     )
       return;
     startTransition(async () => {
-      await fetch(`/api/business-closures/${closureId}`, { method: "DELETE" });
+      const res = await fetch(`/api/business-closures/${closureId}`, { method: "DELETE" });
+      if (!res.ok) {
+        const b = (await res.json().catch(() => ({}))) as { error?: string; code?: string };
+        setError(b.code === "CLOSURE_STARTED" ? t("deleteStarted") : (b.error ?? "error"));
+        return;
+      }
       window.location.reload();
     });
   }
 
   return (
-    <Button
-      size="sm"
-      variant="ghost"
-      onClick={onDelete}
-      disabled={pending}
-      aria-label={t("delete")}
-    >
-      <Trash2 className="h-3.5 w-3.5" />
-    </Button>
+    <span className="inline-flex items-center gap-2">
+      {error && <span className="text-xs text-destructive">{error}</span>}
+      <Button
+        size="sm"
+        variant="ghost"
+        onClick={onDelete}
+        disabled={pending}
+        aria-label={t("delete")}
+      >
+        <Trash2 className="h-3.5 w-3.5" />
+      </Button>
+    </span>
   );
 }

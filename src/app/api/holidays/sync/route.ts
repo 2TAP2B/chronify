@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireUser } from "@/server/context";
 import { syncHolidaysForState, syncAllUserStates, listHolidays } from "@/server/services/holidays";
+import { currentYear } from "@/lib/datetime";
 import type { FederalState } from "@prisma/client";
 
 export async function GET(request: Request) {
@@ -33,7 +34,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
     const body = await request.json().catch(() => ({}));
-    const year = body?.year ? Number(body.year) : new Date().getUTCFullYear();
+    const year = body?.year ? Number(body.year) : currentYear();
     const state = body?.state as FederalState | undefined;
     const all = Boolean(body?.all);
 

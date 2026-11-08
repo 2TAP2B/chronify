@@ -91,6 +91,16 @@ build/serve step).
 Other useful scripts: `npm run prisma:studio`, `npm run prisma:migrate`,
 `npm run db:push` (dev only), `npm run retention:dry-run`, `bash scripts/backup-db.sh`.
 
+Overtime/vacation regression check (local DB only, refuses non-localhost):
+`npm run scenarios:seed` creates deterministic test users (`*@szenario.local` /
+`test1234`: 40h, 4-day week, part-time, model change, closure overlaps, half
+days 24.12/31.12) with a full year of entries; `npm run scenarios:check`
+recomputes balances via the real services, compares them with hand-derived
+expectations and verifies the year change (live carryover, late corrections,
+automatic holiday sync), sickness during vacation, closure rules and that
+vacation can't go negative (overtime may). Run it after any change to
+overtime, vacation, sickness, closure or year-change logic.
+
 ## 4. Layout & where code goes
 
 ```
@@ -144,8 +154,12 @@ e2e/                          Playwright specs + fixtures (login, timer, vacatio
 - Secrets live only in `.env` (gitignored; template in `.env.example`):
   `NEXTAUTH_SECRET`, `BACKUP_ENCRYPTION_PASSPHRASE`,
   SMTP, VAPID, OIDC. Never commit or print real values; never commit `.env`.
-- GDPR-relevant (Art. 9) data: sickness records and retention
-  (`scripts/retention-cleanup.ts`) — changes there need human review.
+- GDPR-relevant (Art. 9) data: sickness records. Agents may change the sickness
+  business logic (`src/server/services/sickness.ts`, `sick-leave.ts`, sickness
+  UI/API) like any other domain code — keep it covered by `npm run
+scenarios:check`. Retention/deletion of sickness data
+  (`scripts/retention-cleanup.ts`, `gdpr-cleanup.ts`) and any new storage or
+  export of health data still need human review.
 - Auth/session (`src/lib/auth.ts`, `src/middleware.ts`), CSRF (`src/lib/csrf.ts`),
   rate limiting (`src/lib/rate-limit.ts`), RBAC checks in services, backups, and
   anything touching `AuditLog` require human review.

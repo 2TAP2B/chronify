@@ -48,39 +48,45 @@ prisma/
 
 - Live timer + weekly timesheet (7-day lock window)
 - Vacation with approval workflow + balance display
-- Sickness reporting with AU tracking
+- Sickness reporting with AU tracking; sick days during vacation give the
+  vacation back (BUrlG §9), deleting the sick note books it again
 - Public holidays (nager.date, NRW default, manual overrides)
-- Overtime balance with configurable carryover
+- Overtime balance (may go negative), carried over live into the next year
 - Team calendar ("who is off?")
 - Reports (PDF / CSV / Excel), scheduled PDF export automation
 - PWA (offline-capable, Web Push notifications)
 - NFC kiosk for clocking in/out on the separate kiosk domain
-- Admin: user CRUD, working models, year setup, business closures, GDPR
+- Admin: user CRUD, working models, business closures, GDPR
+- Automatic year change: unused vacation days and the overtime balance carry
+  over live (never expire, late corrections flow through); public holidays for
+  the current year — and from December the next — are synced automatically
 
 ## Scripts
 
-| Command                             | What                    |
-| ----------------------------------- | ----------------------- |
-| `npm run dev`                       | Dev server (:3001)      |
-| `npm run build`                     | Production build        |
-| `npm run start`                     | Production server       |
-| `npm run typecheck`                 | TypeScript strict       |
-| `npm run lint`                      | ESLint                  |
-| `npm run prisma:migrate`            | Create a migration      |
-| `npm run prisma:deploy`             | Apply migrations (prod) |
-| `npm run prisma:seed`               | Run seed                |
-| `npm run prisma:studio`             | Prisma Studio           |
-| `npm test`                          | Vitest (unit)           |
-| `npm run test:e2e`                  | Playwright (e2e, :3100) |
-| `npm run test:e2e -- --ui`          | Playwright interactive  |
-| `npm run format`                    | Prettier (write)        |
-| `npm run format:check`              | Prettier (check)        |
-| `dev-db start\|stop\|status\|reset` | Local Postgres cluster  |
-| `bash scripts/backup-db.sh`         | Encrypted DB backup     |
-| `bash scripts/restore-db.sh <file>` | Restore DB              |
-| `bash scripts/first-install.sh`     | Interactive prod setup  |
-| `npm run reports:run`               | One-shot report run     |
-| `npm run retention:run`             | GDPR retention cleanup  |
+| Command                             | What                                          |
+| ----------------------------------- | --------------------------------------------- |
+| `npm run dev`                       | Dev server (:3001)                            |
+| `npm run build`                     | Production build                              |
+| `npm run start`                     | Production server                             |
+| `npm run typecheck`                 | TypeScript strict                             |
+| `npm run lint`                      | ESLint                                        |
+| `npm run prisma:migrate`            | Create a migration                            |
+| `npm run prisma:deploy`             | Apply migrations (prod)                       |
+| `npm run prisma:seed`               | Run seed                                      |
+| `npm run prisma:studio`             | Prisma Studio                                 |
+| `npm test`                          | Vitest (unit)                                 |
+| `npm run test:e2e`                  | Playwright (e2e, :3100)                       |
+| `npm run test:e2e -- --ui`          | Playwright interactive                        |
+| `npm run format`                    | Prettier (write)                              |
+| `npm run format:check`              | Prettier (check)                              |
+| `dev-db start\|stop\|status\|reset` | Local Postgres cluster                        |
+| `bash scripts/backup-db.sh`         | Encrypted DB backup                           |
+| `bash scripts/restore-db.sh <file>` | Restore DB                                    |
+| `bash scripts/first-install.sh`     | Interactive prod setup                        |
+| `npm run reports:run`               | One-shot report run                           |
+| `npm run retention:run`             | GDPR retention cleanup                        |
+| `npm run scenarios:seed`            | Dev-only: overtime/vacation test users + data |
+| `npm run scenarios:check`           | Dev-only: verify balances against expected    |
 
 ## Web Push (VAPID keys)
 

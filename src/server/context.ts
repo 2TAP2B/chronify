@@ -3,15 +3,17 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import type { OrgSettings, User } from "@prisma/client";
 import { startReportAutomationScheduler } from "@/server/report-scheduler";
+import { startYearRolloverScheduler } from "@/server/year-rollover";
 
-// Report automation scheduler: started on the first authenticated request
-// instead of an instrumentation hook. This keeps its `pg`/`fs` dependency
-// chain strictly inside Node.js server bundles (never middleware/edge or
-// client chunks) and survives redeploys via the (kind, periodKey)
-// idempotency on ReportAutomationRun.
+// Background schedulers (report automation, year-change housekeeping): started
+// on the first authenticated request instead of an instrumentation hook. This
+// keeps their `pg`/`fs` dependency chain strictly inside Node.js server bundles
+// (never middleware/edge or client chunks); report runs survive redeploys via
+// the (kind, periodKey) idempotency on ReportAutomationRun.
 let schedulerStarter: Promise<void> | null = null;
 
 function ensureReportScheduler(): void {
+  startYearRolloverScheduler();
   if (!schedulerStarter) {
     schedulerStarter = startReportAutomationScheduler().then(
       () => {},

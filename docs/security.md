@@ -15,16 +15,16 @@ or the kiosk routes.
 
 ## Active protections
 
-| Area           | Measure                                                                                                                                            |
-| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Session        | Auth.js v5 JWT, httpOnly cookies; prod sets `AUTH_SECURE_COOKIE=true`; token carries only user id + role                                           |
-| Password login | bcrypt compare + `rateLimit` 10/min/IP; can be disabled org-wide (`passwordLoginDisabled`, server-enforced)                                        |
-| Password reset | tokens `randomBytes(32)`, 1 h TTL, single-use per email; forgot 5/min, reset 10/min                                                                |
-| CSRF           | every mutation requires `Origin` ∈ `CSRF_ALLOWED_ORIGINS` (missing origin rejected)                                                                |
-| Headers        | CSP `default-src 'self'`, X-Frame-Options DENY, nosniff, Referrer/Permissions-Policy (next.config.mjs)                                             |
-| RBAC           | `requireAdmin` inside admin services (users, settings, working models, year setup, audit log, import, report automation, work overview, test-smtp) |
-| Input          | zod schemas on every API route; NFC card ids capped at 20 chars                                                                                    |
-| Audit          | `AuditLog` on all admin mutations, kiosk taps, profile changes                                                                                     |
+| Area           | Measure                                                                                                                                |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| Session        | Auth.js v5 JWT, httpOnly cookies; prod sets `AUTH_SECURE_COOKIE=true`; token carries only user id + role                               |
+| Password login | bcrypt compare + `rateLimit` 10/min/IP; can be disabled org-wide (`passwordLoginDisabled`, server-enforced)                            |
+| Password reset | tokens `randomBytes(32)`, 1 h TTL, single-use per email; forgot 5/min, reset 10/min                                                    |
+| CSRF           | every mutation requires `Origin` ∈ `CSRF_ALLOWED_ORIGINS` (missing origin rejected)                                                    |
+| Headers        | CSP `default-src 'self'`, X-Frame-Options DENY, nosniff, Referrer/Permissions-Policy (next.config.mjs)                                 |
+| RBAC           | `requireAdmin` inside admin services (users, settings, working models, audit log, import, report automation, work overview, test-smtp) |
+| Input          | zod schemas on every API route; NFC card ids capped at 20 chars                                                                        |
+| Audit          | `AuditLog` on all admin mutations, kiosk taps, profile changes                                                                         |
 
 ## Accepted trade-offs (explicit owner decisions)
 

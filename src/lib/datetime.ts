@@ -22,6 +22,11 @@ export function toCalendarDate(instant: Date, timeZone: string): Date {
   return new Date(Date.UTC(y, m, d));
 }
 
+/** Current calendar year in the given zone (Jan 1 00:30 Berlin is already the new year). */
+export function currentYear(timeZone = "Europe/Berlin", now: Date = new Date()): number {
+  return toCalendarDate(now, timeZone).getUTCFullYear();
+}
+
 export function startOfDayUtc(instant: Date, timeZone: string): Date {
   return toCalendarDate(instant, timeZone);
 }
