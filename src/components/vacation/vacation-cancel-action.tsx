@@ -16,6 +16,7 @@ export function VacationCancelAction({
   showLabel?: boolean;
 }) {
   const t = useTranslations("vacation");
+  const tc = useTranslations("common");
   const confirm = useConfirm();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -39,12 +40,12 @@ export function VacationCancelAction({
       });
       if (!res.ok) {
         const b = await res.json().catch(() => ({}));
-        setError((b as { error?: string }).error ?? "error");
+        setError((b as { error?: string }).error ?? tc("errorGeneric"));
         return;
       }
       window.location.reload();
     } catch {
-      setError("error");
+      setError(tc("errorGeneric"));
     } finally {
       setLoading(false);
     }

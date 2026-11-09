@@ -14,6 +14,7 @@ export function ClosureDelete({
   closureName: string;
 }) {
   const t = useTranslations("adminClosures");
+  const tc = useTranslations("common");
   const confirm = useConfirm();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -31,7 +32,9 @@ export function ClosureDelete({
       const res = await fetch(`/api/business-closures/${closureId}`, { method: "DELETE" });
       if (!res.ok) {
         const b = (await res.json().catch(() => ({}))) as { error?: string; code?: string };
-        setError(b.code === "CLOSURE_STARTED" ? t("deleteStarted") : (b.error ?? "error"));
+        setError(
+          b.code === "CLOSURE_STARTED" ? t("deleteStarted") : (b.error ?? tc("errorGeneric"))
+        );
         return;
       }
       window.location.reload();

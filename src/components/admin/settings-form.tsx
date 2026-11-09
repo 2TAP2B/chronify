@@ -19,6 +19,7 @@ import { STATE_NAMES, STATE_CODES } from "@/lib/federal-states";
 
 export function SettingsForm({ settings }: { settings: SettingsView }) {
   const t = useTranslations("adminSettings");
+  const tc = useTranslations("common");
   const [form, setForm] = useState({
     defaultFederalState: settings.defaultFederalState,
     timeEntryLockWindowDays: String(settings.timeEntryLockWindowDays),
@@ -71,12 +72,12 @@ export function SettingsForm({ settings }: { settings: SettingsView }) {
       });
       if (!res.ok) {
         const b = await res.json().catch(() => ({}));
-        setError((b as { error?: string }).error ?? "error");
+        setError((b as { error?: string }).error ?? tc("errorGeneric"));
         return;
       }
       setMsg(t("saved"));
     } catch {
-      setError("error");
+      setError(tc("errorGeneric"));
     } finally {
       setLoading(false);
     }
@@ -216,7 +217,7 @@ export function SettingsForm({ settings }: { settings: SettingsView }) {
                   if (!res.ok) throw new Error(b.error ?? `HTTP ${res.status}`);
                   setMsg(t("smtpTestSent", { email: b.to ?? "" }));
                 } catch (e) {
-                  setError(e instanceof Error ? e.message : "error");
+                  setError(e instanceof Error ? e.message : tc("errorGeneric"));
                 } finally {
                   setTestingSmtp(false);
                 }

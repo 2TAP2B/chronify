@@ -38,3 +38,11 @@ export function formatMinutesHMM(minutes: number): string {
 export function decimalHoursToHMM(decimalHours: number): string {
   return formatMinutesHMM(Math.round(decimalHours * 60));
 }
+
+/** Decimal hours → locale-formatted number (de: "7,50", en: "7.50"). */
+export function formatHoursDecimal(hours: number, locale: string, digits = 2): string {
+  return new Intl.NumberFormat(locale === "en" ? "en-US" : "de-DE", {
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits,
+  }).format(hours);
+}

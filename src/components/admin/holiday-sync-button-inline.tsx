@@ -8,6 +8,7 @@ import type { FederalState } from "@prisma/client";
 
 export function HolidaySyncButtonInline({ year, state }: { year: number; state: FederalState }) {
   const t = useTranslations("adminHolidays");
+  const tc = useTranslations("common");
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
 
@@ -22,7 +23,7 @@ export function HolidaySyncButtonInline({ year, state }: { year: number; state: 
       });
       if (!res.ok) {
         const b = await res.json().catch(() => ({}));
-        setMsg((b as { error?: string }).error ?? "error");
+        setMsg((b as { error?: string }).error ?? tc("errorGeneric"));
         return;
       }
       const data = await res.json();
@@ -30,7 +31,7 @@ export function HolidaySyncButtonInline({ year, state }: { year: number; state: 
       setMsg(t("synced", { count: total }));
       window.location.reload();
     } catch {
-      setMsg("error");
+      setMsg(tc("errorGeneric"));
     } finally {
       setLoading(false);
     }

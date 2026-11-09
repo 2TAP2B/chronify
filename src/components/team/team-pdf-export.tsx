@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { FileText, Loader2 } from "lucide-react";
 
 export function TeamPdfExport({ year, month }: { year: number; month: number }) {
   const [loading, setLoading] = useState(false);
+  const tc = useTranslations("common");
 
   async function download() {
     setLoading(true);
@@ -13,7 +15,7 @@ export function TeamPdfExport({ year, month }: { year: number; month: number }) 
       const params = new URLSearchParams({ year: String(year), month: String(month) });
       const res = await fetch(`/api/team/export?${params}`);
       if (!res.ok) {
-        alert("error");
+        alert(tc("errorGeneric"));
         return;
       }
       const blob = await res.blob();
@@ -26,7 +28,7 @@ export function TeamPdfExport({ year, month }: { year: number; month: number }) 
       document.body.removeChild(link);
       URL.revokeObjectURL(link.href);
     } catch {
-      alert("error");
+      alert(tc("errorGeneric"));
     } finally {
       setLoading(false);
     }

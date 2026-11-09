@@ -136,6 +136,7 @@ export function TimeEntryDialog({
   onSaved: () => void;
 }) {
   const t = useTranslations("timesheet");
+  const tc = useTranslations("common");
   const isCreate = mode === "create";
   const initStart = initial.startAt
     ? isoToTimeInput(initial.startAt)
@@ -299,7 +300,7 @@ export function TimeEntryDialog({
       onSaved();
       onClose();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "error");
+      setError(e instanceof Error ? e.message : tc("errorGeneric"));
     } finally {
       setSaving(false);
     }

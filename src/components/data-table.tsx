@@ -1,6 +1,8 @@
 "use client";
 
 import * as React from "react";
+import { useLocale } from "next-intl";
+import { formatHoursDecimal } from "@/lib/duration";
 import {
   ColumnDef,
   SortingState,
@@ -64,6 +66,7 @@ export function DataTable({
     };
   };
 }) {
+  const locale = useLocale();
   const [sorting, setSorting] = React.useState<SortingState>([{ id: "date", desc: true }]);
   const [filter, setFilter] = React.useState<string>("all");
 
@@ -115,7 +118,9 @@ export function DataTable({
         header: () => <div className="text-right">{labels.duration}</div>,
         cell: ({ row }) => (
           <div className="text-right tabular-nums font-medium">
-            {row.original.durationHours > 0 ? `${row.original.durationHours.toFixed(2)} h` : "—"}
+            {row.original.durationHours > 0
+              ? `${formatHoursDecimal(row.original.durationHours, locale)} h`
+              : "—"}
           </div>
         ),
       },
@@ -129,7 +134,7 @@ export function DataTable({
         ),
       },
     ],
-    [labels]
+    [labels, locale]
   );
 
   const table = useReactTable({

@@ -15,7 +15,7 @@ const ARBZG_TITLES_BODIES: Record<
   approachingMax: {
     de: {
       title: "ArbZG: Mehr als 8 Stunden gearbeitet",
-      body: "Sie haben heute mehr als 8 Stunden gearbeitet. Ab 10 Stunden ist die gesetzliche Höchstarbeitszeit erreicht (§3 ArbZG).",
+      body: "Du hast heute mehr als 8 Stunden gearbeitet. Ab 10 Stunden ist die gesetzliche Höchstarbeitszeit erreicht (§3 ArbZG).",
     },
     en: {
       title: "ArbZG: More than 8 hours worked",
@@ -25,7 +25,7 @@ const ARBZG_TITLES_BODIES: Record<
   exceededMax: {
     de: {
       title: "ArbZG: Höchstarbeitszeit überschritten (10h)",
-      body: "Die gesetzliche Höchstarbeitszeit von 10 Stunden pro Tag wurde überschritten (§3 ArbZG). Bitte informieren Sie Ihren Vorgesetzten.",
+      body: "Die gesetzliche Höchstarbeitszeit von 10 Stunden pro Tag wurde überschritten (§3 ArbZG). Bitte informiere deine Führungskraft.",
     },
     en: {
       title: "ArbZG: Maximum working time exceeded (10h)",

@@ -27,6 +27,14 @@ export function currentYear(timeZone = "Europe/Berlin", now: Date = new Date()):
   return toCalendarDate(now, timeZone).getUTCFullYear();
 }
 
+/** Calendar date (UTC midnight key) for display: 03.08.2026 (de) / 2026-08-03 (en). */
+export function formatCalendarDate(date: Date, locale: "de" | "en"): string {
+  const iso = date.toISOString().slice(0, 10);
+  if (locale === "en") return iso;
+  const [y, m, d] = iso.split("-");
+  return `${d}.${m}.${y}`;
+}
+
 export function startOfDayUtc(instant: Date, timeZone: string): Date {
   return toCalendarDate(instant, timeZone);
 }

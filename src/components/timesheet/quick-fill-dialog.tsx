@@ -51,6 +51,7 @@ export function QuickFillDialog({
   onDone: () => void;
 }) {
   const t = useTranslations("timesheet");
+  const tc = useTranslations("common");
   const [startAt, setStartAt] = useState("08:00");
   const [endAt, setEndAt] = useState("16:00");
   const [breakMinutes, setBreakMinutes] = useState("30");
@@ -101,7 +102,7 @@ export function QuickFillDialog({
         onDone();
       }
     } catch {
-      setError("error");
+      setError(tc("errorGeneric"));
     } finally {
       setSaving(false);
     }

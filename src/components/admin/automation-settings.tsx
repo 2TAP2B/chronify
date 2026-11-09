@@ -60,6 +60,7 @@ export function AutomationSettings({
   exportBaseDir: string | null;
 }) {
   const t = useTranslations("adminAutomation");
+  const tc = useTranslations("common");
   const locale = useLocale();
   const [form, setForm] = useState({
     enabled: config.enabled,
@@ -105,7 +106,7 @@ export function AutomationSettings({
       setMsg(t("saved"));
       router.refresh();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "error");
+      setError(e instanceof Error ? e.message : tc("errorGeneric"));
     } finally {
       setLoading(false);
     }
@@ -136,7 +137,7 @@ export function AutomationSettings({
         throw new Error(b.error ?? `HTTP ${res.status}`);
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : "error");
+      setError(e instanceof Error ? e.message : tc("errorGeneric"));
     } finally {
       setRunning(false);
     }

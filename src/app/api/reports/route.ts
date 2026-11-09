@@ -10,6 +10,7 @@ export async function GET(request: Request) {
     const fromStr = url.searchParams.get("from");
     const toStr = url.searchParams.get("to");
     const targetUserId = url.searchParams.get("userId") ?? undefined;
+    const locale = url.searchParams.get("locale") === "en" ? "en" : "de";
 
     if (!fromStr || !toStr) {
       return NextResponse.json({ error: "from and to required" }, { status: 400 });
@@ -34,7 +35,7 @@ export async function GET(request: Request) {
     }
 
     if (format === "excel") {
-      const buf = toExcel(data);
+      const buf = toExcel({ ...data, locale });
       return new NextResponse(new Uint8Array(buf), {
         status: 200,
         headers: {
@@ -45,7 +46,7 @@ export async function GET(request: Request) {
     }
 
     if (format === "pdf") {
-      const buf = await toPdf(data);
+      const buf = await toPdf({ ...data, locale });
       return new NextResponse(new Uint8Array(buf), {
         status: 200,
         headers: {

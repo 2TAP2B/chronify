@@ -9,6 +9,7 @@ import { Check, X } from "lucide-react";
 
 export function VacationApprovalActions({ requestId }: { requestId: string }) {
   const t = useTranslations("vacation");
+  const tc = useTranslations("common");
   const confirm = useConfirm();
   const [note, setNote] = useState("");
   const [loading, setLoading] = useState<null | "approve" | "reject">(null);
@@ -35,12 +36,12 @@ export function VacationApprovalActions({ requestId }: { requestId: string }) {
       if (!res.ok) {
         const b = (await res.json().catch(() => ({}))) as { error?: string; code?: string };
         if (b.code === "INSUFFICIENT_ENTITLEMENT") setError(t("insufficientError"));
-        else setError(b.error ?? "error");
+        else setError(b.error ?? tc("errorGeneric"));
         return;
       }
       window.location.reload();
     } catch {
-      setError("error");
+      setError(tc("errorGeneric"));
     } finally {
       setLoading(null);
     }

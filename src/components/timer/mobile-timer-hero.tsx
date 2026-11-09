@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
+import { formatHoursDecimal } from "@/lib/duration";
 import { useTimer, useTimerInit } from "@/components/timer/use-timer";
 import { Button } from "@/components/ui/button";
 import { Play, Square, Coffee } from "lucide-react";
@@ -70,7 +71,7 @@ export function MobileTimerHero({ userName, todayWorkedMs, todayTargetHours, loc
         <div className="font-mono text-6xl font-bold tabular-nums tracking-tight">{timeStr}</div>
         {targetHours > 0 && (
           <p className="text-xs text-muted-foreground">
-            {t("dailyTarget")}: {targetHours.toFixed(1)} h · {progressPct}%
+            {t("dailyTarget")}: {formatHoursDecimal(targetHours, localeStr, 1)} h · {progressPct}%
           </p>
         )}
       </div>

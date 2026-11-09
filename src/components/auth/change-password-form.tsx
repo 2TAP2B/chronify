@@ -11,6 +11,7 @@ import { AlertCircle, CheckCircle2 } from "lucide-react";
 
 export function ChangePasswordForm({ locale }: { locale: string }) {
   const t = useTranslations("changePassword");
+  const tc = useTranslations("common");
   const router = useRouter();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -46,7 +47,7 @@ export function ChangePasswordForm({ locale }: { locale: string }) {
         if (code === "wrong_password") {
           setError(t("errorCurrent"));
         } else {
-          setError((data as { error?: string }).error ?? "error");
+          setError((data as { error?: string }).error ?? tc("errorGeneric"));
         }
         return;
       }
@@ -56,7 +57,7 @@ export function ChangePasswordForm({ locale }: { locale: string }) {
         router.refresh();
       }, 1500);
     } catch {
-      setError("error");
+      setError(tc("errorGeneric"));
     } finally {
       setLoading(false);
     }

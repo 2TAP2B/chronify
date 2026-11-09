@@ -16,6 +16,7 @@ export function UserToggleActive({
   isSelf: boolean;
 }) {
   const t = useTranslations("adminUsers");
+  const tc = useTranslations("common");
   const confirm = useConfirm();
   const [, startTransition] = useTransition();
 
@@ -40,12 +41,12 @@ export function UserToggleActive({
         const b = await res.json().catch(() => ({}));
         const code = (b as { code?: string }).code;
         await confirm({
-          title: "Fehler",
+          title: tc("error"),
           description:
             code === "SELF_DEACTIVATE"
               ? t("cannotDeactivateSelf")
-              : ((b as { error?: string }).error ?? "error"),
-          confirmLabel: "OK",
+              : ((b as { error?: string }).error ?? tc("errorGeneric")),
+          confirmLabel: tc("ok"),
         });
         return;
       }

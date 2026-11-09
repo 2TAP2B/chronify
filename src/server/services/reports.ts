@@ -3,7 +3,7 @@ import { type SessionUser } from "@/server/context";
 import { formatInZone } from "@/lib/datetime";
 import { workedMsFromEntry } from "@/server/services/overtime";
 import { msToSignedHours } from "@/lib/overtime/calculate";
-import { decimalHoursToHMM } from "@/lib/duration";
+import { decimalHoursToHMM, formatHoursDecimal } from "@/lib/duration";
 import Papa from "papaparse";
 import * as XLSX from "xlsx";
 import React from "react";
@@ -108,6 +108,7 @@ export function toExcel(data: {
   rows: ReportRow[];
   userName: string;
   range: { from: string; to: string };
+  locale?: string;
 }): Buffer {
   const wsData: (string | number)[][] = [
     [
@@ -134,7 +135,17 @@ export function toExcel(data: {
     ]),
   ];
   const totalHours = data.rows.reduce((s, r) => s + r.workedHours, 0);
-  wsData.push(["", "", "", "", "", "Gesamt", totalHours.toFixed(2), "", ""]);
+  wsData.push([
+    "",
+    "",
+    "",
+    "",
+    "",
+    data.locale === "en" ? "Total" : "Gesamt",
+    Number(totalHours.toFixed(2)),
+    "",
+    "",
+  ]);
 
   const ws = XLSX.utils.aoa_to_sheet(wsData);
   ws["!cols"] = [
@@ -269,7 +280,9 @@ export async function toPdfExport(data: {
   rows: ReportRow[];
   userName: string;
   range: { from: string; to: string };
+  locale?: string;
 }): Promise<Buffer> {
+  const locale = data.locale ?? "de";
   const totalHours = data.rows.reduce((s, r) => s + r.workedHours, 0);
   const settings = await db.orgSettings.findUniqueOrThrow({ where: { id: "singleton" } });
   const appName = settings.appName || "Chronify";
@@ -358,7 +371,7 @@ export async function toPdfExport(data: {
               row.startAt ?? "—",
               row.endAt ?? "—",
               row.breakMinutes > 0 ? String(row.breakMinutes) : "—",
-              row.workedHours > 0 ? row.workedHours.toFixed(2) : "—",
+              row.workedHours > 0 ? formatHoursDecimal(row.workedHours, locale) : "—",
               row.note ?? "—",
             ].map((cell, j) =>
               React.createElement(
@@ -378,7 +391,7 @@ export async function toPdfExport(data: {
           React.createElement(
             Text,
             { style: { width: "70%", paddingLeft: 0, fontSize: 9, fontWeight: "bold" } },
-            "Gesamt"
+            locale === "en" ? "Total" : "Gesamt"
           ),
           React.createElement(
             Text,

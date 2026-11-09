@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
+import { formatHoursDecimal } from "@/lib/duration";
 import {
   CalendarDays,
   ChevronLeft,
@@ -100,6 +101,7 @@ function useSaveFeedback() {
 /** -------------------------------------------------------------- profile */
 function ProfileSection({ user }: { user: AdminUser }) {
   const t = useTranslations("adminUsers");
+  const tc = useTranslations("common");
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
@@ -148,13 +150,15 @@ function ProfileSection({ user }: { user: AdminUser }) {
       });
       if (!res.ok) {
         const b = (await res.json().catch(() => ({}))) as { error?: string; code?: string };
-        throw new Error(b.code === "EMAIL_TAKEN" ? t("emailTaken") : (b.error ?? "error"));
+        throw new Error(
+          b.code === "EMAIL_TAKEN" ? t("emailTaken") : (b.error ?? tc("errorGeneric"))
+        );
       }
       setMsg(t("saveOk"));
       setPassword("");
       router.refresh();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "error");
+      setError(e instanceof Error ? e.message : tc("errorGeneric"));
     } finally {
       setSaving(false);
     }
@@ -302,7 +306,9 @@ function WorkingModelSection({
   workingModel: WorkingModelRecord;
 }) {
   const tWm = useTranslations("adminWorkingModels");
+  const tc = useTranslations("common");
   const t = useTranslations("adminUsers");
+  const locale = useLocale();
   const router = useRouter();
   const [templates, setTemplates] = useState<Template[]>([]);
   const [selected, setSelected] = useState("");
@@ -334,12 +340,12 @@ function WorkingModelSection({
       });
       if (!res.ok) {
         const b = await res.json().catch(() => ({}));
-        throw new Error(b.error ?? "error");
+        throw new Error(b.error ?? tc("errorGeneric"));
       }
       setMsg(t("saveOk"));
       router.refresh();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "error");
+      setError(e instanceof Error ? e.message : tc("errorGeneric"));
     } finally {
       setSaving(false);
     }
@@ -381,7 +387,8 @@ function WorkingModelSection({
                     {tpl.name}
                   </Label>
                   <p className="text-xs text-muted-foreground">
-                    {tWm("weeklyTarget")}: {(tpl.weeklyTargetMinutes / 60).toFixed(1)} h
+                    {tWm("weeklyTarget")}:{" "}
+                    {formatHoursDecimal(tpl.weeklyTargetMinutes / 60, locale, 1)} h
                   </p>
                 </div>
               </div>
@@ -401,6 +408,7 @@ function WorkingModelSection({
 /**--------------- vacation entitlement */
 function EntitlementSection({ userId }: { userId: string }) {
   const t = useTranslations("adminUsers");
+  const tc = useTranslations("common");
   const router = useRouter();
   const year = currentYear();
   const [totalDays, setTotalDays] = useState("30");
@@ -437,12 +445,12 @@ function EntitlementSection({ userId }: { userId: string }) {
       });
       if (!res.ok) {
         const b = await res.json().catch(() => ({}));
-        throw new Error(b.error ?? "error");
+        throw new Error(b.error ?? tc("errorGeneric"));
       }
       setMsg(t("saveOk"));
       router.refresh();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "error");
+      setError(e instanceof Error ? e.message : tc("errorGeneric"));
     } finally {
       setSaving(false);
     }
@@ -486,6 +494,7 @@ function EntitlementSection({ userId }: { userId: string }) {
 /**--------------- notification prefs */
 function NotificationsSection({ user }: { user: AdminUser }) {
   const t = useTranslations("adminUsers");
+  const tc = useTranslations("common");
   const router = useRouter();
   const [sick, setSick] = useState(user.sickMailEnabled !== false);
   const [vacation, setVacation] = useState(user.vacationMailEnabled !== false);
@@ -505,12 +514,12 @@ function NotificationsSection({ user }: { user: AdminUser }) {
       });
       if (!res.ok) {
         const b = await res.json().catch(() => ({}));
-        throw new Error(b.error ?? "error");
+        throw new Error(b.error ?? tc("errorGeneric"));
       }
       setMsg(t("saveOk"));
       router.refresh();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "error");
+      setError(e instanceof Error ? e.message : tc("errorGeneric"));
     } finally {
       setSaving(false);
     }
@@ -553,12 +562,12 @@ function NotificationsSection({ user }: { user: AdminUser }) {
               });
               if (!res.ok) {
                 const b = await res.json().catch(() => ({}));
-                throw new Error(b.error ?? "error");
+                throw new Error(b.error ?? tc("errorGeneric"));
               }
               setMsg(t("saveOk"));
               router.refresh();
             } catch (e) {
-              setError(e instanceof Error ? e.message : "error");
+              setError(e instanceof Error ? e.message : tc("errorGeneric"));
             } finally {
               setSaving(false);
             }
@@ -574,6 +583,7 @@ function NotificationsSection({ user }: { user: AdminUser }) {
 /*--------------- overtime */
 function OvertimeSection({ userId }: { userId: string }) {
   const t = useTranslations("adminUsers");
+  const tc = useTranslations("common");
   const router = useRouter();
   const year = currentYear();
   const [carriedOver, setCarriedOver] = useState("00:00");
@@ -616,12 +626,12 @@ function OvertimeSection({ userId }: { userId: string }) {
       });
       if (!res.ok) {
         const b = await res.json().catch(() => ({}));
-        throw new Error(b.error ?? "error");
+        throw new Error(b.error ?? tc("errorGeneric"));
       }
       setMsg(t("saveOk"));
       router.refresh();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "error");
+      setError(e instanceof Error ? e.message : tc("errorGeneric"));
     } finally {
       setSaving(false);
     }
@@ -685,6 +695,7 @@ type RemoteTimerStatus = {
 
 function RemoteTimerSection({ userId, active }: { userId: string; active: boolean }) {
   const t = useTranslations("adminUsers");
+  const tc = useTranslations("common");
   const [status, setStatus] = useState<RemoteTimerStatus | null>(null);
   const [running, setRunning] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -746,7 +757,7 @@ function RemoteTimerSection({ userId, active }: { userId: string; active: boolea
       setStartTime("");
       await load();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "error");
+      setError(e instanceof Error ? e.message : tc("errorGeneric"));
     } finally {
       setBusy(false);
     }
@@ -767,7 +778,7 @@ function RemoteTimerSection({ userId, active }: { userId: string; active: boolea
       }
       await load();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "error");
+      setError(e instanceof Error ? e.message : tc("errorGeneric"));
     } finally {
       setBusy(false);
     }
@@ -848,6 +859,7 @@ function AccountSection({
   listHref: string;
 }) {
   const t = useTranslations("adminUsers");
+  const tc = useTranslations("common");
   const confirm = useConfirm();
   const router = useRouter();
   const [busy, setBusy] = useState(false);
@@ -872,12 +884,12 @@ function AccountSection({
       if (!res.ok) {
         const b = await res.json().catch(() => ({}));
         await confirm({
-          title: "Fehler",
+          title: tc("error"),
           description:
             (b as { code?: string }).code === "SELF_DEACTIVATE"
               ? t("cannotDeactivateSelf")
-              : ((b as { error?: string }).error ?? "error"),
-          confirmLabel: "OK",
+              : ((b as { error?: string }).error ?? tc("errorGeneric")),
+          confirmLabel: tc("ok"),
         });
       }
       router.refresh();
@@ -901,12 +913,12 @@ function AccountSection({
       if (!res.ok) {
         const b = await res.json().catch(() => ({}));
         await confirm({
-          title: "Fehler",
+          title: tc("error"),
           description:
             (b as { code?: string }).code === "HAS_DEPENDENCIES"
               ? t("hasDependencies")
-              : ((b as { error?: string }).error ?? "error"),
-          confirmLabel: "OK",
+              : ((b as { error?: string }).error ?? tc("errorGeneric")),
+          confirmLabel: tc("ok"),
         });
         return;
       }
@@ -957,6 +969,7 @@ export function UserDetail({
 }) {
   const locale = useLocale();
   const t = useTranslations("adminUsers");
+  const tc = useTranslations("common");
   const listHref = `/${locale}/admin/users`;
 
   return (

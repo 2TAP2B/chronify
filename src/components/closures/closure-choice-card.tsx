@@ -15,6 +15,7 @@ export function ClosureChoiceCard({
   name: string;
 }) {
   const t = useTranslations("closureChoices");
+  const tc = useTranslations("common");
   const [choice, setChoice] = useState(currentChoice);
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -33,7 +34,7 @@ export function ClosureChoiceCard({
       } else {
         const b = (await res.json().catch(() => ({}))) as { error?: string; code?: string };
         if (b.code === "INSUFFICIENT_ENTITLEMENT") setError(t("insufficientVacation"));
-        else setError(b.error ?? "error");
+        else setError(b.error ?? tc("errorGeneric"));
       }
     });
   }

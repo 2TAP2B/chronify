@@ -19,6 +19,7 @@ type BrandingForm = {
 
 export function BrandingSettings({ settings }: { settings: BrandingForm }) {
   const t = useTranslations("branding");
+  const tc = useTranslations("common");
   const [form, setForm] = useState<BrandingForm>(settings);
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
@@ -78,12 +79,12 @@ export function BrandingSettings({ settings }: { settings: BrandingForm }) {
       });
       if (!res.ok) {
         const b = await res.json().catch(() => ({}));
-        setError((b as { error?: string }).error ?? "error");
+        setError((b as { error?: string }).error ?? tc("errorGeneric"));
         return;
       }
       setMsg(t("saved"));
     } catch {
-      setError("error");
+      setError(tc("errorGeneric"));
     } finally {
       setLoading(false);
     }
@@ -207,7 +208,7 @@ export function BrandingSettings({ settings }: { settings: BrandingForm }) {
               onChange={(e) => setForm({ ...form, loginQuote: e.target.value || null })}
               maxLength={200}
               rows={3}
-              placeholder="Erfassen Sie Ihre Arbeitszeit einfach und präzise – nach deutschen Arbeitsgesetzen."
+              placeholder={t("loginQuotePlaceholder")}
             />
             <p className="text-xs text-muted-foreground">{t("loginQuoteHint")}</p>
           </div>

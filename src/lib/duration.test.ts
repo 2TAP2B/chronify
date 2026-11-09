@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseHMM, formatMinutesHMM, decimalHoursToHMM } from "./duration";
+import { parseHMM, formatMinutesHMM, decimalHoursToHMM, formatHoursDecimal } from "./duration";
 
 describe("parseHMM", () => {
   it("parses h:mm", () => {
@@ -40,5 +40,17 @@ describe("decimalHoursToHMM", () => {
     expect(decimalHoursToHMM(7.5)).toBe("7:30");
     expect(decimalHoursToHMM(7.77)).toBe("7:46"); // 7h46m20s → display 7:46
     expect(decimalHoursToHMM(0)).toBe("0:00");
+  });
+});
+
+describe("formatHoursDecimal", () => {
+  it("uses a decimal comma for de", () => {
+    expect(formatHoursDecimal(7.5, "de")).toBe("7,50");
+  });
+  it("uses a decimal point for en", () => {
+    expect(formatHoursDecimal(7.5, "en")).toBe("7.50");
+  });
+  it("respects digits", () => {
+    expect(formatHoursDecimal(38.5, "de", 1)).toBe("38,5");
   });
 });

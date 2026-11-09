@@ -20,7 +20,12 @@
     "month": "Monat",
     "year": "Jahr",
     "privacy": "Datenschutz",
-    "imprint": "Impressum"
+    "imprint": "Impressum",
+    "error": "Fehler",
+    "errorGeneric": "Etwas ist schiefgelaufen. Bitte versuche es erneut.",
+    "ok": "OK",
+    "total": "Gesamt",
+    "hoursMinutesHint": "(h:mm)"
   },
   "nav": {
     "mobileNavAria": "Hauptnavigation",
@@ -55,32 +60,32 @@
   },
   "auth": {
     "loginTitle": "Anmelden",
-    "loginSubtitle": "Melden Sie sich bei Ihrem Konto an",
+    "loginSubtitle": "Melde dich bei deinem Konto an",
     "passwordLoginDisabledHint": "Passwort-Anmeldung ist deaktiviert — bitte über SSO/OIDC anmelden. Falls SSO nicht verfügbar ist, wende dich an die Verwaltung.",
     "email": "E-Mail",
     "emailOrUsername": "E-Mail oder Benutzername",
     "password": "Passwort",
     "loginButton": "Anmelden",
     "loginError": "E-Mail oder Passwort ist falsch",
-    "logoutSuccess": "Sie wurden abgemeldet",
-    "loginQuote": "Erfassen Sie Ihre Arbeitszeit einfach und präzise – nach deutschen Arbeitsgesetzen.",
+    "logoutSuccess": "Du wurdest abgemeldet",
+    "loginQuote": "Erfasse deine Arbeitszeit einfach und präzise – nach deutschen Arbeitsgesetzen.",
     "oidcLogin": "Mit Pocket-ID anmelden",
     "or": "oder",
     "forgotPassword": "Passwort vergessen?",
     "forgotPasswordTitle": "Passwort zurücksetzen",
-    "forgotPasswordDescription": "Geben Sie Ihre E-Mail-Adresse ein. Wir senden Ihnen einen Link zum Zurücksetzen Ihres Passworts.",
+    "forgotPasswordDescription": "Gib deine E-Mail-Adresse ein. Wir senden dir einen Link zum Zurücksetzen deines Passworts.",
     "forgotPasswordButton": "Link senden",
     "forgotPasswordSent": "Falls die E-Mail existiert, wurde ein Link zum Zurücksetzen versendet.",
     "resetPasswordTitle": "Neues Passwort festlegen",
-    "resetPasswordDescription": "Geben Sie Ihr neues Passwort ein.",
+    "resetPasswordDescription": "Gib dein neues Passwort ein.",
     "resetPasswordButton": "Passwort festlegen",
-    "resetPasswordSuccess": "Passwort wurde zurückgesetzt. Sie können sich jetzt anmelden.",
+    "resetPasswordSuccess": "Passwort wurde zurückgesetzt. Du kannst dich jetzt anmelden.",
     "resetPasswordInvalid": "Link ungültig oder abgelaufen.",
     "backToLogin": "Zurück zur Anmeldung"
   },
   "changePassword": {
     "title": "Passwort ändern",
-    "description": "Bitte ändern Sie Ihr Passwort bei der ersten Anmeldung.",
+    "description": "Bitte ändere dein Passwort bei der ersten Anmeldung.",
     "current": "Aktuelles Passwort",
     "new": "Neues Passwort",
     "confirm": "Passwort bestätigen",
@@ -145,8 +150,8 @@
     "errorBreak": "Pause konnte nicht gestartet werden"
   },
   "arbzg": {
-    "approachingMax": "Hinweis: Sie haben heute mehr als 8 Stunden gearbeitet. Ab 10 Stunden ist die gesetzliche Höchstarbeitszeit erreicht (§3 ArbZG).",
-    "exceededMax": "Warnung: Die gesetzliche Höchstarbeitszeit von 10 Stunden pro Tag wurde überschritten (§3 ArbZG). Bitte informieren Sie Ihren Vorgesetzten.",
+    "approachingMax": "Hinweis: Du hast heute mehr als 8 Stunden gearbeitet. Ab 10 Stunden ist die gesetzliche Höchstarbeitszeit erreicht (§3 ArbZG).",
+    "exceededMax": "Warnung: Die gesetzliche Höchstarbeitszeit von 10 Stunden pro Tag wurde überschritten (§3 ArbZG). Bitte informiere deine Führungskraft.",
     "restPeriodShort": "Warnung: Seit dem Ende der letzten Schicht sind noch keine 11 Stunden Ruhezeit vergangen (§5 ArbZG)."
   },
   "timesheet": {
@@ -176,7 +181,7 @@
     "noEntries": "Keine Einträge an diesem Tag",
     "total": "Gesamt",
     "locked": "Gesperrt",
-    "lockedHint": "Einträge älter als {days} Tage sind gesperrt. Wenden Sie sich an einen Administrator.",
+    "lockedHint": "Einträge älter als {days} Tage sind gesperrt. Wende dich an einen Administrator.",
     "confirmDelete": "Eintrag wirklich löschen?",
     "types": {
       "WORK": "Arbeit",
@@ -388,7 +393,7 @@
     "lastLogin": "Letzte Anmeldung",
     "noUsers": "Keine Benutzer vorhanden",
     "confirmDeactivate": "Benutzer wirklich deaktivieren?",
-    "cannotDeactivateSelf": "Sie können sich nicht selbst deaktivieren",
+    "cannotDeactivateSelf": "Du kannst dich nicht selbst deaktivieren",
     "emailTaken": "E-Mail-Adresse bereits vergeben",
     "actions": "Aktionen",
     "groupUser": "Benutzer",
@@ -410,7 +415,8 @@
     "computedThisYear": "Dieses Jahr erarbeitet",
     "netBalance": "Saldo",
     "overtimeHint": "Werte in Stunden:Minuten (z.B. 08:30) oder Dezimal (8,5).",
-    "carryAutoHint": "Übertrag wird automatisch aus dem Vorjahr übernommen (Schlusssaldo) und ist hier nicht änderbar."
+    "carryAutoHint": "Übertrag wird automatisch aus dem Vorjahr übernommen (Schlusssaldo) und ist hier nicht änderbar.",
+    "passwordKeepHint": "(leer = nicht ändern)"
   },
   "adminAutomation": {
     "heading": "Automatisierung",
@@ -553,7 +559,7 @@
   "adminSettings": {
     "title": "Einstellungen",
     "appearance": "Darstellung",
-    "appearanceHint": "Wählen Sie ein Farbschema für die Anwendung.",
+    "appearanceHint": "Wähle ein Farbschema für die Anwendung.",
     "defaultFederalState": "Standard-Bundesland",
     "lockWindowDays": "Sperrfrist (Tage)",
     "autoBreakDefault": "Standard-Pausenmodus",
@@ -687,10 +693,10 @@
     "importAnother": "Weitere Datei importieren",
     "close": "Schließen",
     "howTo": "So funktioniert's",
-    "step1": "Wählen Sie den Mitarbeiter aus, für den Sie Daten importieren möchten.",
-    "step2": "Laden Sie eine CSV-Datei hoch (mit Kopfzeile).",
-    "step3": "Ordnen Sie die Spalten zu (Datum, Start, Ende).",
-    "step4": "Bestätigen Sie den Import — Duplikate werden automatisch übersprungen."
+    "step1": "Wähle den Mitarbeiter aus, für den du Daten importieren möchtest.",
+    "step2": "Lade eine CSV-Datei hoch (mit Kopfzeile).",
+    "step3": "Ordne die Spalten zu (Datum, Start, Ende).",
+    "step4": "Bestätige den Import — Duplikate werden automatisch übersprungen."
   },
   "theme": {
     "modeLight": "Hell",
@@ -708,7 +714,7 @@
   "profile": {
     "title": "Profil",
     "personalData": "Persönliche Daten",
-    "personalDataHint": "Bearbeiten Sie Ihren Vor- und Nachnamen. Benutzername und Anzeigename werden daraus automatisch abgeleitet.",
+    "personalDataHint": "Bearbeite deinen Vor- und Nachnamen. Benutzername und Anzeigename werden daraus automatisch abgeleitet.",
     "firstName": "Vorname",
     "lastName": "Nachname",
     "email": "E-Mail",
@@ -731,15 +737,15 @@
     "saved": "Gespeichert.",
     "saving": "Speichert …",
     "cancel": "Abbrechen",
-    "nameRequired": "Bitte geben Sie mindestens Vor- oder Nachnamen an.",
+    "nameRequired": "Bitte gib mindestens Vor- oder Nachnamen an.",
     "readOnlyHint": "E-Mail-Adresse, Benutzername und NFC-Karten-ID können nur von der Verwaltung geändert werden.",
     "passwordTitle": "Passwort",
-    "passwordHint": "Ändern Sie Ihr Passwort regelmäßig für mehr Sicherheit.",
+    "passwordHint": "Ändere dein Passwort regelmäßig für mehr Sicherheit.",
     "changePassword": "Passwort ändern →",
     "appearance": "Darstellung",
-    "appearanceHint": "Wählen Sie ein Farbschema für die Anwendung.",
+    "appearanceHint": "Wähle ein Farbschema für die Anwendung.",
     "oidcLink": "Pocket-ID",
-    "oidcLinkHint": "Verknüpfen Sie Ihr Pocket-ID-Konto für passwortloses Anmelden.",
+    "oidcLinkHint": "Verknüpfe dein Pocket-ID-Konto für passwortloses Anmelden.",
     "oidcLinked": "ist verknüpft",
     "oidcNotLinked": "Nicht verknüpft",
     "oidcLinkButton": "Pocket-ID verknüpfen",
@@ -747,7 +753,7 @@
     "oidcUnlinkConfirm": "Pocket-ID-Verknüpfung wirklich trennen?",
     "dataTitle": "Meine Daten",
     "dataHint": "DSGVO-Auskunft und Datenübertragbarkeit (Art. 15/20 DSGVO).",
-    "dataExportDescription": "Alle Ihre Daten als JSON-Datei herunterladen."
+    "dataExportDescription": "Alle deine Daten als JSON-Datei herunterladen."
   },
   "adminAuditLog": {
     "title": "Audit-Protokoll",
@@ -798,7 +804,7 @@
     "rangeRequired": "Bitte Zeitraum auswählen",
     "personalReport": "Persönlicher Bericht",
     "adminReport": "Admin-Bericht (alle Benutzer)",
-    "hint": "Wählen Sie einen Zeitraum und ein Format zum Exportieren"
+    "hint": "Wähle einen Zeitraum und ein Format zum Exportieren"
   },
   "notFound": {
     "title": "Seite nicht gefunden",
@@ -846,14 +852,14 @@
   },
   "branding": {
     "sectionBranding": "Branding",
-    "sectionBrandingHint": "Passen Sie Name und Logo der Anwendung an.",
+    "sectionBrandingHint": "Passe Name und Logo der Anwendung an.",
     "appName": "App-Name",
     "appNameHint": "Maximal 50 Zeichen. Wird in der Sidebar und auf der Login-Seite angezeigt.",
     "logo": "Logo",
     "logoHint": "SVG, PNG oder JPG. Maximal 200 KB. Wird in der Sidebar und auf der Login-Seite angezeigt.",
     "logoTooLarge": "Logo ist zu groß (max. 200 KB).",
     "sectionLogin": "Login-Seite",
-    "sectionLoginHint": "Passen Sie das Bild und den Spruch auf der Login-Seite an.",
+    "sectionLoginHint": "Passe das Bild und den Spruch auf der Login-Seite an.",
     "loginImage": "Hintergrundbild",
     "loginImageHint": "SVG, PNG, JPG oder WebP. Maximal 500 KB. Wird als Hintergrund auf der rechten Seite der Login-Karte angezeigt.",
     "imageTooLarge": "Bild ist zu groß (max. 500 KB).",
@@ -864,7 +870,8 @@
     "upload": "Hochladen",
     "remove": "Entfernen",
     "save": "Speichern",
-    "saved": "Branding gespeichert."
+    "saved": "Branding gespeichert.",
+    "loginQuotePlaceholder": "Erfasse deine Arbeitszeit einfach und präzise – nach deutschen Arbeitsgesetzen."
   },
   "legal": {
     "privacyTitle": "Datenschutzerklärung",
@@ -881,14 +888,14 @@
     "privacyPurposeDesc": "Die Verarbeitung erfolgt zur Durchführung des Arbeitsvertrags (Art. 6 Abs. 1 lit. b DSGVO) und zur Erfüllung gesetzlicher Aufzeichnungspflichten nach dem Arbeitszeitgesetz (ArbZG §16). Die Verarbeitung von Gesundheitsdaten erfolgt auf Grundlage von Art. 9 Abs. 2 lit. b DSGVO.",
     "privacyRetentionTitle": "Aufbewahrungsfrist",
     "privacyRetentionDesc": "Arbeitszeitdaten werden {years} Jahre aufbewahrt und danach gelöscht. Krankmeldungen werden nach 12 Monaten gelöscht. Audit-Logs nach 6 Monaten.",
-    "privacyRightsTitle": "Ihre Rechte",
+    "privacyRightsTitle": "Deine Rechte",
     "privacyRightAccess": "Auskunft (Art. 15 DSGVO)",
     "privacyRightRectification": "Berichtigung (Art. 16 DSGVO)",
     "privacyRightErasure": "Löschung (Art. 17 DSGVO)",
     "privacyRightPortability": "Datenübertragbarkeit (Art. 20 DSGVO)",
     "privacyRightObject": "Widerspruch (Art. 21 DSGVO)",
     "privacyComplaintTitle": "Beschwerderecht",
-    "privacyComplaintDesc": "Sie haben das Recht, sich bei einer Aufsichtsbehörde zu beschweren.",
+    "privacyComplaintDesc": "Du hast das Recht, dich bei einer Aufsichtsbehörde zu beschweren.",
     "imprintTitle": "Impressum",
     "imprintNameLabel": "Name",
     "imprintAddressLabel": "Anschrift",

@@ -8,6 +8,7 @@ import { Trash2 } from "lucide-react";
 
 export function WorkingModelDelete({ modelId }: { modelId: string }) {
   const t = useTranslations("adminWorkingModels");
+  const tc = useTranslations("common");
   const confirm = useConfirm();
   const [, startTransition] = useTransition();
   async function del() {
@@ -24,9 +25,9 @@ export function WorkingModelDelete({ modelId }: { modelId: string }) {
       if (!res.ok) {
         const b = await res.json().catch(() => ({}));
         await confirm({
-          title: "Fehler",
-          description: (b as { error?: string }).error ?? "error",
-          confirmLabel: "OK",
+          title: tc("error"),
+          description: (b as { error?: string }).error ?? tc("errorGeneric"),
+          confirmLabel: tc("ok"),
         });
         return;
       }

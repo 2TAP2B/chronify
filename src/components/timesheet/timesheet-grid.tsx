@@ -66,6 +66,7 @@ export function TimesheetGrid({
   isAdmin?: boolean;
 }) {
   const t = useTranslations("timesheet");
+  const tc = useTranslations("common");
   const confirm = useConfirm();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<GridEntry | null>(null);
@@ -107,9 +108,9 @@ export function TimesheetGrid({
       if (!res.ok) {
         const b = await res.json().catch(() => ({}));
         await confirm({
-          title: "Fehler",
-          description: (b as { error?: string }).error ?? "error",
-          confirmLabel: "OK",
+          title: tc("error"),
+          description: (b as { error?: string }).error ?? tc("errorGeneric"),
+          confirmLabel: tc("ok"),
         });
       }
       window.location.reload();

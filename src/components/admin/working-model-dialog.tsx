@@ -40,6 +40,7 @@ export function WorkingModelDialog({
   model?: WorkingModel;
 }) {
   const t = useTranslations("adminWorkingModels");
+  const tc = useTranslations("common");
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -99,13 +100,13 @@ export function WorkingModelDialog({
       });
       if (!res.ok) {
         const b = await res.json().catch(() => ({}));
-        setError((b as { error?: string }).error ?? "error");
+        setError((b as { error?: string }).error ?? tc("errorGeneric"));
         return;
       }
       setOpen(false);
       window.location.reload();
     } catch {
-      setError("error");
+      setError(tc("errorGeneric"));
     } finally {
       setLoading(false);
     }
@@ -148,7 +149,9 @@ export function WorkingModelDialog({
           <div className="grid grid-cols-4 gap-3">
             {DAYS.map((d) => (
               <div key={d} className="space-y-1.5">
-                <Label htmlFor={d}>{t(d as never)} (h:mm)</Label>
+                <Label htmlFor={d}>
+                  {t(d as never)} {tc("hoursMinutesHint")}
+                </Label>
                 <Input
                   id={d}
                   type="text"
@@ -160,7 +163,9 @@ export function WorkingModelDialog({
               </div>
             ))}
             <div className="space-y-1.5">
-              <Label htmlFor="weeklyTarget">{t("weeklyTarget")} (h:mm)</Label>
+              <Label htmlFor="weeklyTarget">
+                {t("weeklyTarget")} {tc("hoursMinutesHint")}
+              </Label>
               <Input
                 id="weeklyTarget"
                 type="text"
@@ -191,7 +196,9 @@ export function WorkingModelDialog({
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="halfDay">{t("halfDayHours")} (h:mm)</Label>
+              <Label htmlFor="halfDay">
+                {t("halfDayHours")} {tc("hoursMinutesHint")}
+              </Label>
               <Input
                 id="halfDay"
                 type="text"

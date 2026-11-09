@@ -36,6 +36,7 @@ export function TemplateDialog({
   template?: WorkingModelTemplate;
 }) {
   const t = useTranslations("adminWorkingModels");
+  const tc = useTranslations("common");
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -89,13 +90,13 @@ export function TemplateDialog({
       if (!res.ok) {
         const b = await res.json().catch(() => ({}));
         if ((b as { code?: string }).code === "NAME_TAKEN") setError(t("nameTaken"));
-        else setError((b as { error?: string }).error ?? "error");
+        else setError((b as { error?: string }).error ?? tc("errorGeneric"));
         return;
       }
       setOpen(false);
       window.location.reload();
     } catch {
-      setError("error");
+      setError(tc("errorGeneric"));
     } finally {
       setLoading(false);
     }
@@ -127,7 +128,7 @@ export function TemplateDialog({
             {DAYS.map((d) => (
               <div key={d.key} className="space-y-1">
                 <Label htmlFor={d.key} className="text-xs">
-                  {d.label} (h:mm)
+                  {d.label} {tc("hoursMinutesHint")}
                 </Label>
                 <Input
                   id={d.key}
@@ -143,7 +144,9 @@ export function TemplateDialog({
           </div>
           <div className="grid grid-cols-3 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="weekly-target">{t("weeklyTarget")} (h:mm)</Label>
+              <Label htmlFor="weekly-target">
+                {t("weeklyTarget")} {tc("hoursMinutesHint")}
+              </Label>
               <Input
                 id="weekly-target"
                 type="text"
