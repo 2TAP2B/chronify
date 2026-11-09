@@ -3,7 +3,7 @@ import { audit, getUserContext, type SessionUser } from "@/server/context";
 import { sendMail } from "@/server/services/mail";
 import { sickNoteReminderEmail } from "@/lib/email-templates";
 import { businessDaysInRange, makeHolidayResolver } from "@/lib/vacation/business-days";
-import { toCalendarDate } from "@/lib/datetime";
+import { formatCalendarDate, toCalendarDate } from "@/lib/datetime";
 import { withLeaveLock } from "@/server/services/leave-balance";
 import {
   auCoveredDays,
@@ -125,11 +125,12 @@ export async function createSickNote(opts: {
     const appUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
     const appName = process.env.APP_NAME ?? "Chronify";
     const sicknessUrl = `${appUrl}/${ctx.user.locale ?? "de"}/sickness`;
+    const locale: "de" | "en" = ctx.user.locale === "en" ? "en" : "de";
     const mailContent = sickNoteReminderEmail({
-      locale: (ctx.user.locale ?? "de") as "de" | "en",
+      locale,
       appName,
       recipientName: ctx.user.name,
-      sickFrom: from.toISOString().slice(0, 10),
+      sickFrom: formatCalendarDate(from, locale),
       sicknessUrl,
     });
     await sendMail({

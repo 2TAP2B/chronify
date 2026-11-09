@@ -84,6 +84,7 @@ function cropToDataUrl(file: File): Promise<string | null> {
 
 export function PersonalDataCard({ profile }: { profile: OwnProfileView }) {
   const t = useTranslations("profile");
+  const tc = useTranslations("common");
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -116,7 +117,7 @@ export function PersonalDataCard({ profile }: { profile: OwnProfileView }) {
       setMsg(t("saved"));
       router.refresh();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "error");
+      setError(e instanceof Error ? e.message : tc("errorGeneric"));
     } finally {
       setSaving(false);
     }
@@ -149,7 +150,7 @@ export function PersonalDataCard({ profile }: { profile: OwnProfileView }) {
       }
       router.refresh();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "error");
+      setError(e instanceof Error ? e.message : tc("errorGeneric"));
     } finally {
       setAvatarBusy(false);
     }
@@ -170,7 +171,7 @@ export function PersonalDataCard({ profile }: { profile: OwnProfileView }) {
       }
       router.refresh();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "error");
+      setError(e instanceof Error ? e.message : tc("errorGeneric"));
     } finally {
       setAvatarBusy(false);
     }

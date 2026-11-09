@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { formatHoursDecimal } from "@/lib/duration";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -24,6 +25,8 @@ export function TemplatePickerDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   const t = useTranslations("adminWorkingModels");
+  const tc = useTranslations("common");
+  const locale = useLocale();
   const [templates, setTemplates] = useState<WorkingModelTemplate[]>([]);
   const [selected, setSelected] = useState<string>("");
   const [loading, setLoading] = useState(false);
@@ -56,13 +59,13 @@ export function TemplatePickerDialog({
       });
       if (!res.ok) {
         const b = await res.json().catch(() => ({}));
-        setError((b as { error?: string }).error ?? "error");
+        setError((b as { error?: string }).error ?? tc("errorGeneric"));
         return;
       }
       onOpenChange(false);
       window.location.reload();
     } catch {
-      setError("error");
+      setError(tc("errorGeneric"));
     } finally {
       setLoading(false);
     }
@@ -87,7 +90,8 @@ export function TemplatePickerDialog({
                     {tpl.name}
                   </Label>
                   <p className="text-xs text-muted-foreground">
-                    {t("weeklyTarget")}: {(tpl.weeklyTargetMinutes / 60).toFixed(1)} h
+                    {t("weeklyTarget")}:{" "}
+                    {formatHoursDecimal(tpl.weeklyTargetMinutes / 60, locale, 1)} h
                   </p>
                 </div>
               </div>

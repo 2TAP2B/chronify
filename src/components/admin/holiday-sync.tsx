@@ -11,6 +11,7 @@ import { stateName } from "@/lib/federal-states";
 
 export function HolidaySync({ defaultFederalState }: { defaultFederalState: FederalState }) {
   const t = useTranslations("adminHolidays");
+  const tc = useTranslations("common");
   const [loading, setLoading] = useState<"single" | "all" | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
 
@@ -27,14 +28,14 @@ export function HolidaySync({ defaultFederalState }: { defaultFederalState: Fede
       });
       if (!res.ok) {
         const b = await res.json().catch(() => ({}));
-        setMsg((b as { error?: string }).error ?? "error");
+        setMsg((b as { error?: string }).error ?? tc("errorGeneric"));
         return;
       }
       const data = await res.json();
       const total = (data.results as { upserted: number }[]).reduce((s, r) => s + r.upserted, 0);
       setMsg(t("synced", { count: total }));
     } catch {
-      setMsg("error");
+      setMsg(tc("errorGeneric"));
     } finally {
       setLoading(null);
     }

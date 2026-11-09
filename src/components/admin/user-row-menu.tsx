@@ -47,6 +47,7 @@ type User = {
 
 export function UserRowMenu({ user, isSelf }: { user: User; isSelf: boolean }) {
   const t = useTranslations("adminUsers");
+  const tc = useTranslations("common");
   const confirm = useConfirm();
   const [pending, startTransition] = useTransition();
   const [showEdit, setShowEdit] = useState(false);
@@ -76,9 +77,9 @@ export function UserRowMenu({ user, isSelf }: { user: User; isSelf: boolean }) {
         const b = await res.json().catch(() => ({}));
         if ((b as { code?: string }).code === "SELF_DEACTIVATE") {
           await confirm({
-            title: "Fehler",
+            title: tc("error"),
             description: t("cannotDeactivateSelf"),
-            confirmLabel: "OK",
+            confirmLabel: tc("ok"),
           });
         }
       }
@@ -101,12 +102,16 @@ export function UserRowMenu({ user, isSelf }: { user: User; isSelf: boolean }) {
       } else {
         const b = await res.json().catch(() => ({}));
         if ((b as { code?: string }).code === "HAS_DEPENDENCIES") {
-          await confirm({ title: "Fehler", description: t("hasDependencies"), confirmLabel: "OK" });
+          await confirm({
+            title: tc("error"),
+            description: t("hasDependencies"),
+            confirmLabel: tc("ok"),
+          });
         } else {
           await confirm({
-            title: "Fehler",
-            description: (b as { error?: string }).error ?? "error",
-            confirmLabel: "OK",
+            title: tc("error"),
+            description: (b as { error?: string }).error ?? tc("errorGeneric"),
+            confirmLabel: tc("ok"),
           });
         }
       }

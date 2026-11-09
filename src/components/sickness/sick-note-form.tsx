@@ -25,6 +25,7 @@ export function SickNoteForm({
   employees?: { id: string; name: string; email: string }[];
 }) {
   const t = useTranslations("sickness");
+  const tc = useTranslations("common");
   const [userId, setUserId] = useState("");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
@@ -52,12 +53,12 @@ export function SickNoteForm({
       });
       if (!res.ok) {
         const b = await res.json().catch(() => ({}));
-        setError((b as { error?: string }).error ?? "error");
+        setError((b as { error?: string }).error ?? tc("errorGeneric"));
         return;
       }
       window.location.reload();
     } catch {
-      setError("error");
+      setError(tc("errorGeneric"));
     } finally {
       setLoading(false);
     }

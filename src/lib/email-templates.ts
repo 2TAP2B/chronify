@@ -77,13 +77,13 @@ export function passwordResetEmail(opts: {
   const greeting = t(locale, "Hallo", "Hello");
   const intro = t(
     locale,
-    "Sie haben die Zurücksetzung Ihres Passworts angefordert. Klicken Sie auf den untenstehenden Link, um ein neues Passwort festzulegen:",
+    "Du hast die Zurücksetzung deines Passworts angefordert. Klicke auf den Link unten, um ein neues Passwort festzulegen:",
     "You requested a password reset. Click the link below to set a new password:"
   );
   const btnText = t(locale, "Passwort zurücksetzen", "Reset password");
   const expiry = t(
     locale,
-    "Dieser Link ist 1 Stunde gültig. Falls Sie diese E-Mail nicht angefordert haben, können Sie diese Nachricht ignorieren.",
+    "Dieser Link ist 1 Stunde gültig. Falls du diese E-Mail nicht angefordert hast, kannst du sie ignorieren.",
     "This link is valid for 1 hour. If you did not request this email, you can safely ignore it."
   );
   const subject = t(locale, "Passwort zurücksetzen", "Reset your password");
@@ -112,7 +112,7 @@ export function vacationApprovedEmail(opts: {
   const greeting = t(locale, "Hallo", "Hello");
   const intro = t(
     locale,
-    "Ihr Urlaubsantrag wurde genehmigt.",
+    "Dein Urlaubsantrag wurde genehmigt.",
     "Your vacation request has been approved."
   );
   const detailDays = t(locale, "Tage", "days");
@@ -145,7 +145,7 @@ export function vacationRejectedEmail(opts: {
   const greeting = t(locale, "Hallo", "Hello");
   const intro = t(
     locale,
-    "Ihr Urlaubsantrag wurde leider abgelehnt.",
+    "Dein Urlaubsantrag wurde leider abgelehnt.",
     "Unfortunately, your vacation request has been rejected."
   );
   const detailFrom = t(locale, "Von", "From");
@@ -215,7 +215,7 @@ export function sickNoteReminderEmail(opts: {
   const greeting = t(locale, "Hallo", "Hello");
   const intro = t(
     locale,
-    "Sie sind seit dem {date} krankgemeldet. Falls die Krankheit länger als 3 Tage dauert, bitten wir Sie, das Ende der Arbeitsunfähigkeit (AU) zu melden.".replace(
+    "Du bist seit dem {date} krankgemeldet. Falls die Krankheit länger als 3 Tage dauert, melde bitte das Ende der Arbeitsunfähigkeit (AU).".replace(
       "{date}",
       sickFrom
     ),
@@ -253,14 +253,14 @@ export function welcomeEmail(opts: {
   const greeting = t(locale, "Hallo", "Hello");
   const intro = t(
     locale,
-    "Ein Konto wurde für Sie erstellt. Hier sind Ihre Zugangsdaten:",
+    "Für dich wurde ein Konto erstellt. Hier sind deine Zugangsdaten:",
     "An account has been created for you. Here are your credentials:"
   );
   const emailLabel = t(locale, "E-Mail", "Email");
   const passwordLabel = t(locale, "Passwort", "Password");
   const securityNote = t(
     locale,
-    "Bitte ändern Sie Ihr Passwort bei der ersten Anmeldung.",
+    "Bitte ändere dein Passwort bei der ersten Anmeldung.",
     "Please change your password on first login."
   );
   const btnText = t(locale, "Anmelden", "Sign in");

@@ -32,6 +32,7 @@ function todayISO(): string {
 
 export function VacationRequestForm({ overtimeHours = 0, regeneration }: Props) {
   const t = useTranslations("vacation");
+  const tc = useTranslations("common");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [note, setNote] = useState("");
@@ -86,7 +87,7 @@ export function VacationRequestForm({ overtimeHours = 0, regeneration }: Props) 
         else if (code === "INSUFFICIENT_ENTITLEMENT") setError(t("insufficientError"));
         else if (code === "NO_REGENERATION") setError(t("noRegenerationError"));
         else if (code === "NO_BUSINESS_DAYS") setError(t("noBusinessDaysError"));
-        else setError((b as { error?: string }).error ?? "error");
+        else setError((b as { error?: string }).error ?? tc("errorGeneric"));
         return;
       }
       setSuccess(true);
@@ -96,7 +97,7 @@ export function VacationRequestForm({ overtimeHours = 0, regeneration }: Props) 
       setUseOvertime(false);
       window.location.reload();
     } catch {
-      setError("error");
+      setError(tc("errorGeneric"));
     } finally {
       setLoading(false);
     }

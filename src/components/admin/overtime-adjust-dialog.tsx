@@ -45,6 +45,7 @@ export function OvertimeAdjustDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   const t = useTranslations("adminUsers");
+  const tc = useTranslations("common");
   const year = currentYear();
   const [carriedOver, setCarriedOver] = useState("00:00");
   const [consumed, setConsumed] = useState("00:00");
@@ -88,13 +89,13 @@ export function OvertimeAdjustDialog({
       });
       if (!res.ok) {
         const b = await res.json().catch(() => ({}));
-        setError((b as { error?: string }).error ?? "error");
+        setError((b as { error?: string }).error ?? tc("errorGeneric"));
         return;
       }
       onOpenChange(false);
       window.location.reload();
     } catch {
-      setError("error");
+      setError(tc("errorGeneric"));
     } finally {
       setLoading(false);
     }

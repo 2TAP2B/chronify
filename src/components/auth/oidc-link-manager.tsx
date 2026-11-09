@@ -17,6 +17,7 @@ export function OidcLinkManager({
   providerName: string;
 }) {
   const t = useTranslations("profile");
+  const tc = useTranslations("common");
   const confirm = useConfirm();
   const [loading, setLoading] = useState(false);
 
@@ -40,15 +41,19 @@ export function OidcLinkManager({
       if (!res.ok) {
         const b = await res.json().catch(() => ({}));
         await confirm({
-          title: "Fehler",
-          description: (b as { error?: string }).error ?? "error",
-          confirmLabel: "OK",
+          title: tc("error"),
+          description: (b as { error?: string }).error ?? tc("errorGeneric"),
+          confirmLabel: tc("ok"),
         });
         return;
       }
       window.location.reload();
     } catch {
-      await confirm({ title: "Fehler", description: "error", confirmLabel: "OK" });
+      await confirm({
+        title: tc("error"),
+        description: tc("errorGeneric"),
+        confirmLabel: tc("ok"),
+      });
     } finally {
       setLoading(false);
     }

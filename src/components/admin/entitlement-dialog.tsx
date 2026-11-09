@@ -26,6 +26,7 @@ export function EntitlementDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   const t = useTranslations("adminUsers");
+  const tc = useTranslations("common");
   const [totalDays, setTotalDays] = useState(30);
   const [currentDays, setCurrentDays] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
@@ -63,13 +64,13 @@ export function EntitlementDialog({
       });
       if (!res.ok) {
         const b = await res.json().catch(() => ({}));
-        setError((b as { error?: string }).error ?? "error");
+        setError((b as { error?: string }).error ?? tc("errorGeneric"));
         return;
       }
       onOpenChange(false);
       window.location.reload();
     } catch {
-      setError("error");
+      setError(tc("errorGeneric"));
     } finally {
       setLoading(false);
     }

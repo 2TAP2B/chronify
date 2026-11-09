@@ -36,6 +36,7 @@ export function SickNoteRowActions({
   aubUntil: string | null;
 }) {
   const t = useTranslations("sickness");
+  const tc = useTranslations("common");
   const confirm = useConfirm();
   const [menuOpen, setMenuOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -74,13 +75,13 @@ export function SickNoteRowActions({
       });
       if (!res.ok) {
         const b = await res.json().catch(() => ({}));
-        setError((b as { error?: string }).error ?? "error");
+        setError((b as { error?: string }).error ?? tc("errorGeneric"));
         return;
       }
       setEditOpen(false);
       window.location.reload();
     } catch {
-      setError("error");
+      setError(tc("errorGeneric"));
     } finally {
       setLoading(false);
     }
@@ -102,15 +103,15 @@ export function SickNoteRowActions({
       if (!res.ok) {
         const b = await res.json().catch(() => ({}));
         await confirm({
-          title: "Fehler",
-          description: (b as { error?: string }).error ?? "error",
-          confirmLabel: "OK",
+          title: tc("error"),
+          description: (b as { error?: string }).error ?? tc("errorGeneric"),
+          confirmLabel: tc("ok"),
         });
         return;
       }
       window.location.reload();
     } catch {
-      setError("error");
+      setError(tc("errorGeneric"));
     } finally {
       setLoading(false);
     }

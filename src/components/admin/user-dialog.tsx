@@ -57,6 +57,7 @@ export function UserDialog({
   onOpenChange?: (open: boolean) => void;
 }) {
   const t = useTranslations("adminUsers");
+  const tc = useTranslations("common");
   const [internalOpen, setInternalOpen] = useState(false);
   const open = externalOpen ?? internalOpen;
   const setOpen = externalOnOpenChange ?? setInternalOpen;
@@ -110,13 +111,13 @@ export function UserDialog({
         const b = await res.json().catch(() => ({}));
         const code = (b as { code?: string }).code;
         if (code === "EMAIL_TAKEN") setError(t("emailTaken"));
-        else setError((b as { error?: string }).error ?? "error");
+        else setError((b as { error?: string }).error ?? tc("errorGeneric"));
         return;
       }
       setOpen(false);
       window.location.reload();
     } catch {
-      setError("error");
+      setError(tc("errorGeneric"));
     } finally {
       setLoading(false);
     }
@@ -153,7 +154,7 @@ export function UserDialog({
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="password">
-                {t("password")} {mode === "edit" && "(leer = nicht ändern)"}
+                {t("password")} {mode === "edit" && t("passwordKeepHint")}
               </Label>
               <Input
                 id="password"

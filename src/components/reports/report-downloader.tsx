@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -27,6 +27,8 @@ export function ReportDownloader({
   isAdmin: boolean;
 }) {
   const t = useTranslations("reports");
+  const tc = useTranslations("common");
+  const locale = useLocale();
   const [from, setFrom] = useState(defaultFrom);
   const [to, setTo] = useState(defaultTo);
   const [userId, setUserId] = useState(users[0]?.id ?? "");
@@ -36,12 +38,12 @@ export function ReportDownloader({
     if (!from || !to) return;
     setLoading(format);
     try {
-      const params = new URLSearchParams({ from, to, format });
+      const params = new URLSearchParams({ from, to, format, locale });
       if (isAdmin && userId) params.set("userId", userId);
       const url = `/api/reports?${params}`;
       const res = await fetch(url);
       if (!res.ok) {
-        alert("error");
+        alert(tc("errorGeneric"));
         return;
       }
       const blob = await res.blob();
@@ -54,7 +56,7 @@ export function ReportDownloader({
       document.body.removeChild(link);
       URL.revokeObjectURL(link.href);
     } catch {
-      alert("error");
+      alert(tc("errorGeneric"));
     } finally {
       setLoading(null);
     }

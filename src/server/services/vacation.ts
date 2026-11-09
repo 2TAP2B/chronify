@@ -12,7 +12,7 @@ import {
   requestEntryNote,
   vacationWeight,
 } from "@/lib/vacation/business-days";
-import { toCalendarDate, isSameCalendarDay, currentYear } from "@/lib/datetime";
+import { toCalendarDate, isSameCalendarDay, currentYear, formatCalendarDate } from "@/lib/datetime";
 import { notificationText } from "@/lib/notifications/server-texts";
 import {
   REGENERATION_EXTRA_DAYS,
@@ -196,8 +196,8 @@ export async function createVacationRequest(opts: {
         const text = notificationText("vacationRequested", locale, {
           actorName: requesterName,
           days: vacationDays,
-          fromDate: from.toISOString().slice(0, 10),
-          toDate: to.toISOString().slice(0, 10),
+          fromDate: formatCalendarDate(from, locale),
+          toDate: formatCalendarDate(to, locale),
         });
         return {
           userId: a.id,
@@ -222,13 +222,14 @@ export async function createVacationRequest(opts: {
     const approvalUrl = `${appUrl}/de/admin/vacation-approvals`;
 
     for (const admin of admins) {
+      const adminLocale: "de" | "en" = admin.locale === "en" ? "en" : "de";
       const mailContent = vacationRequestedAdminEmail({
-        locale: (admin.locale ?? "de") as "de" | "en",
+        locale: adminLocale,
         appName,
         adminName: admin.name,
         requesterName: ctx.user.name ?? ctx.user.email ?? "User",
-        fromDate: from.toISOString().slice(0, 10),
-        toDate: to.toISOString().slice(0, 10),
+        fromDate: formatCalendarDate(from, adminLocale),
+        toDate: formatCalendarDate(to, adminLocale),
         days: vacationDays,
         approvalUrl,
       });
@@ -372,12 +373,13 @@ export async function approveVacationRequest(opts: {
     return { req, days, ctx };
   });
 
+  const locale: "de" | "en" = ctx.user.locale === "en" ? "en" : "de";
   await notifyUser({
     userId: req.userId,
     type: "VACATION_APPROVED",
-    ...notificationText("vacationApproved", (ctx.user.locale ?? "de") === "en" ? "en" : "de", {
-      fromDate: req.from.toISOString().slice(0, 10),
-      toDate: req.to.toISOString().slice(0, 10),
+    ...notificationText("vacationApproved", locale, {
+      fromDate: formatCalendarDate(req.from, locale),
+      toDate: formatCalendarDate(req.to, locale),
     }),
     payload: {
       requestId: req.id,
@@ -387,12 +389,12 @@ export async function approveVacationRequest(opts: {
     url: "/de/vacation",
     email: {
       template: "vacation_approved",
-      locale: (ctx.user.locale ?? "de") as "de" | "en",
+      locale,
       recipientName: ctx.user.name,
       appName: process.env.APP_NAME ?? "Chronify",
       vars: {
-        fromDate: req.from.toISOString().slice(0, 10),
-        toDate: req.to.toISOString().slice(0, 10),
+        fromDate: formatCalendarDate(req.from, locale),
+        toDate: formatCalendarDate(req.to, locale),
         days,
       },
     },
@@ -434,17 +436,14 @@ export async function rejectVacationRequest(opts: {
 
   const rejectCtx = await getUserContext(req.userId);
 
+  const rejectLocale: "de" | "en" = rejectCtx.user.locale === "en" ? "en" : "de";
   await notifyUser({
     userId: req.userId,
     type: "VACATION_REJECTED",
-    ...notificationText(
-      "vacationRejected",
-      (rejectCtx.user.locale ?? "de") === "en" ? "en" : "de",
-      {
-        fromDate: req.from.toISOString().slice(0, 10),
-        toDate: req.to.toISOString().slice(0, 10),
-      }
-    ),
+    ...notificationText("vacationRejected", rejectLocale, {
+      fromDate: formatCalendarDate(req.from, rejectLocale),
+      toDate: formatCalendarDate(req.to, rejectLocale),
+    }),
     payload: {
       requestId: req.id,
       fromDate: req.from.toISOString().slice(0, 10),
@@ -453,12 +452,12 @@ export async function rejectVacationRequest(opts: {
     url: "/de/vacation",
     email: {
       template: "vacation_rejected",
-      locale: (rejectCtx.user.locale ?? "de") as "de" | "en",
+      locale: rejectLocale,
       recipientName: rejectCtx.user.name,
       appName: process.env.APP_NAME ?? "Chronify",
       vars: {
-        fromDate: req.from.toISOString().slice(0, 10),
-        toDate: req.to.toISOString().slice(0, 10),
+        fromDate: formatCalendarDate(req.from, rejectLocale),
+        toDate: formatCalendarDate(req.to, rejectLocale),
         reason: opts.approverNote ?? "",
       },
     },

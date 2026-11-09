@@ -19,6 +19,7 @@ import { Plus } from "lucide-react";
 
 export function ClosureDialog({ mode }: { mode: "create" }) {
   const t = useTranslations("adminClosures");
+  const tc = useTranslations("common");
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -42,7 +43,7 @@ export function ClosureDialog({ mode }: { mode: "create" }) {
       });
       if (!res.ok) {
         const b = await res.json().catch(() => ({}));
-        setError((b as { error?: string }).error ?? "error");
+        setError((b as { error?: string }).error ?? tc("errorGeneric"));
         return;
       }
       setOpen(false);
@@ -51,7 +52,7 @@ export function ClosureDialog({ mode }: { mode: "create" }) {
       setTo("");
       window.location.reload();
     } catch {
-      setError("error");
+      setError(tc("errorGeneric"));
     } finally {
       setLoading(false);
     }

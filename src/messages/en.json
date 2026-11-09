@@ -20,7 +20,12 @@
     "month": "Month",
     "year": "Year",
     "privacy": "Privacy",
-    "imprint": "Imprint"
+    "imprint": "Imprint",
+    "error": "Error",
+    "errorGeneric": "Something went wrong. Please try again.",
+    "ok": "OK",
+    "total": "Total",
+    "hoursMinutesHint": "(h:mm)"
   },
   "nav": {
     "mobileNavAria": "Main navigation",
@@ -410,7 +415,8 @@
     "computedThisYear": "Earned this year",
     "netBalance": "Balance",
     "overtimeHint": "Values in hours:minutes (e.g. 08:30) or decimal (8.5).",
-    "carryAutoHint": "Carryover is taken over automatically from the previous year's closing balance and can't be edited here."
+    "carryAutoHint": "Carryover is taken over automatically from the previous year's closing balance and can't be edited here.",
+    "passwordKeepHint": "(leave empty to keep)"
   },
   "adminAutomation": {
     "heading": "Automation",
@@ -864,7 +870,8 @@
     "upload": "Upload",
     "remove": "Remove",
     "save": "Save",
-    "saved": "Branding saved."
+    "saved": "Branding saved.",
+    "loginQuotePlaceholder": "Track your working time simply and precisely — in line with German labour law."
   },
   "legal": {
     "privacyTitle": "Privacy Policy",

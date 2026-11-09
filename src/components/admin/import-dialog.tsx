@@ -47,6 +47,7 @@ const AUTO_DETECT: Record<FieldKey, string[]> = {
 
 export function ImportDialog({ users }: { users: User[] }) {
   const t = useTranslations("import");
+  const tc = useTranslations("common");
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<Step>("upload");
   const [targetUserId, setTargetUserId] = useState(users[0]?.id ?? "");
@@ -125,13 +126,13 @@ export function ImportDialog({ users }: { users: User[] }) {
       });
       const data = await res.json();
       if (!res.ok) {
-        alert(data.error ?? "error");
+        alert(data.error ?? tc("errorGeneric"));
         return;
       }
       setResult(data);
       setStep("result");
     } catch {
-      alert("error");
+      alert(tc("errorGeneric"));
     } finally {
       setLoading(false);
     }

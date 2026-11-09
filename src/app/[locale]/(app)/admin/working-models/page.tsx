@@ -1,5 +1,6 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { auth } from "@/lib/auth";
+import { formatHoursDecimal } from "@/lib/duration";
 import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -76,9 +77,11 @@ export default async function WorkingModelsPage({ params }: Props) {
                     return (
                       <TableRow key={tpl.id}>
                         <TableCell className="font-medium">{tpl.name}</TableCell>
-                        <TableCell>{(tpl.weeklyTargetMinutes / 60).toFixed(1)} h</TableCell>
-                        <TableCell>{(moFr / 60).toFixed(1)} h</TableCell>
-                        <TableCell>{(saSo / 60).toFixed(1)} h</TableCell>
+                        <TableCell>
+                          {formatHoursDecimal(tpl.weeklyTargetMinutes / 60, locale, 1)} h
+                        </TableCell>
+                        <TableCell>{formatHoursDecimal(moFr / 60, locale, 1)} h</TableCell>
+                        <TableCell>{formatHoursDecimal(saSo / 60, locale, 1)} h</TableCell>
                         <TableCell>
                           {tpl.isDefault ? (
                             <Badge>{t("default")}</Badge>
